@@ -1,7 +1,12 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Mascot } from '../components/Mascot'
+import laptopMascot from '../assets/laptop_mascot.webp'
+import { BuddyCard } from '../components/home/BuddyCard'
+import { GoalRing } from '../components/home/GoalRing'
+import { ProgressCard } from '../components/home/ProgressCard'
+import '../components/home/home.css'
 import { useAuth } from '../context/auth-context'
+import { fetchSubjectProgress, fetchTodayActivity } from '../lib/home'
 import { formatBytes, listMaterials } from '../lib/materials'
 
 const STATUS_LABEL = {
@@ -14,17 +19,22 @@ const STATUS_LABEL = {
 }
 
 const TYPE_LABEL = {
-  pdf: 'PDF',
-  pptx: 'Slides',
-  docx: 'Document',
-  image: 'Image',
-  text: 'Notes',
-  link: 'Link',
+  pdf: 'PDF', pptx: 'Slides', docx: 'Document', image: 'Image', text: 'Notes', link: 'Link',
+}
+
+function greetingFor(date = new Date()) {
+  const h = date.getHours()
+  if (h < 12) return 'Good morning'
+  if (h < 18) return 'Good afternoon'
+  return 'Good evening'
 }
 
 export function Dashboard() {
   const { user, buddy } = useAuth()
+
   const [materials, setMaterials] = useState([])
+  const [activity, setActivity] = useState(null)
+  const [subjects, setSubjects] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
@@ -32,10 +42,17 @@ export function Dashboard() {
     if (!user) return
     setLoading(true)
     try {
-      setMaterials(await listMaterials(user.id))
+      const [mats, today, progress] = await Promise.all([
+        listMaterials(user.id),
+        fetchTodayActivity(user.id),
+        fetchSubjectProgress(user.id),
+      ])
+      setMaterials(mats)
+      setActivity(today)
+      setSubjects(progress)
       setError(null)
     } catch (err) {
-      setError(err?.message ?? 'Could not load your material.')
+      setError(err?.message ?? 'Could not load your home page.')
     } finally {
       setLoading(false)
     }
@@ -48,83 +65,75 @@ export function Dashboard() {
   const firstName = user?.user_metadata?.display_name?.split(' ')[0]
 
   return (
-    <div className="page">
-      <section className="greeting card card-pad">
-        <div className="greeting-orb">
-          <Mascot size={64} />
-        </div>
-        <div>
-          <h1 className="greeting-title">
-            {firstName ? `Hey ${firstName}` : 'Hey there'}
-          </h1>
-          <p className="hint">
-            {materials.length === 0
-              ? `${buddy?.name ?? 'Your buddy'} is ready when you are. Upload something to study and we will take it from there.`
-              : `${buddy?.name ?? 'Your buddy'} is holding on to ${materials.length} ${
-                  materials.length === 1 ? 'item' : 'items'
-                } for you.`}
-          </p>
-        </div>
-        <Link to="/upload" className="btn btn-primary">Upload material</Link>
-      </section>
+    <div className="hm">
+      <div className="hm-main">
+        <header className="hm-top">
+          <div className="hm-greeting">
+            <h1>
+              {greetingFor()}{firstName ? `, ${firstName}` : ''}! <span aria-hidden="true">☀️</span>
+            </h1>
+            <p className="hm-sub">Ready to make progress today?</p>
+          </div>
 
-      <section className="section">
-        <div className="section-head">
-          <h2>Your material</h2>
-          {materials.length > 0 && (
-            <Link to="/upload" className="btn btn-secondary">Add another</Link>
-          )}
-        </div>
+          <img
+            className="hm-hero-art"
+            src={laptopMascot}
+            alt=""
+            width="1536"
+            height="1024"
+          />
+        </header>
 
         {error && <div className="msg msg-error">{error}</div>}
 
-        {loading ? (
-          <div className="card card-pad empty">
-            <p className="hint">Loading your material...</p>
-          </div>
-        ) : materials.length === 0 ? (
-          <div className="card card-pad empty">
-            <Mascot size={56} mood="calm" />
-            <h3>Nothing here yet</h3>
-            <p className="hint">
-              Upload a lecture PDF, a slide deck, or a photo of your notes. That is all Novi
-              needs to start building your reviewer.
-            </p>
-            <Link to="/upload" className="btn btn-primary">Upload your first material</Link>
-          </div>
-        ) : (
-          <ul className="material-list">
-            {materials.map((material) => {
-              const status = STATUS_LABEL[material.status] ?? STATUS_LABEL.uploaded
-              return (
-                <li key={material.id} className="card material-row">
-                  <div className="material-icon">{TYPE_LABEL[material.source_type] ?? 'File'}</div>
-                  <div className="material-meta">
-                    <span className="material-title">{material.title}</span>
-                    <span className="hint">
-                      {formatBytes(material.file_size_bytes)}
-                      {material.file_size_bytes ? ' · ' : ''}
-                      {new Date(material.created_at).toLocaleDateString()}
-                    </span>
-                  </div>
-                  <span className={status.tone}>{status.text}</span>
-                </li>
-              )
-            })}
-          </ul>
-        )}
-      </section>
-
-      <section className="section">
-        <div className="card card-pad next-up">
-          <h3>Coming next</h3>
-          <p className="hint">
-            Processing turns each upload into summaries, key concepts, and practice questions.
-            That runs in a Supabase Edge Function so the API keys stay off the browser, and it
-            is the next piece to build.
-          </p>
+        <div className="hm-row">
+          <BuddyCard buddyName={buddy?.name} hasMaterial={materials.length > 0} />
+          <GoalRing done={activity?.sessions_count ?? 0} />
+          <ProgressCard subjects={subjects} loading={loading} />
         </div>
-      </section>
+
+        {/* Kept from the previous dashboard so uploads stay visible until the
+            Recent Study Packs section replaces this. */}
+        <section className="hm-section">
+          <header className="hm-card-head">
+            <h2 className="hm-section-title">Your material</h2>
+            <Link to="/upload" className="hm-muted-link">Add another</Link>
+          </header>
+
+          {loading ? (
+            <p className="hm-empty-line">Loading your material…</p>
+          ) : materials.length === 0 ? (
+            <div className="hm-card hm-empty">
+              <p className="hm-empty-line">
+                Nothing here yet. Upload a lecture PDF, a slide deck, or a photo of your notes.
+              </p>
+              <Link to="/upload" className="hm-buddy-cta">Upload your first material</Link>
+            </div>
+          ) : (
+            <ul className="hm-materials">
+              {materials.map((material) => {
+                const status = STATUS_LABEL[material.status] ?? STATUS_LABEL.uploaded
+                return (
+                  <li key={material.id} className="hm-card hm-material">
+                    <span className="hm-material-type">
+                      {TYPE_LABEL[material.source_type] ?? 'File'}
+                    </span>
+                    <span className="hm-material-meta">
+                      <span className="hm-material-title">{material.title}</span>
+                      <span className="hm-sub">
+                        {formatBytes(material.file_size_bytes)}
+                        {material.file_size_bytes ? ' · ' : ''}
+                        {new Date(material.created_at).toLocaleDateString()}
+                      </span>
+                    </span>
+                    <span className={status.tone}>{status.text}</span>
+                  </li>
+                )
+              })}
+            </ul>
+          )}
+        </section>
+      </div>
     </div>
   )
 }
