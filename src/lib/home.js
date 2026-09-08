@@ -113,3 +113,23 @@ export async function fetchStudySets(userId, limit = 6) {
     updatedAt: set.updated_at,
   }))
 }
+
+/**
+ * Pending recommendations, highest priority first.
+ *
+ * Nothing writes to this table yet — the learning engine that would generate
+ * recommendations does not exist — so it returns [] in practice.
+ */
+export async function fetchRecommendations(userId, limit = 3) {
+  const { data, error } = await supabase
+    .from('recommendations')
+    .select('id, kind, title, rationale, priority, study_set_id')
+    .eq('user_id', userId)
+    .eq('status', 'pending')
+    .order('priority', { ascending: false })
+    .order('created_at', { ascending: false })
+    .limit(limit)
+
+  if (error) throw error
+  return data ?? []
+}

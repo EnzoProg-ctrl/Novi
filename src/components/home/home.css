@@ -59,7 +59,7 @@
 /* ── Buddy card ──────────────────────────────────────────────── */
 .hm-buddy {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 14px;
   background: var(--coral-tint);
   border-color: rgba(255, 107, 90, 0.2);
@@ -73,8 +73,8 @@
   position: relative;
   flex: none;
   display: block;
-  width: 76px;
-  height: 76px;
+  width: 88px;
+  height: 88px;
   border-radius: 50%;
   overflow: hidden;
   background: #fff;
@@ -358,3 +358,68 @@
 @media (max-width: 620px) {
   .hm-packs { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
 }
+
+/* ── Recommended for you ─────────────────────────────────────── */
+.hm-rec-head { align-items: flex-start; }
+.hm-rec-heading { display: flex; align-items: flex-start; gap: 10px; min-width: 0; }
+.hm-rec-spark {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  flex: none;
+  border-radius: var(--r-sm);
+  background: var(--coral-tint);
+  color: var(--coral);
+}
+.hm-rec-heading .hm-sub { margin-top: 2px; }
+
+.hm-recs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 14px;
+}
+.hm-rec { display: flex; flex-direction: column; align-items: flex-start; }
+.hm-rec-icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  margin-bottom: 12px;
+  border-radius: var(--r-md);
+}
+.hm-rec-icon.is-violet { background: #efecfe; color: #6b52d6; }
+.hm-rec-icon.is-pink   { background: #fdeaea; color: #d64545; }
+.hm-rec-icon.is-amber  { background: #fdf3e3; color: #b7791f; }
+.hm-rec-icon.is-blue   { background: #e9f0fe; color: #3b6fd4; }
+
+.hm-rec-title { margin: 0; font-size: 0.95rem; font-weight: 700; line-height: 1.35; color: var(--ink); }
+.hm-rec-body {
+  margin: 6px 0 0;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: var(--muted);
+}
+.hm-rec-cta {
+  display: inline-flex;
+  align-items: center;
+  margin-top: auto;
+  padding-top: 14px;
+  font-size: 0.85rem;
+  font-weight: 620;
+  color: var(--coral-active);
+  text-decoration: none;
+}
+.hm-rec-cta::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+.hm-rec { position: relative; }
+.hm-rec-cta:hover { text-decoration: underline; }
+/* Kinds with no destination yet: readable, clearly not clickable. */
+.hm-rec-cta.is-inert { color: var(--faint); cursor: default; }
+.hm-rec-cta.is-inert::before { content: none; }
+.hm-rec-cta.is-inert:hover { text-decoration: none; }
+
+.hm-rec-empty { padding: 20px; }

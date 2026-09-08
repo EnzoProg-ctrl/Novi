@@ -59,3 +59,37 @@ export const IconPackBook = (props) => (
     <path d="M5 4.5A1.5 1.5 0 003.5 6v12A1.5 1.5 0 005 19.5" />
   </svg>
 )
+
+export const IconSparkle = (props) => (
+  <svg {...base} {...props}>
+    <path d="M12 3l1.8 4.9L18.7 9.7l-4.9 1.8L12 16.4l-1.8-4.9L5.3 9.7l4.9-1.8L12 3z" fill="currentColor" stroke="none" />
+  </svg>
+)
+
+export const IconCards = (props) => (
+  <svg {...base} {...props} strokeWidth="1.8">
+    <rect x="4" y="6" width="12" height="14" rx="2" />
+    <path d="M8 3.5h9A2.5 2.5 0 0119.5 6v11" />
+  </svg>
+)
+
+export const IconBrain = (props) => (
+  <svg {...base} {...props} strokeWidth="1.8">
+    <path d="M12 5.5a2.8 2.8 0 00-5.3 1.2A2.7 2.7 0 005 9.4a2.8 2.8 0 001.4 2.4A2.8 2.8 0 008 17.2a2.7 2.7 0 004 1.1" />
+    <path d="M12 5.5a2.8 2.8 0 015.3 1.2A2.7 2.7 0 0119 9.4a2.8 2.8 0 01-1.4 2.4A2.8 2.8 0 0116 17.2a2.7 2.7 0 01-4 1.1z" />
+  </svg>
+)
+
+export const IconPencil = (props) => (
+  <svg {...base} {...props} strokeWidth="1.8">
+    <path d="M4 20l4.5-1.2L19.3 8A2.4 2.4 0 0016 4.7L5.2 15.5 4 20z" />
+    <path d="M15.2 5.8l3 3" />
+  </svg>
+)
+
+export const IconUpload = (props) => (
+  <svg {...base} {...props} strokeWidth="1.8">
+    <path d="M12 15V4M8 8l4-4 4 4" />
+    <path d="M4 15v3a2 2 0 002 2h12a2 2 0 002-2v-3" />
+  </svg>
+)

@@ -5,10 +5,12 @@ import { BuddyCard } from '../components/home/BuddyCard'
 import { GoalRing } from '../components/home/GoalRing'
 import { ProgressCard } from '../components/home/ProgressCard'
 import { QuoteCard, ScheduleCard, StatCards } from '../components/home/RailCards'
+import { Recommendations } from '../components/home/Recommendations'
 import { StudyPacks } from '../components/home/StudyPacks'
 import '../components/home/home.css'
 import { useAuth } from '../context/auth-context'
 import {
+  fetchRecommendations,
   fetchStudySets,
   fetchStudyStats,
   fetchSubjectProgress,
@@ -44,6 +46,7 @@ export function Dashboard() {
   const [subjects, setSubjects] = useState([])
   const [stats, setStats] = useState(null)
   const [packs, setPacks] = useState([])
+  const [recs, setRecs] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
@@ -51,18 +54,21 @@ export function Dashboard() {
     if (!user) return
     setLoading(true)
     try {
-      const [mats, today, progress, studyStats, studySets] = await Promise.all([
+      const [mats, today, progress, studyStats, studySets, recommendations] =
+        await Promise.all([
         listMaterials(user.id),
         fetchTodayActivity(user.id),
         fetchSubjectProgress(user.id),
         fetchStudyStats(user.id),
         fetchStudySets(user.id),
+        fetchRecommendations(user.id),
       ])
       setMaterials(mats)
       setActivity(today)
       setSubjects(progress)
       setStats(studyStats)
       setPacks(studySets)
+      setRecs(recommendations)
       setError(null)
     } catch (err) {
       setError(err?.message ?? 'Could not load your home page.')
@@ -96,6 +102,8 @@ export function Dashboard() {
         </div>
 
         <StudyPacks packs={packs} loading={loading} />
+
+        <Recommendations items={recs} loading={loading} />
 
         {/* Uploads stay listed while pack generation does not exist - without
             this there is no way to see what you have added. */}
