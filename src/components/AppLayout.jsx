@@ -1,54 +1,35 @@
-import { useState } from 'react'
-import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
-import { Logo, Mascot } from '../components/Mascot'
+import { useEffect, useState } from 'react'
+import { Outlet } from 'react-router-dom'
 import { useAuth } from '../context/auth-context'
+import { AppSidebar } from './app/AppSidebar'
+import { AppTopbar } from './app/AppTopbar'
+import './app/app-shell.css'
 
 export function AppLayout() {
-  const { buddy, user, signOut } = useAuth()
-  const navigate = useNavigate()
-  const [signingOut, setSigningOut] = useState(false)
+  const { user, buddy } = useAuth()
+  const [menuOpen, setMenuOpen] = useState(false)
 
-  async function handleSignOut() {
-    setSigningOut(true)
-    try {
-      await signOut()
-      navigate('/', { replace: true })
-    } catch {
-      setSigningOut(false)
+  // Every sidebar link closes the drawer itself, so navigation needs no effect
+  // here. Escape is the one case with no element to hang a handler on.
+  useEffect(() => {
+    if (!menuOpen) return
+    const onKeyDown = (event) => {
+      if (event.key === 'Escape') setMenuOpen(false)
     }
-  }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [menuOpen])
 
   return (
-    <div className="app-shell">
-      <header className="app-bar">
-        <Link to="/dashboard" className="app-bar-brand">
-          <Logo />
-        </Link>
+    <div className="nv-app">
+      <AppSidebar open={menuOpen} onClose={() => setMenuOpen(false)} />
 
-        <nav className="app-nav">
-          <NavLink to="/dashboard" className="app-nav-link">Dashboard</NavLink>
-          <NavLink to="/upload" className="app-nav-link">Upload</NavLink>
-        </nav>
-
-        <div className="app-bar-end">
-          <Link to="/buddy/new" className="buddy-chip" title="Edit your buddy">
-            <Mascot size={24} />
-            <span>{buddy?.name ?? 'Buddy'}</span>
-          </Link>
-          <button
-            type="button"
-            className="btn btn-ghost"
-            onClick={handleSignOut}
-            disabled={signingOut}
-          >
-            {signingOut ? 'Signing out...' : 'Sign out'}
-          </button>
-        </div>
-      </header>
-
-      <main className="app-main">
-        <Outlet context={{ user, buddy }} />
-      </main>
+      <div className="nv-app-body">
+        <AppTopbar onMenuClick={() => setMenuOpen(true)} />
+        <main className="nv-app-content">
+          <Outlet context={{ user, buddy }} />
+        </main>
+      </div>
     </div>
   )
 }

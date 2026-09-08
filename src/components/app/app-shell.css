@@ -1,0 +1,311 @@
+/* ── Signed-in app shell: sidebar + top bar ───────────────────────
+   Tokens come from index.css.                                   */
+
+.nv-app {
+  --nv-side-w: 244px;
+  --nv-top-h: 76px;
+
+  min-height: 100vh;
+  background: #f7f8fa;
+}
+
+.nv-app-body {
+  min-height: 100vh;
+  margin-left: var(--nv-side-w);
+  display: flex;
+  flex-direction: column;
+}
+
+.nv-app-content {
+  flex: 1;
+  padding: 28px 32px 64px;
+}
+
+/* ── Sidebar ─────────────────────────────────────────────────── */
+.nv-side {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 40;
+  width: var(--nv-side-w);
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 22px 16px 20px;
+  background: var(--bg);
+  border-right: 1px solid var(--line);
+}
+
+.nv-side-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 8px;
+  margin-bottom: 26px;
+}
+.nv-side-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 1.4rem;
+  font-weight: 750;
+  letter-spacing: -0.035em;
+  color: var(--ink);
+  text-decoration: none;
+}
+.nv-side-brand:hover { text-decoration: none; }
+
+.nv-side-close {
+  display: none;
+  padding: 6px;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+.nv-side-close:hover { background: var(--bg-sunken); color: var(--ink); }
+
+/* ── Nav ─────────────────────────────────────────────────────── */
+.nv-side-nav { display: flex; flex-direction: column; gap: 4px; }
+
+.nv-side-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 12px;
+  border-radius: 11px;
+  font-size: 0.95rem;
+  font-weight: 560;
+  color: var(--ink-soft);
+  text-decoration: none;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.nv-side-item:hover { background: var(--bg-sunken); color: var(--ink); text-decoration: none; }
+.nv-side-item.is-active {
+  background: var(--coral-tint);
+  color: var(--coral-active);
+  font-weight: 650;
+}
+.nv-side-item:focus-visible { outline: 2px solid var(--coral); outline-offset: 2px; }
+
+/* Design-only entries: visible, clearly not yet available, not clickable. */
+.nv-side-item.is-soon {
+  color: var(--faint);
+  cursor: default;
+}
+.nv-side-item.is-soon:hover { background: transparent; color: var(--faint); }
+.nv-soon {
+  margin-left: auto;
+  padding: 2px 7px;
+  border-radius: var(--r-pill);
+  background: var(--bg-sunken);
+  font-size: 0.68rem;
+  font-weight: 620;
+  letter-spacing: 0.02em;
+  color: var(--faint);
+}
+
+/* ── Encouragement card ──────────────────────────────────────── */
+.nv-side-card {
+  margin-top: auto;
+  padding: 16px 14px 18px;
+  border-radius: var(--r-lg);
+  background: var(--coral-tint);
+  text-align: center;
+}
+.nv-side-art {
+  display: block;
+  width: 86px;
+  height: auto;
+  margin: 0 auto 6px;
+}
+.nv-side-cardtitle {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+.nv-side-cardsub {
+  margin: 3px 0 0;
+  font-size: 0.82rem;
+  color: var(--coral-active);
+}
+
+/* ── Backdrop (drawer only) ──────────────────────────────────── */
+.nv-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 35;
+  background: rgba(19, 26, 46, 0.35);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+/* ── Top bar ─────────────────────────────────────────────────── */
+.nv-top {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  height: var(--nv-top-h);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 32px;
+  background: #f7f8fa;
+}
+
+.nv-top-menu {
+  display: none;
+  padding: 8px;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+}
+.nv-top-menu:hover { background: var(--bg-sunken); }
+
+.nv-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: min(420px, 100%);
+  margin-left: auto;
+  padding: 0 16px;
+  height: 44px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  background: var(--bg);
+  color: var(--faint);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.nv-search:focus-within {
+  border-color: var(--coral);
+  box-shadow: 0 0 0 3px var(--coral-ring);
+}
+.nv-search-input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 0.93rem;
+  color: var(--ink);
+}
+.nv-search-input::placeholder { color: var(--faint); }
+.nv-search-input:focus { outline: none; }
+.nv-search-input::-webkit-search-cancel-button { -webkit-appearance: none; }
+
+.nv-top-end { display: flex; align-items: center; gap: 10px; flex: none; }
+
+.nv-icon-btn {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--bg);
+  color: var(--ink-soft);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.nv-icon-btn:hover { background: var(--bg-sunken); color: var(--ink); }
+.nv-icon-btn:focus-visible { outline: 2px solid var(--coral); outline-offset: 2px; }
+
+/* ── User menu ───────────────────────────────────────────────── */
+.nv-user { position: relative; }
+
+.nv-user-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 6px 3px 3px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  background: var(--bg);
+  color: var(--muted);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+.nv-user-btn:hover { background: var(--bg-sunken); }
+.nv-user-btn:focus-visible { outline: 2px solid var(--coral); outline-offset: 2px; }
+
+.nv-avatar {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--coral-tint);
+  color: var(--coral-active);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.nv-user-menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 30;
+  min-width: 216px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--bg);
+  box-shadow: var(--shadow-lg);
+}
+.nv-user-menu[hidden] { display: none; }
+.nv-user-name { margin: 0; font-size: 0.92rem; font-weight: 650; }
+.nv-user-email {
+  margin: 1px 0 10px;
+  font-size: 0.8rem;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+.nv-user-action {
+  display: block;
+  width: 100%;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: transparent;
+  font: inherit;
+  font-size: 0.88rem;
+  text-align: left;
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+.nv-user-action:hover { background: var(--bg-sunken); color: var(--ink); }
+.nv-user-action:focus-visible { outline: 2px solid var(--coral); outline-offset: -2px; }
+
+/* ── Drawer below 1024 ───────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .nv-app-body { margin-left: 0; }
+
+  .nv-side {
+    transform: translateX(-100%);
+    transition: transform 0.24s ease;
+    box-shadow: var(--shadow-lg);
+  }
+  .nv-side.is-open { transform: translateX(0); }
+
+  .nv-side-close { display: block; }
+  .nv-top-menu { display: block; }
+  .nv-backdrop.is-open { opacity: 1; pointer-events: auto; }
+}
+
+@media (max-width: 620px) {
+  .nv-top { padding: 0 16px; gap: 10px; }
+  .nv-app-content { padding: 20px 16px 48px; }
+  .nv-search { width: auto; }
+  .nv-user-btn { padding: 3px; }
+  .nv-user-btn svg { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nv-side, .nv-backdrop { transition: none; }
+}

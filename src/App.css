@@ -136,53 +136,6 @@
 .personality-option:has(:focus-visible) { outline: 2px solid var(--coral); outline-offset: 2px; }
 .personality-label { font-weight: 560; font-size: 0.9rem; }
 
-/* ── App shell ───────────────────────────────────────────────── */
-.app-shell { min-height: 100vh; background: var(--bg-soft); }
-
-.app-bar {
-  display: flex;
-  align-items: center;
-  gap: 24px;
-  padding: 0 24px;
-  height: 62px;
-  background: var(--bg);
-  border-bottom: 1px solid var(--line);
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-.app-bar-brand { text-decoration: none; }
-.app-bar-brand:hover { text-decoration: none; }
-
-.app-nav { display: flex; gap: 4px; margin-right: auto; }
-.app-nav-link {
-  padding: 7px 12px;
-  border-radius: var(--r-sm);
-  font-size: 0.92rem;
-  font-weight: 540;
-  color: var(--muted);
-  text-decoration: none;
-}
-.app-nav-link:hover { background: var(--bg-sunken); color: var(--ink); text-decoration: none; }
-.app-nav-link.active { color: var(--coral); background: var(--coral-tint); }
-
-.app-bar-end { display: flex; align-items: center; gap: 8px; }
-.buddy-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  padding: 5px 12px 5px 6px;
-  border-radius: var(--r-pill);
-  background: var(--bg-sunken);
-  color: var(--ink);
-  font-size: 0.88rem;
-  font-weight: 560;
-  text-decoration: none;
-}
-.buddy-chip:hover { background: var(--coral-tint); text-decoration: none; }
-
-.app-main { padding: 28px 24px 64px; }
-
 /* ── Pages ───────────────────────────────────────────────────── */
 .page { max-width: 860px; margin: 0 auto; display: flex; flex-direction: column; gap: 28px; }
 .page-narrow { max-width: 620px; }
@@ -276,10 +229,6 @@
 }
 
 @media (max-width: 620px) {
-  .app-bar { gap: 12px; padding: 0 14px; }
-  .app-nav { gap: 0; }
-  .app-main { padding: 20px 14px 48px; }
   .greeting { flex-direction: column; align-items: flex-start; }
-  .buddy-chip span { display: none; }
   .landing-bar { padding: 16px 0; }
 }

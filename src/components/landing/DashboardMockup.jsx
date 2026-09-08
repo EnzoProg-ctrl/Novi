@@ -1,4 +1,4 @@
-import capybara from '../../assets/capybara_landingpage.png'
+import capybara from '../../assets/capybara_landingpage.webp'
 import {
   IconArrowRight,
   IconAtom,

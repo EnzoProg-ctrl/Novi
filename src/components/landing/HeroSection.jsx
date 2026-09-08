@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import capybara from '../../assets/capybara_landingpage.png'
+import capybara from '../../assets/capybara_landingpage.webp'
 import { DashboardMockup } from './DashboardMockup'
 import {
   IconArrowRight,

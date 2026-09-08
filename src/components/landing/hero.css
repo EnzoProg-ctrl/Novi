@@ -20,6 +20,14 @@
 /* ── Copy column ─────────────────────────────────────────────── */
 .nv-hero-copy { min-width: 0; }
 
+/* Small nudge right, off the shell edge. Uses a transform rather than padding
+   so the column keeps its full width - padding narrowed it enough to wrap
+   "Upload anything" onto a second line. Desktop only; the stacked layout
+   below 980px keeps its own alignment. */
+@media (min-width: 981px) {
+  .nv-hero-copy { transform: translateX(clamp(16px, 1.6vw, 30px)); }
+}
+
 .nv-badge {
   display: inline-flex;
   align-items: center;
