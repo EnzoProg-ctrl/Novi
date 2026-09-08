@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import avatar from '../../assets/capybara-avatar.webp'
+import avatar from '../../assets/facingfront_mascot.webp'
 import { IconArrowRight } from './HomeIcons'
 
 /**
@@ -14,7 +14,9 @@ export function BuddyCard({ buddyName, hasMaterial }) {
 
   return (
     <section className="hm-card hm-buddy" aria-label={`A note from ${name}`}>
-      <img className="hm-buddy-avatar" src={avatar} alt="" width="320" height="320" />
+      <span className="hm-buddy-avatar">
+        <img src={avatar} alt="" width="1230" height="1278" />
+      </span>
 
       <div className="hm-buddy-text">
         <p className="hm-buddy-name">{name}</p>

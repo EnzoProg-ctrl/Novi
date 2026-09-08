@@ -51,3 +51,42 @@ export async function fetchSubjectProgress(userId) {
     .map(({ id, name, sum, count }) => ({ id, name, percent: Math.round((sum / count) * 100) }))
     .sort((a, b) => b.percent - a.percent)
 }
+
+/** First day of the current month, as YYYY-MM-DD. */
+function monthStartISO() {
+  const d = new Date()
+  const pad = (n) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-01`
+}
+
+/**
+ * Streak comes from learning_profile (maintained by the learning engine).
+ * "This month" is summed from daily_activity so the label matches the number
+ * rather than reusing the all-time total_study_minutes.
+ */
+export async function fetchStudyStats(userId) {
+  const [{ data: profile, error: profileError }, { data: days, error: daysError }] =
+    await Promise.all([
+      supabase
+        .from('learning_profile')
+        .select('current_day_streak, longest_day_streak')
+        .eq('user_id', userId)
+        .maybeSingle(),
+      supabase
+        .from('daily_activity')
+        .select('minutes_studied')
+        .eq('user_id', userId)
+        .gte('activity_date', monthStartISO())
+        .lte('activity_date', todayISO()),
+    ])
+
+  if (profileError) throw profileError
+  if (daysError) throw daysError
+
+  const minutes = (days ?? []).reduce((sum, d) => sum + (d.minutes_studied ?? 0), 0)
+
+  return {
+    streakDays: profile?.current_day_streak ?? 0,
+    monthMinutes: minutes,
+  }
+}

@@ -4,9 +4,10 @@ import laptopMascot from '../assets/laptop_mascot.webp'
 import { BuddyCard } from '../components/home/BuddyCard'
 import { GoalRing } from '../components/home/GoalRing'
 import { ProgressCard } from '../components/home/ProgressCard'
+import { QuoteCard, ScheduleCard, StatCards } from '../components/home/RailCards'
 import '../components/home/home.css'
 import { useAuth } from '../context/auth-context'
-import { fetchSubjectProgress, fetchTodayActivity } from '../lib/home'
+import { fetchStudyStats, fetchSubjectProgress, fetchTodayActivity } from '../lib/home'
 import { formatBytes, listMaterials } from '../lib/materials'
 
 const STATUS_LABEL = {
@@ -35,6 +36,7 @@ export function Dashboard() {
   const [materials, setMaterials] = useState([])
   const [activity, setActivity] = useState(null)
   const [subjects, setSubjects] = useState([])
+  const [stats, setStats] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
@@ -42,14 +44,16 @@ export function Dashboard() {
     if (!user) return
     setLoading(true)
     try {
-      const [mats, today, progress] = await Promise.all([
+      const [mats, today, progress, studyStats] = await Promise.all([
         listMaterials(user.id),
         fetchTodayActivity(user.id),
         fetchSubjectProgress(user.id),
+        fetchStudyStats(user.id),
       ])
       setMaterials(mats)
       setActivity(today)
       setSubjects(progress)
+      setStats(studyStats)
       setError(null)
     } catch (err) {
       setError(err?.message ?? 'Could not load your home page.')
@@ -67,21 +71,11 @@ export function Dashboard() {
   return (
     <div className="hm">
       <div className="hm-main">
-        <header className="hm-top">
-          <div className="hm-greeting">
-            <h1>
-              {greetingFor()}{firstName ? `, ${firstName}` : ''}! <span aria-hidden="true">☀️</span>
-            </h1>
-            <p className="hm-sub">Ready to make progress today?</p>
-          </div>
-
-          <img
-            className="hm-hero-art"
-            src={laptopMascot}
-            alt=""
-            width="1536"
-            height="1024"
-          />
+        <header className="hm-greeting">
+          <h1>
+            {greetingFor()}{firstName ? `, ${firstName}` : ''}! <span aria-hidden="true">☀️</span>
+          </h1>
+          <p className="hm-sub">Ready to make progress today?</p>
         </header>
 
         {error && <div className="msg msg-error">{error}</div>}
@@ -134,6 +128,13 @@ export function Dashboard() {
           )}
         </section>
       </div>
+
+      <aside className="hm-rail">
+        <img className="hm-hero-art" src={laptopMascot} alt="" width="1316" height="1195" />
+        <ScheduleCard sessions={[]} />
+        <StatCards streakDays={stats?.streakDays ?? 0} monthMinutes={stats?.monthMinutes ?? 0} />
+        <QuoteCard />
+      </aside>
     </div>
   )
 }

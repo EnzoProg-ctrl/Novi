@@ -1,5 +1,7 @@
 import { Link, NavLink } from 'react-router-dom'
-import waving from '../../assets/mascot-waving.webp'
+// The standalone waving pose was removed; capybara-avatar is the same
+// waving character, squared off from the landing artwork.
+import waving from '../../assets/capybara-avatar.webp'
 import {
   IconCalendar,
   IconChat,
@@ -70,7 +72,7 @@ export function AppSidebar({ open, onClose }) {
         </nav>
 
         <div className="nv-side-card">
-          <img className="nv-side-art" src={waving} alt="" width="380" height="422" />
+          <img className="nv-side-art" src={waving} alt="" width="320" height="320" />
           <p className="nv-side-cardtitle">Good things take time.</p>
           <p className="nv-side-cardsub">You&apos;re doing great!</p>
         </div>
