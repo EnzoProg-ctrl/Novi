@@ -294,3 +294,67 @@
   .hm-progress { grid-column: auto; }
   .hm-material { flex-wrap: wrap; }
 }
+
+/* ── Recent study packs ──────────────────────────────────────── */
+.hm-packs {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+  gap: 14px;
+}
+.hm-pack {
+  display: block;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  background: var(--bg);
+  box-shadow: var(--shadow-sm);
+  text-decoration: none;
+}
+.hm-pack-icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  margin-bottom: 14px;
+  border-radius: var(--r-md);
+}
+.hm-pack-icon.is-green  { background: #e7f6ed; color: #1f9d63; }
+.hm-pack-icon.is-blue   { background: #e9f0fe; color: #3b6fd4; }
+.hm-pack-icon.is-pink   { background: #fdeaea; color: #d64545; }
+.hm-pack-icon.is-violet { background: #efecfe; color: #6b52d6; }
+
+.hm-pack-subject { margin: 0; font-size: 0.98rem; font-weight: 700; color: var(--ink); }
+.hm-pack-topic {
+  margin: 2px 0 0;
+  font-size: 0.86rem;
+  color: var(--ink-soft);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.hm-pack-meta { margin: 10px 0 0; font-size: 0.78rem; color: var(--faint); }
+
+/* Add-new tile */
+.hm-pack-add {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: 148px;
+  text-align: center;
+  border-style: dashed;
+  border-color: rgba(255, 107, 90, 0.4);
+  background: #fff9f8;
+  color: var(--coral);
+  box-shadow: none;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+.hm-pack-add:hover { background: var(--coral-tint); border-color: var(--coral); text-decoration: none; }
+.hm-pack-add:focus-visible { outline: 2px solid var(--coral); outline-offset: 2px; }
+.hm-pack-add .hm-pack-subject { margin-top: 8px; color: var(--coral-active); }
+.hm-pack-add .hm-pack-topic { color: var(--coral-active); }
+
+@media (max-width: 620px) {
+  .hm-packs { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+}

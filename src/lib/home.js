@@ -90,3 +90,26 @@ export async function fetchStudyStats(userId) {
     monthMinutes: minutes,
   }
 }
+
+/**
+ * Study packs are generated from uploaded material. Generation is not built
+ * yet, so this returns [] until study_sets rows exist.
+ */
+export async function fetchStudySets(userId, limit = 6) {
+  const { data, error } = await supabase
+    .from('study_sets')
+    .select('id, title, status, updated_at, subjects(name)')
+    .eq('user_id', userId)
+    .order('updated_at', { ascending: false })
+    .limit(limit)
+
+  if (error) throw error
+
+  return (data ?? []).map((set) => ({
+    id: set.id,
+    subject: set.subjects?.name ?? null,
+    title: set.title,
+    status: set.status,
+    updatedAt: set.updated_at,
+  }))
+}

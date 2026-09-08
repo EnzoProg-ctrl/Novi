@@ -5,9 +5,15 @@ import { BuddyCard } from '../components/home/BuddyCard'
 import { GoalRing } from '../components/home/GoalRing'
 import { ProgressCard } from '../components/home/ProgressCard'
 import { QuoteCard, ScheduleCard, StatCards } from '../components/home/RailCards'
+import { StudyPacks } from '../components/home/StudyPacks'
 import '../components/home/home.css'
 import { useAuth } from '../context/auth-context'
-import { fetchStudyStats, fetchSubjectProgress, fetchTodayActivity } from '../lib/home'
+import {
+  fetchStudySets,
+  fetchStudyStats,
+  fetchSubjectProgress,
+  fetchTodayActivity,
+} from '../lib/home'
 import { formatBytes, listMaterials } from '../lib/materials'
 
 const STATUS_LABEL = {
@@ -37,6 +43,7 @@ export function Dashboard() {
   const [activity, setActivity] = useState(null)
   const [subjects, setSubjects] = useState([])
   const [stats, setStats] = useState(null)
+  const [packs, setPacks] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
@@ -44,16 +51,18 @@ export function Dashboard() {
     if (!user) return
     setLoading(true)
     try {
-      const [mats, today, progress, studyStats] = await Promise.all([
+      const [mats, today, progress, studyStats, studySets] = await Promise.all([
         listMaterials(user.id),
         fetchTodayActivity(user.id),
         fetchSubjectProgress(user.id),
         fetchStudyStats(user.id),
+        fetchStudySets(user.id),
       ])
       setMaterials(mats)
       setActivity(today)
       setSubjects(progress)
       setStats(studyStats)
+      setPacks(studySets)
       setError(null)
     } catch (err) {
       setError(err?.message ?? 'Could not load your home page.')
@@ -86,8 +95,10 @@ export function Dashboard() {
           <ProgressCard subjects={subjects} loading={loading} />
         </div>
 
-        {/* Kept from the previous dashboard so uploads stay visible until the
-            Recent Study Packs section replaces this. */}
+        <StudyPacks packs={packs} loading={loading} />
+
+        {/* Uploads stay listed while pack generation does not exist - without
+            this there is no way to see what you have added. */}
         <section className="hm-section">
           <header className="hm-card-head">
             <h2 className="hm-section-title">Your material</h2>
