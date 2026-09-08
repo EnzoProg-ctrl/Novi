@@ -5,11 +5,13 @@ import { BuddyCard } from '../components/home/BuddyCard'
 import { GoalRing } from '../components/home/GoalRing'
 import { ProgressCard } from '../components/home/ProgressCard'
 import { QuoteCard, ScheduleCard, StatCards } from '../components/home/RailCards'
+import { ContinueSection } from '../components/home/ContinueSection'
 import { Recommendations } from '../components/home/Recommendations'
 import { StudyPacks } from '../components/home/StudyPacks'
 import '../components/home/home.css'
 import { useAuth } from '../context/auth-context'
 import {
+  fetchInProgress,
   fetchRecommendations,
   fetchStudySets,
   fetchStudyStats,
@@ -47,6 +49,7 @@ export function Dashboard() {
   const [stats, setStats] = useState(null)
   const [packs, setPacks] = useState([])
   const [recs, setRecs] = useState([])
+  const [inProgress, setInProgress] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
@@ -54,7 +57,7 @@ export function Dashboard() {
     if (!user) return
     setLoading(true)
     try {
-      const [mats, today, progress, studyStats, studySets, recommendations] =
+      const [mats, today, progress, studyStats, studySets, recommendations, resumable] =
         await Promise.all([
         listMaterials(user.id),
         fetchTodayActivity(user.id),
@@ -62,6 +65,7 @@ export function Dashboard() {
         fetchStudyStats(user.id),
         fetchStudySets(user.id),
         fetchRecommendations(user.id),
+        fetchInProgress(user.id),
       ])
       setMaterials(mats)
       setActivity(today)
@@ -69,6 +73,7 @@ export function Dashboard() {
       setStats(studyStats)
       setPacks(studySets)
       setRecs(recommendations)
+      setInProgress(resumable)
       setError(null)
     } catch (err) {
       setError(err?.message ?? 'Could not load your home page.')
@@ -104,6 +109,8 @@ export function Dashboard() {
         <StudyPacks packs={packs} loading={loading} />
 
         <Recommendations items={recs} loading={loading} />
+
+        <ContinueSection items={inProgress} loading={loading} />
 
         {/* Uploads stay listed while pack generation does not exist - without
             this there is no way to see what you have added. */}

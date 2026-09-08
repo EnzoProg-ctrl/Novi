@@ -133,3 +133,59 @@ export async function fetchRecommendations(userId, limit = 3) {
   if (error) throw error
   return data ?? []
 }
+
+const MODE_LABEL = {
+  practice: 'Practice',
+  quiz: 'Practice Quiz',
+  review: 'Review',
+  chat: 'Chat with Novi',
+  reading: 'Reading',
+}
+
+/**
+ * Sittings the student opened but never closed — `ended_at is null` is what
+ * makes a session resumable. Progress is answered-so-far against the number of
+ * questions in the set, counted in a second pass since PostgREST cannot
+ * aggregate a child table inline.
+ */
+export async function fetchInProgress(userId, limit = 4) {
+  const { data, error } = await supabase
+    .from('study_sessions')
+    .select('id, mode, started_at, questions_answered, study_sets(id, title, subjects(name))')
+    .eq('user_id', userId)
+    .is('ended_at', null)
+    .order('started_at', { ascending: false })
+    .limit(limit)
+
+  if (error) throw error
+
+  const sessions = data ?? []
+  const setIds = [...new Set(sessions.map((s) => s.study_sets?.id).filter(Boolean))]
+
+  let totals = new Map()
+  if (setIds.length > 0) {
+    const { data: questions, error: qError } = await supabase
+      .from('questions')
+      .select('study_set_id')
+      .in('study_set_id', setIds)
+    if (qError) throw qError
+    for (const q of questions ?? []) {
+      totals.set(q.study_set_id, (totals.get(q.study_set_id) ?? 0) + 1)
+    }
+  }
+
+  return sessions.map((s) => {
+    const set = s.study_sets
+    const total = set ? (totals.get(set.id) ?? 0) : 0
+    const done = s.questions_answered ?? 0
+    return {
+      id: s.id,
+      subject: set?.subjects?.name ?? null,
+      title: set?.title ?? 'Study session',
+      modeLabel: MODE_LABEL[s.mode] ?? 'Session',
+      done,
+      total,
+      percent: total > 0 ? Math.round((done / total) * 100) : 0,
+    }
+  })
+}
