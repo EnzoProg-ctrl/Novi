@@ -16,7 +16,10 @@
   --nv-coral-tint: #ffeae6;
   --nv-faint: #97a0ad;
   --nv-line: rgba(19, 26, 46, 0.08);
-  --nv-shell: 1720px;
+  /* Grows with the viewport so zooming out widens the content instead of
+     leaving big empty bands either side. Floor keeps <=1955px identical
+     to before; ceiling stops the hero stretching on ultra-wide screens. */
+  --nv-shell: clamp(1720px, 88vw, 2100px);
 
   min-height: 100vh;
   background: var(--nv-bg);

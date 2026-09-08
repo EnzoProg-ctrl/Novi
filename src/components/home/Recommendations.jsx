@@ -26,7 +26,7 @@ export function Recommendations({ items = [], loading }) {
         <div className="hm-rec-heading">
           <span className="hm-rec-spark"><IconSparkle width={17} height={17} /></span>
           <div>
-            <h2 className="hm-section-title">Recommended for You</h2>
+            <h2 className="hm-section-title">Recommended for You!</h2>
             <p className="hm-sub">Based on your recent activity</p>
           </div>
         </div>

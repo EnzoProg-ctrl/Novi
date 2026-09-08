@@ -12,7 +12,7 @@ export function ContinueSection({ items = [], loading }) {
       <header className="hm-card-head hm-rec-head">
         <div className="hm-rec-heading">
           <span className="hm-rec-spark is-plain"><IconClock width={17} height={17} /></span>
-          <h2 className="hm-section-title">Continue Where You Left Off</h2>
+          <h2 className="hm-section-title">Continue Where You Left Off..</h2>
         </div>
         {items.length > 0 && <span className="hm-muted-link">View All</span>}
       </header>

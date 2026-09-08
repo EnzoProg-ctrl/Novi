@@ -6,7 +6,10 @@
   grid-template-columns: minmax(0, 1fr) clamp(300px, 26vw, 380px);
   gap: 20px;
   align-items: start;
-  max-width: 1500px;
+  /* Centred, and wider before it caps - left-aligning at 1500px left a large
+     unused band on the right once the window got wide. */
+  max-width: 1760px;
+  margin-inline: auto;
 }
 .hm-main { min-width: 0; display: flex; flex-direction: column; gap: 20px; }
 .hm-rail { min-width: 0; display: flex; flex-direction: column; gap: 16px; }
