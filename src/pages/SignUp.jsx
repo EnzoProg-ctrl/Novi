@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Logo } from '../components/Mascot'
+import { PasswordField } from '../components/PasswordField'
 import { useAuth } from '../context/auth-context'
 
 function friendlyError(err) {
@@ -102,19 +103,15 @@ export function SignUp() {
             />
           </div>
 
-          <div className="field">
-            <label className="label" htmlFor="password">Password</label>
-            <input
-              id="password"
-              className="input"
-              type="password"
-              value={form.password}
-              onChange={update('password')}
-              placeholder="At least 8 characters"
-              autoComplete="new-password"
-              required
-            />
-          </div>
+          <PasswordField
+            id="password"
+            label="Password"
+            value={form.password}
+            onChange={update('password')}
+            placeholder="At least 8 characters"
+            autoComplete="new-password"
+            required
+          />
         </div>
 
         <button className="btn btn-primary btn-block auth-gap" disabled={busy}>

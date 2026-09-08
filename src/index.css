@@ -146,6 +146,49 @@ a:hover { text-decoration: underline; }
 .input:disabled { background: var(--bg-sunken); cursor: not-allowed; }
 .input[aria-invalid="true"] { border-color: var(--danger); }
 
+/* ── Mascot ──────────────────────────────────────────────────── */
+.mascot {
+  display: block;
+  flex: none;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+/* ── Password field with reveal toggle ───────────────────────── */
+.password-wrap { position: relative; display: flex; }
+
+/* Room for the toggle so long values never slide under it. */
+.password-input { padding-right: 46px; }
+
+/* Chromium-based Edge draws its own reveal control; hide it so the field
+   does not end up with two eye icons side by side. */
+.password-input::-ms-reveal,
+.password-input::-ms-clear { display: none; }
+
+.password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  transform: translateY(-50%);
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+.password-toggle:hover { color: var(--ink); background: var(--bg-sunken); }
+.password-toggle:focus-visible {
+  outline: 2px solid var(--coral);
+  outline-offset: 2px;
+}
+
 /* ── Cards & surfaces ────────────────────────────────────────── */
 .card {
   background: var(--bg);
