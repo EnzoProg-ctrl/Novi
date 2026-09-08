@@ -1,3 +1,6 @@
+/* Caveat is only used for the handwritten hero note. */
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&display=swap');
+
 /* ── Novi landing page ────────────────────────────────────────────
    Scoped under .novi-landing so the signed-in app and auth screens
    keep their own tokens untouched.                              */
@@ -10,8 +13,10 @@
   --nv-coral-soft: #ffa294;
   --nv-coral-hover: #f4543f;
   --nv-coral-active: #dd422f;
+  --nv-coral-tint: #ffeae6;
+  --nv-faint: #97a0ad;
   --nv-line: rgba(19, 26, 46, 0.08);
-  --nv-shell: 1280px;
+  --nv-shell: 1720px;
 
   min-height: 100vh;
   background: var(--nv-bg);
@@ -35,7 +40,7 @@
 .nv-nav-inner {
   max-width: var(--nv-shell);
   margin: 0 auto;
-  padding: 0 40px;
+  padding: 0 clamp(20px, 4vw, 48px);
   height: 92px;
   display: flex;
   align-items: center;
@@ -64,6 +69,7 @@
   display: flex;
   align-items: center;
   gap: 36px;
+  /* Links sit left, next to the wordmark; all slack goes to their right. */
   margin-right: auto;
 }
 .nv-link {
@@ -98,6 +104,8 @@
   align-items: center;
   gap: 28px;
   flex: none;
+  /* Pulls the pair in from the right edge; collapses on narrower screens. */
+  margin-right: clamp(0px, 5vw, 88px);
 }
 .nv-signin {
   font-size: 1rem;
@@ -171,6 +179,8 @@
 .nv-burger-box.is-open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
 
 /* ── Mobile panel ────────────────────────────────────────────── */
+/* Author styles beat the UA's [hidden] rule, so the open state has to be
+   expressed as :not([hidden]) rather than a plain `display: block`. */
 .nv-mobile {
   display: none;
   padding: 8px 24px 24px;
@@ -209,17 +219,17 @@
 
 /* ── Responsive ──────────────────────────────────────────────── */
 @media (max-width: 1080px) {
-  .nv-nav-inner { gap: 32px; padding: 0 28px; }
+  .nv-nav-inner { gap: 32px; }
   .nv-links { gap: 26px; }
   .nv-actions { gap: 18px; }
 }
 
 @media (max-width: 900px) {
-  .nv-nav-inner { height: 76px; padding: 0 20px; }
+  .nv-nav-inner { height: 76px; }
   .nv-links,
   .nv-actions { display: none; }
   .nv-burger { display: block; }
-  .nv-mobile { display: block; }
+  .nv-mobile:not([hidden]) { display: block; }
   .nv-brand-text { font-size: 1.5rem; }
 }
 

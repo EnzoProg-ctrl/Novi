@@ -1,0 +1,396 @@
+/* ── Hero section ─────────────────────────────────────────────────
+   Tokens come from .novi-landing in landing.css.               */
+
+.nv-hero { overflow-x: clip; }
+
+.nv-hero-inner {
+  max-width: var(--nv-shell);
+  margin: 0 auto;
+  padding: clamp(20px, 2vw, 32px) clamp(20px, 4vw, 48px) clamp(56px, 6vw, 96px);
+  display: grid;
+  grid-template-columns: minmax(0, 0.84fr) minmax(0, 1.16fr);
+  /* Height is content-driven. align-items keeps the copy and the art centred
+     against each other; align-content pins the row to the top so the space
+     under the nav stays exactly the padding above, never padding + slack. */
+  align-items: center;
+  align-content: start;
+  gap: 28px;
+}
+
+/* ── Copy column ─────────────────────────────────────────────── */
+.nv-hero-copy { min-width: 0; }
+
+.nv-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 18px;
+  border-radius: 999px;
+  background: var(--nv-coral-tint);
+  color: var(--nv-coral-hover);
+  font-size: 0.94rem;
+  font-weight: 600;
+}
+
+.nv-hero-title {
+  margin: 26px 0 0;
+  font-size: clamp(2.5rem, 3.1vw + 1rem, 4.6rem);
+  font-weight: 800;
+  line-height: 1.06;
+  letter-spacing: -0.04em;
+  color: var(--nv-ink);
+}
+.nv-accent { color: var(--nv-coral); }
+
+.nv-hero-sub {
+  margin: 22px 0 0;
+  max-width: 40ch;
+  font-size: clamp(1.05rem, 0.6vw + 0.85rem, 1.25rem);
+  line-height: 1.6;
+  color: var(--nv-muted);
+}
+
+.nv-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 32px;
+}
+.nv-cta-lg {
+  gap: 10px;
+  padding: 17px 32px;
+  font-size: 1.05rem;
+  border-radius: 14px;
+}
+.nv-btn-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 17px 30px;
+  border: 1px solid var(--nv-line);
+  border-radius: 14px;
+  background: #fff;
+  color: var(--nv-ink);
+  font-size: 1.05rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+.nv-btn-outline:hover {
+  border-color: var(--nv-coral);
+  background: #fffaf9;
+  text-decoration: none;
+}
+.nv-btn-outline:focus-visible {
+  outline: 2px solid var(--nv-coral);
+  outline-offset: 3px;
+}
+
+.nv-hero-note {
+  margin: 18px 0 0;
+  font-size: 0.93rem;
+  color: var(--nv-faint);
+}
+
+/* ── Four supporting points ──────────────────────────────────── */
+.nv-points {
+  list-style: none;
+  margin: clamp(40px, 4vw, 64px) 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(16px, 1.6vw, 28px);
+}
+.nv-point-icon {
+  display: grid;
+  place-items: center;
+  width: 50px;
+  height: 50px;
+  border-radius: 14px;
+  background: var(--nv-coral-tint);
+  color: var(--nv-coral);
+}
+.nv-point-title {
+  margin: 14px 0 3px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--nv-ink);
+}
+.nv-point-body {
+  margin: 0;
+  font-size: 0.87rem;
+  line-height: 1.45;
+  color: var(--nv-muted);
+}
+
+/* ── Art column ──────────────────────────────────────────────── */
+/* The left gutter is what the mascot and handwritten note sit in; the
+   mockup starts after it and the mascot overlaps only its left edge. */
+.nv-hero-art {
+  position: relative;
+  min-width: 0;
+  padding-left: 26%;
+}
+
+.nv-scribble {
+  position: absolute;
+  top: 0;
+  right: 76.5%;
+  z-index: 3;
+  margin: 0;
+  max-width: 138px;
+  font-family: Caveat, "Segoe Script", cursive;
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1.12;
+  color: var(--nv-ink);
+  transform: rotate(-7deg);
+  pointer-events: none;
+}
+.nv-heart { color: var(--nv-coral); }
+
+.nv-mascot {
+  position: absolute;
+  left: -2%;
+  bottom: -7%;
+  z-index: 2;
+  width: 30%;
+  max-width: 300px;
+  height: auto;
+  pointer-events: none;
+  filter: drop-shadow(0 18px 30px rgba(19, 26, 46, 0.12));
+}
+
+/* ── Dashboard mockup ────────────────────────────────────────── */
+.nv-mock {
+  position: relative;
+  font-size: clamp(12px, 0.92vw, 17.5px);
+  z-index: 1;
+  display: flex;
+  border: 1px solid rgba(19, 26, 46, 0.06);
+  border-radius: 1.2em;
+  background: #fff;
+  box-shadow: 0 26px 64px rgba(19, 26, 46, 0.12), 0 4px 14px rgba(19, 26, 46, 0.05);
+  overflow: hidden;
+}
+
+.nv-mock-side {
+  flex: none;
+  width: 8.4em;
+  padding: 0.95em 0.7em;
+  border-right: 1px solid var(--nv-line);
+}
+.nv-mock-brand {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 16px;
+  font-size: 0.92em;
+  font-weight: 750;
+  letter-spacing: -0.03em;
+}
+.nv-mock-nav { display: flex; flex-direction: column; gap: 2px; }
+.nv-mock-navitem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 0.72em;
+  font-weight: 550;
+  color: var(--nv-muted);
+  white-space: nowrap;
+}
+.nv-mock-navitem.is-active {
+  background: var(--nv-coral-tint);
+  color: var(--nv-coral-hover);
+  font-weight: 650;
+}
+
+.nv-mock-main {
+  flex: 1;
+  min-width: 0;
+  padding: 0.95em 1.08em 1.08em;
+  background: #fdfcfc;
+}
+.nv-mock-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.nv-mock-greet { margin: 0; font-size: 0.92em; font-weight: 700; }
+.nv-mock-sub { margin: 2px 0 0; font-size: 0.68em; line-height: 1.35; color: var(--nv-muted); }
+.nv-mock-headicons { display: flex; gap: 10px; color: var(--nv-faint); flex: none; }
+
+.nv-mock-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.04fr);
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.nv-mock-card {
+  padding: 0.68em;
+  border: 1px solid var(--nv-line);
+  border-radius: 0.72em;
+  background: #fff;
+}
+.nv-mock-buddy {
+  display: flex;
+  gap: 9px;
+  background: #fff8f6;
+  border-color: rgba(255, 107, 90, 0.18);
+}
+.nv-mock-avatar {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 2.5em;
+  height: 2.5em;
+  border-radius: 50%;
+  border: 1px solid var(--nv-line);
+  background: #fff;
+  overflow: hidden;
+}
+.nv-mock-avatar img { width: 125%; height: auto; margin-top: 5px; }
+.nv-mock-buddytext { min-width: 0; }
+.nv-mock-buddyname { margin: 0; font-size: 0.74em; font-weight: 700; }
+.nv-mock-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 8px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: var(--nv-coral);
+  color: #fff;
+  font-size: 0.68em;
+  font-weight: 620;
+  white-space: nowrap;
+}
+
+.nv-mock-cardhead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 9px;
+}
+.nv-mock-cardtitle { margin: 0; font-size: 0.76em; font-weight: 700; }
+.nv-mock-link { font-size: 0.63em; font-weight: 620; color: var(--nv-coral); white-space: nowrap; }
+
+.nv-mock-progress {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.nv-mock-progress li {
+  display: grid;
+  grid-template-columns: minmax(0, 62px) minmax(0, 1fr) 26px;
+  align-items: center;
+  gap: 8px;
+}
+.nv-mock-psubject {
+  font-size: 0.66em;
+  color: var(--nv-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.nv-mock-track { height: 5px; border-radius: 3px; background: #efecec; overflow: hidden; }
+.nv-mock-fill { display: block; height: 100%; border-radius: 3px; background: var(--nv-coral); }
+.nv-mock-pvalue { font-size: 0.64em; font-weight: 680; text-align: right; }
+
+.nv-mock-packhead { margin-bottom: 8px; }
+.nv-mock-packs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.nv-mock-pack {
+  padding: 0.56em;
+  border: 1px solid var(--nv-line);
+  border-radius: 0.62em;
+  background: #fff;
+}
+.nv-mock-packicon {
+  display: grid;
+  place-items: center;
+  width: 1.35em;
+  height: 1.35em;
+  margin-bottom: 0.42em;
+  border-radius: 0.38em;
+}
+.nv-mock-packicon.is-green { background: #e7f6ed; color: #1f9d63; }
+.nv-mock-packicon.is-blue { background: #e9f0fe; color: #3b6fd4; }
+.nv-mock-packicon.is-pink { background: #fdeaea; color: #d64545; }
+.nv-mock-packsubject { margin: 0; font-size: 0.66em; font-weight: 700; }
+.nv-mock-packtopic {
+  margin: 1px 0 0;
+  font-size: 0.6em;
+  color: var(--nv-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.nv-mock-packmeta { margin: 5px 0 0; font-size: 0.55em; color: var(--nv-faint); }
+.nv-mock-packadd {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  border-style: dashed;
+  border-color: rgba(255, 107, 90, 0.35);
+  background: #fff9f8;
+  color: var(--nv-coral);
+}
+.nv-mock-packadd .nv-mock-packsubject,
+.nv-mock-packadd .nv-mock-packtopic { color: var(--nv-coral-hover); }
+
+/* ── Responsive ──────────────────────────────────────────────── */
+@media (max-width: 1180px) {
+  .nv-hero-inner { grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: 24px; }
+  .nv-hero-art { padding-left: 25%; }
+  .nv-points { gap: 16px; }
+}
+
+@media (max-width: 980px) {
+  .nv-hero-inner {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 32px 28px 64px;
+    gap: 64px;
+  }
+  .nv-hero-sub { max-width: 52ch; }
+  .nv-hero-art { padding-left: 0; padding-top: 40px; }
+  .nv-mascot {
+    position: static;
+    display: block;
+    width: 210px;
+    margin: 0 auto -34px;
+  }
+  /* Stacked layout has no side gutter, so the note flows above the mascot
+     instead of being absolutely placed beside the card. */
+  .nv-scribble {
+    position: static;
+    max-width: none;
+    margin: 0 0 14px;
+    text-align: center;
+    transform: rotate(-4deg);
+  }
+}
+
+@media (max-width: 720px) {
+  .nv-points { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 16px; }
+  .nv-hero-actions .nv-cta-lg,
+  .nv-hero-actions .nv-btn-outline { flex: 1; }
+}
+
+@media (max-width: 620px) {
+  .nv-hero-inner { padding: 24px 20px 56px; }
+  .nv-mock-side { display: none; }
+  .nv-mock-row { grid-template-columns: minmax(0, 1fr); }
+  .nv-mock-packs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .nv-scribble { font-size: 1.5rem; }
+}
