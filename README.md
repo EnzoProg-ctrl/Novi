@@ -8,13 +8,13 @@ Instead of simply generating summaries or answering questions, Novi learns how e
 
 ## ✨ Features
 
-- 🤖 **Personal AI Study Buddy** — Create and customize your own study companion.
-- 📚 **Study Materials** — Upload PDFs, presentations, documents, images, or notes.
-- 🧠 **AI-Powered Study Content** — Generate summaries, key concepts, explanations, and practice questions.
-- 🎯 **Personalized Learning** — Novi identifies strengths and weaknesses and adapts to your learning style.
-- 📈 **Progress Tracking** — Track study sessions, quiz performance, and topic mastery.
-- 💡 **Smart Recommendations** — Novi recommends what you should study next based on your progress.
-- 🔐 **Secure Accounts** — Your study history and personalization are saved to your account.
+- 🤖 **Personal AI Study Buddy** - Create and customize your own study companion.
+- 📚 **Study Materials** - Upload PDFs, presentations, documents, images, or notes.
+- 🧠 **AI-Powered Study Content** - Generate summaries, key concepts, explanations, and practice questions.
+- 🎯 **Personalized Learning** - Novi identifies strengths and weaknesses and adapts to your learning style.
+- 📈 **Progress Tracking** - Track study sessions, quiz performance, and topic mastery.
+- 💡 **Smart Recommendations** - Novi recommends what you should study next based on your progress.
+- 🔐 **Secure Accounts** - Your study history and personalization are saved to your account.
 
 ## 🛠️ Tech Stack
 

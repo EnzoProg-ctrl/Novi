@@ -1,0 +1,230 @@
+/* ── Novi landing page ────────────────────────────────────────────
+   Scoped under .novi-landing so the signed-in app and auth screens
+   keep their own tokens untouched.                              */
+
+.novi-landing {
+  --nv-bg: #fdf8f6;
+  --nv-ink: #131a2e;
+  --nv-muted: #4f5a6b;
+  --nv-coral: #ff6b5a;
+  --nv-coral-soft: #ffa294;
+  --nv-coral-hover: #f4543f;
+  --nv-coral-active: #dd422f;
+  --nv-line: rgba(19, 26, 46, 0.08);
+  --nv-shell: 1280px;
+
+  min-height: 100vh;
+  background: var(--nv-bg);
+  color: var(--nv-ink);
+}
+
+/* ── Bar ─────────────────────────────────────────────────────── */
+.nv-nav {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--nv-bg);
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.nv-nav.is-scrolled {
+  border-bottom-color: var(--nv-line);
+  box-shadow: 0 1px 12px rgba(19, 26, 46, 0.04);
+}
+
+.nv-nav-inner {
+  max-width: var(--nv-shell);
+  margin: 0 auto;
+  padding: 0 40px;
+  height: 92px;
+  display: flex;
+  align-items: center;
+  gap: 48px;
+}
+
+/* ── Brand ───────────────────────────────────────────────────── */
+.nv-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  flex: none;
+}
+.nv-brand:hover { text-decoration: none; }
+.nv-brand-text {
+  font-size: 1.75rem;
+  font-weight: 750;
+  letter-spacing: -0.035em;
+  color: var(--nv-ink);
+  line-height: 1;
+}
+
+/* ── Links ───────────────────────────────────────────────────── */
+.nv-links {
+  display: flex;
+  align-items: center;
+  gap: 36px;
+  margin-right: auto;
+}
+.nv-link {
+  position: relative;
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--nv-muted);
+  text-decoration: none;
+  padding: 6px 0;
+  transition: color 0.15s ease;
+}
+.nv-link:hover { color: var(--nv-ink); text-decoration: none; }
+
+/* Coral underline that grows from the centre on hover. */
+.nv-link::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 0;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--nv-coral);
+  transform: translateX(-50%);
+  transition: width 0.2s ease;
+}
+.nv-link:hover::after { width: 100%; }
+
+/* ── Actions ─────────────────────────────────────────────────── */
+.nv-actions {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  flex: none;
+}
+.nv-signin {
+  font-size: 1rem;
+  font-weight: 560;
+  color: var(--nv-ink);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+.nv-signin:hover { color: var(--nv-coral); text-decoration: none; }
+
+.nv-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 15px 30px;
+  border-radius: 12px;
+  background: var(--nv-coral);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  box-shadow: 0 1px 2px rgba(19, 26, 46, 0.06);
+  transition: background-color 0.15s ease, transform 0.06s ease,
+    box-shadow 0.2s ease;
+}
+.nv-cta:hover {
+  background: var(--nv-coral-hover);
+  text-decoration: none;
+  box-shadow: 0 6px 18px rgba(255, 107, 90, 0.28);
+}
+.nv-cta:active { background: var(--nv-coral-active); transform: translateY(1px); }
+.nv-cta:focus-visible,
+.nv-signin:focus-visible,
+.nv-link:focus-visible,
+.nv-brand:focus-visible,
+.nv-burger:focus-visible {
+  outline: 2px solid var(--nv-coral);
+  outline-offset: 3px;
+  border-radius: 8px;
+}
+
+/* ── Mobile toggle ───────────────────────────────────────────── */
+.nv-burger {
+  display: none;
+  margin-left: auto;
+  padding: 8px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  color: var(--nv-ink);
+}
+.nv-burger-box {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  width: 24px;
+  height: 18px;
+}
+.nv-burger-box span {
+  display: block;
+  height: 2px;
+  width: 100%;
+  border-radius: 2px;
+  background: currentColor;
+  transition: transform 0.2s ease, opacity 0.15s ease;
+}
+.nv-burger-box.is-open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.nv-burger-box.is-open span:nth-child(2) { opacity: 0; }
+.nv-burger-box.is-open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+/* ── Mobile panel ────────────────────────────────────────────── */
+.nv-mobile {
+  display: none;
+  padding: 8px 24px 24px;
+  border-bottom: 1px solid var(--nv-line);
+  background: var(--nv-bg);
+}
+.nv-mobile-links { display: flex; flex-direction: column; }
+.nv-mobile-link {
+  padding: 14px 4px;
+  font-size: 1.05rem;
+  font-weight: 500;
+  color: var(--nv-muted);
+  text-decoration: none;
+  border-bottom: 1px solid var(--nv-line);
+}
+.nv-mobile-link:hover { color: var(--nv-ink); text-decoration: none; }
+
+.nv-mobile-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 20px;
+}
+.nv-mobile-signin {
+  padding: 13px;
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 560;
+  color: var(--nv-ink);
+  border: 1px solid var(--nv-line);
+  border-radius: 12px;
+  text-decoration: none;
+}
+.nv-mobile-signin:hover { border-color: var(--nv-coral); text-decoration: none; }
+.nv-cta-block { width: 100%; }
+
+/* ── Responsive ──────────────────────────────────────────────── */
+@media (max-width: 1080px) {
+  .nv-nav-inner { gap: 32px; padding: 0 28px; }
+  .nv-links { gap: 26px; }
+  .nv-actions { gap: 18px; }
+}
+
+@media (max-width: 900px) {
+  .nv-nav-inner { height: 76px; padding: 0 20px; }
+  .nv-links,
+  .nv-actions { display: none; }
+  .nv-burger { display: block; }
+  .nv-mobile { display: block; }
+  .nv-brand-text { font-size: 1.5rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nv-link::after,
+  .nv-cta,
+  .nv-burger-box span { transition: none; }
+}
