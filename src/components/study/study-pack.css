@@ -1,0 +1,149 @@
+/* ── Study pack screen ────────────────────────────────────────── */
+
+.sp {
+  max-width: 900px;
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.sp-head { display: flex; flex-direction: column; gap: 6px; }
+.sp-title {
+  margin: 6px 0 0;
+  font-size: clamp(1.6rem, 1.6vw + 1rem, 2.1rem);
+  font-weight: 750;
+  letter-spacing: -0.03em;
+  color: var(--ink);
+}
+
+.sp-section { display: flex; flex-direction: column; gap: 12px; }
+.sp-section-title { margin: 0; font-size: 1.05rem; font-weight: 700; color: var(--ink); }
+
+/* ── Markdown ────────────────────────────────────────────────── */
+.md { display: flex; flex-direction: column; gap: 12px; }
+.md-heading { margin: 6px 0 0; font-size: 1rem; font-weight: 700; color: var(--ink); }
+.md-p { margin: 0; font-size: 0.95rem; line-height: 1.65; color: var(--ink-soft); }
+.md-list { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 6px; }
+.md-list li { font-size: 0.95rem; line-height: 1.6; color: var(--ink-soft); }
+.md code {
+  padding: 1px 5px;
+  border-radius: 5px;
+  background: var(--bg-sunken);
+  font-size: 0.88em;
+}
+
+/* ── Key concepts ────────────────────────────────────────────── */
+.sp-concepts {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+.sp-concept { padding: 16px; display: flex; flex-direction: column; gap: 6px; }
+.sp-concept-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+.sp-concept-term { margin: 0; font-size: 0.98rem; font-weight: 700; color: var(--ink); }
+.sp-importance { flex: none; font-size: 0.75rem; color: var(--coral); letter-spacing: 1px; }
+.sp-concept-def { margin: 0; font-size: 0.9rem; line-height: 1.55; color: var(--ink-soft); }
+.sp-concept-example { font-style: italic; }
+
+/* ── Questions ───────────────────────────────────────────────── */
+.sp-questions { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.sp-question {
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  background: var(--bg);
+  box-shadow: var(--shadow-sm);
+}
+.sp-q-head { display: flex; gap: 12px; align-items: flex-start; }
+.sp-q-number {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--coral-tint);
+  color: var(--coral-active);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+.sp-q-prompt { margin: 2px 0 0; font-size: 0.98rem; font-weight: 600; line-height: 1.5; color: var(--ink); }
+
+.sp-q-meta { display: flex; align-items: center; gap: 10px; margin: 12px 0 0 38px; }
+.sp-q-difficulty { font-size: 0.7rem; color: var(--coral); letter-spacing: 2px; }
+.sp-q-dim { color: var(--line-strong); }
+
+.sp-choices {
+  list-style: none;
+  margin: 12px 0 0 38px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.sp-choice {
+  padding: 10px 13px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+.sp-choice.is-answer {
+  border-color: var(--success);
+  background: var(--success-tint);
+  color: #14663f;
+  font-weight: 600;
+}
+
+.sp-reveal {
+  margin: 14px 0 0 38px;
+  padding: 8px 16px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-md);
+  background: var(--bg);
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+.sp-reveal:hover { border-color: var(--coral); color: var(--coral-active); }
+.sp-reveal:focus-visible { outline: 2px solid var(--coral); outline-offset: 2px; }
+
+.sp-answer {
+  margin: 14px 0 0 38px;
+  padding: 12px 14px;
+  border-radius: var(--r-md);
+  background: var(--success-tint);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.sp-answer-line { margin: 0; font-size: 0.92rem; font-weight: 600; color: #14663f; }
+.sp-answer-label {
+  display: inline-block;
+  margin-right: 8px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--success);
+}
+
+@media (max-width: 620px) {
+  .sp-q-meta,
+  .sp-choices,
+  .sp-reveal,
+  .sp-answer { margin-left: 0; }
+}

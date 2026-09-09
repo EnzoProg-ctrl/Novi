@@ -470,3 +470,12 @@
   .hm-continue-count { grid-column: 2; text-align: left; }
   .hm-continue-cta { grid-column: 3; justify-self: end; }
 }
+
+/* Pack cards are links now; keep the text colour from turning into link blue. */
+a.hm-pack { color: inherit; transition: border-color 0.15s ease, box-shadow 0.15s ease; }
+a.hm-pack:hover {
+  border-color: rgba(255, 107, 90, 0.4);
+  box-shadow: var(--shadow-md);
+  text-decoration: none;
+}
+a.hm-pack:focus-visible { outline: 2px solid var(--coral); outline-offset: 2px; }

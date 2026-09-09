@@ -29,6 +29,9 @@ const STATUS_LABEL = {
   failed: { text: 'Failed', tone: 'badge' },
 }
 
+/** Statuses the pipeline never moves on from. */
+const TERMINAL_STATUS = new Set(['ready', 'failed'])
+
 const TYPE_LABEL = {
   pdf: 'PDF', pptx: 'Slides', docx: 'Document', image: 'Image', text: 'Notes', link: 'Link',
 }
@@ -53,9 +56,9 @@ export function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (silent = false) => {
     if (!user) return
-    setLoading(true)
+    if (!silent) setLoading(true)
     try {
       const [mats, today, progress, studyStats, studySets, recommendations, resumable] =
         await Promise.all([
@@ -78,13 +81,23 @@ export function Dashboard() {
     } catch (err) {
       setError(err?.message ?? 'Could not load your home page.')
     } finally {
-      setLoading(false)
+      if (!silent) setLoading(false)
     }
   }, [user])
 
   useEffect(() => {
     load()
   }, [load])
+
+  // Processing runs server-side after upload, so poll while any material is
+  // still moving through extract -> embed -> generate. Chained timeouts rather
+  // than an interval, so a slow request can never stack up behind itself.
+  useEffect(() => {
+    const busy = materials.some((m) => !TERMINAL_STATUS.has(m.status))
+    if (!busy) return
+    const timer = setTimeout(() => load(true), 3000)
+    return () => clearTimeout(timer)
+  }, [materials, load])
 
   const firstName = user?.user_metadata?.display_name?.split(' ')[0]
 
@@ -141,12 +154,21 @@ export function Dashboard() {
                     <span className="hm-material-meta">
                       <span className="hm-material-title">{material.title}</span>
                       <span className="hm-sub">
-                        {formatBytes(material.file_size_bytes)}
-                        {material.file_size_bytes ? ' · ' : ''}
-                        {new Date(material.created_at).toLocaleDateString()}
+                        {material.status === 'failed' && material.error_message
+                          ? material.error_message
+                          : <>
+                              {formatBytes(material.file_size_bytes)}
+                              {material.file_size_bytes ? ' · ' : ''}
+                              {new Date(material.created_at).toLocaleDateString()}
+                            </>}
                       </span>
                     </span>
-                    <span className={status.tone}>{status.text}</span>
+                    <span
+                      className={status.tone}
+                      title={material.error_message ?? undefined}
+                    >
+                      {status.text}
+                    </span>
                   </li>
                 )
               })}

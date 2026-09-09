@@ -44,12 +44,12 @@ export function StudyPacks({ packs = [], loading }) {
             {packs.map((pack, i) => {
               const { tone, Icon } = TONES[i % TONES.length]
               return (
-                <article key={pack.id} className="hm-card hm-pack">
+                <Link key={pack.id} to={`/pack/${pack.id}`} className="hm-card hm-pack">
                   <span className={`hm-pack-icon is-${tone}`}><Icon /></span>
                   <p className="hm-pack-subject">{pack.subject ?? pack.title}</p>
                   <p className="hm-pack-topic">{pack.subject ? pack.title : 'Study pack'}</p>
                   <p className="hm-pack-meta">{relativeDay(pack.updatedAt)}</p>
-                </article>
+                </Link>
               )
             })}
 

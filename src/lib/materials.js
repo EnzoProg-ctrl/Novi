@@ -120,7 +120,7 @@ export async function uploadMaterial({ userId, file, title, subjectId = null }) 
 export async function listMaterials(userId) {
   const { data, error } = await supabase
     .from('materials')
-    .select('id, title, source_type, status, file_size_bytes, created_at')
+    .select('id, title, source_type, status, error_message, file_size_bytes, created_at')
     .eq('user_id', userId)
     .order('created_at', { ascending: false })
 
@@ -134,4 +134,20 @@ export async function deleteMaterial(material) {
   }
   const { error } = await supabase.from('materials').delete().eq('id', material.id)
   if (error) throw error
+}
+
+/**
+ * Hands the material to the processing pipeline (extract, chunk, embed,
+ * generate). Runs server-side in an Edge Function so the Gemini key never
+ * reaches the browser.
+ *
+ * Takes ~15s, so callers generally fire this and let the dashboard show
+ * progress rather than blocking the upload screen on it.
+ */
+export async function processMaterial(materialId) {
+  const { data, error } = await supabase.functions.invoke('process-material', {
+    body: { material_id: materialId },
+  })
+  if (error) throw error
+  return data
 }

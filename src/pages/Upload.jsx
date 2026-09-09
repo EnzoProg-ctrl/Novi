@@ -5,6 +5,7 @@ import { useAuth } from '../context/auth-context'
 import {
   ACCEPTED_EXTENSIONS,
   formatBytes,
+  processMaterial,
   uploadMaterial,
   validateFile,
 } from '../lib/materials'
@@ -54,7 +55,16 @@ export function Upload() {
 
     setBusy(true)
     try {
-      await uploadMaterial({ userId: user.id, file, title })
+      const material = await uploadMaterial({ userId: user.id, file, title })
+
+      // Deliberately not awaited: processing takes ~15s and the dashboard
+      // already shows live status. The request keeps running after we navigate.
+      processMaterial(material.id).catch((err) => {
+        // The function records its own failures on the material row, so this
+        // only catches the case where the call never reached it.
+        console.error('Could not start processing:', err?.message ?? err)
+      })
+
       navigate('/dashboard', { replace: true })
     } catch (err) {
       setError(err?.message ?? 'Upload failed. Try again.')
