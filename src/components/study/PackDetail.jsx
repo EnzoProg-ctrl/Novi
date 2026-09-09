@@ -109,12 +109,9 @@ export function PackDetail({ pack, tone, Icon }) {
       </div>
 
       <div className="pd-actions">
-        {/* No practice screen exists yet, so this stays inert rather than
-            leading somewhere that would bounce the student out. */}
-        <span className="pd-primary is-soon" aria-disabled="true">
-          Continue Studying
-          <span className="nv-soon">Soon</span>
-        </span>
+        <Link to={`/pack/${pack.id}/practice`} className="pd-primary">
+          {pack.questions > 0 ? 'Continue Studying' : 'No questions yet'}
+        </Link>
         <Link to={`/pack/${pack.id}`} className="pd-secondary">View Pack</Link>
       </div>
 

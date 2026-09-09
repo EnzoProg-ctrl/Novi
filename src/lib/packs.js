@@ -15,7 +15,7 @@ export async function fetchStudyPack(packId) {
       materials ( id, title, source_type ),
       summaries ( kind, content, reading_level ),
       key_concepts ( id, term, definition, example, importance, position ),
-      questions ( id, type, prompt, choices, correct_answer, explanation, difficulty, position )
+      questions ( id, topic_id, type, prompt, choices, correct_answer, explanation, difficulty, position )
     `)
     .eq('id', packId)
     .maybeSingle()

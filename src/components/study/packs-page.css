@@ -295,3 +295,7 @@ a.pd-row:focus-visible { outline: 2px solid var(--coral); outline-offset: -2px; 
   .pk-split { grid-template-columns: minmax(0, 1fr); }
   .pd { position: static; }
 }
+
+/* Continue Studying is a link now that practice exists. */
+a.pd-primary:hover { background: var(--coral-hover); text-decoration: none; }
+a.pd-primary:focus-visible { outline: 2px solid var(--coral); outline-offset: 2px; }

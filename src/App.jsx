@@ -8,6 +8,7 @@ import { CreateBuddy } from './pages/CreateBuddy'
 import { Dashboard } from './pages/Dashboard'
 import { Landing } from './pages/Landing'
 import { Packs } from './pages/Packs'
+import { Practice } from './pages/Practice'
 import { SignIn } from './pages/SignIn'
 import { SignUp } from './pages/SignUp'
 import { StudyPack } from './pages/StudyPack'
@@ -50,6 +51,7 @@ function AppRoutes() {
         <Route path="/upload" element={<Upload />} />
         <Route path="/packs" element={<Packs />} />
         <Route path="/pack/:packId" element={<StudyPack />} />
+        <Route path="/pack/:packId/practice" element={<Practice />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />

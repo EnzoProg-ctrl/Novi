@@ -1,0 +1,155 @@
+/* ── Practice session ─────────────────────────────────────────── */
+
+.pr {
+  max-width: 720px;
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.pr-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+.pr-title {
+  margin: 2px 0 0;
+  font-size: 1.4rem;
+  font-weight: 730;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+.pr-exit {
+  flex: none;
+  padding: 8px 16px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-md);
+  background: var(--bg);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+.pr-exit:hover { border-color: var(--coral); color: var(--coral-active); }
+.pr-exit:focus-visible { outline: 2px solid var(--coral); outline-offset: 2px; }
+
+.pr-progress {
+  height: 6px;
+  border-radius: 4px;
+  background: var(--bg-sunken);
+  overflow: hidden;
+}
+.pr-progress span {
+  display: block;
+  height: 100%;
+  border-radius: 4px;
+  background: var(--coral);
+  transition: width 0.3s ease;
+}
+
+.pr-resumed { margin: -4px 0 0; }
+
+/* ── Question ────────────────────────────────────────────────── */
+.pr-card { display: flex; flex-direction: column; gap: 16px; }
+.pr-prompt {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 620;
+  line-height: 1.5;
+  color: var(--ink);
+}
+
+.pr-choices { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 9px; }
+.pr-choice {
+  width: 100%;
+  padding: 13px 16px;
+  border: 1.5px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--bg);
+  font: inherit;
+  font-size: 0.95rem;
+  text-align: left;
+  color: var(--ink-soft);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+.pr-choice:hover:not(:disabled) { border-color: var(--coral); background: #fffaf9; }
+.pr-choice:disabled { cursor: default; }
+.pr-choice:focus-visible { outline: 2px solid var(--coral); outline-offset: 2px; }
+.pr-choice.is-chosen { border-color: var(--coral); }
+/* Right answer is always revealed, whether or not it was the one picked. */
+.pr-choice.is-answer {
+  border-color: var(--success);
+  background: var(--success-tint);
+  color: #14663f;
+  font-weight: 620;
+}
+.pr-choice.is-wrong {
+  border-color: var(--danger);
+  background: var(--danger-tint);
+  color: #8f2f2f;
+}
+
+/* ── Self-graded types ───────────────────────────────────────── */
+.pr-self { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; }
+.pr-reveal {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 16px;
+  border-radius: var(--r-md);
+  background: var(--bg-soft);
+  border: 1px solid var(--line);
+}
+.pr-answer { margin: 0; font-size: 0.98rem; font-weight: 620; color: var(--ink); }
+.pr-answer span {
+  display: inline-block;
+  margin-right: 8px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.pr-self-grade { display: flex; gap: 10px; margin-top: 4px; flex-wrap: wrap; }
+.pr-grade {
+  padding: 9px 18px;
+  border-radius: var(--r-md);
+  border: 1px solid transparent;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 620;
+  cursor: pointer;
+}
+.pr-grade.is-yes { background: var(--success-tint); color: #14663f; border-color: rgba(31, 157, 99, 0.35); }
+.pr-grade.is-no { background: var(--danger-tint); color: #8f2f2f; border-color: rgba(214, 69, 69, 0.3); }
+.pr-grade:focus-visible { outline: 2px solid var(--coral); outline-offset: 2px; }
+
+/* ── Verdict ─────────────────────────────────────────────────── */
+.pr-verdict {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 13px 16px;
+  border-radius: var(--r-md);
+}
+.pr-verdict.is-right { background: var(--success-tint); }
+.pr-verdict.is-wrong { background: var(--danger-tint); }
+.pr-verdict-line { margin: 0; font-size: 0.95rem; font-weight: 650; }
+.pr-verdict.is-right .pr-verdict-line { color: #14663f; }
+.pr-verdict.is-wrong .pr-verdict-line { color: #8f2f2f; }
+
+.pr-next { align-self: flex-start; }
+.pr-tally { text-align: center; }
+
+/* ── Summary ─────────────────────────────────────────────────── */
+.pr-done { justify-content: center; }
+.pr-summary { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.pr-done-title { margin: 0; font-size: 1.5rem; font-weight: 740; color: var(--ink); }
+.pr-score { margin: 8px 0 0; font-size: 2.6rem; font-weight: 780; color: var(--coral); line-height: 1; }
+.pr-score span { font-size: 1.3rem; font-weight: 650; color: var(--muted); }
+.pr-done-note { margin-top: 8px; max-width: 42ch; }
+.pr-done-actions { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; justify-content: center; }
