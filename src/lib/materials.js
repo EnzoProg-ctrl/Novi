@@ -120,7 +120,7 @@ export async function uploadMaterial({ userId, file, title, subjectId = null }) 
 export async function listMaterials(userId) {
   const { data, error } = await supabase
     .from('materials')
-    .select('id, title, source_type, status, error_message, file_size_bytes, created_at')
+    .select('id, title, source_type, status, error_message, storage_path, file_size_bytes, created_at')
     .eq('user_id', userId)
     .order('created_at', { ascending: false })
 
@@ -150,4 +150,35 @@ export async function processMaterial(materialId) {
   })
   if (error) throw error
   return data
+}
+
+/**
+ * Deletes materials and their uploaded files.
+ *
+ * Cascades take care of the rest: material_chunks, the generated study_set and
+ * its summaries, key concepts and questions all go with it. Study sessions are
+ * only detached (ON DELETE SET NULL), which is why the "continue" query filters
+ * out sessions with no pack.
+ *
+ * Rows are removed before files on purpose. If the file removal then fails we
+ * are left with an unreferenced object in the bucket, which is harmless; the
+ * reverse order would leave rows pointing at files that no longer exist.
+ */
+export async function deleteMaterials(materials) {
+  const ids = materials.map((m) => m.id)
+  if (ids.length === 0) return
+
+  const { error } = await supabase.from('materials').delete().in('id', ids)
+  if (error) throw error
+
+  const paths = materials.map((m) => m.storage_path).filter(Boolean)
+  if (paths.length > 0) {
+    const { error: storageError } = await supabase.storage
+      .from(STUDY_MATERIALS_BUCKET)
+      .remove(paths)
+    if (storageError) {
+      // Not surfaced: the material is gone from the student's point of view.
+      console.warn('Material deleted, but its file could not be removed:', storageError.message)
+    }
+  }
 }

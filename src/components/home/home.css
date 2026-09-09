@@ -67,28 +67,26 @@
   background: var(--coral-tint);
   border-color: rgba(255, 107, 90, 0.2);
 }
-/* Face-only avatar.
-   The mascot art is a full sitting body, so the circle is a window onto the
-   head rather than the whole figure. The percentages frame the face of
-   facingfront_mascot.webp (1230x1278) and would need recomputing if that
-   artwork is swapped for a differently-framed pose. */
+/* Full mascot, no frame. Height is capped as well as width so a taller pose
+   can never outgrow the card's text column. */
 .hm-buddy-avatar {
-  position: relative;
   flex: none;
   display: block;
-  width: 88px;
-  height: 88px;
-  border-radius: 50%;
-  overflow: hidden;
-  background: #fff;
-  border: 1px solid rgba(255, 107, 90, 0.18);
-}
-.hm-buddy-avatar img {
-  position: absolute;
-  width: 147.1%;
+  width: 96px;
   height: auto;
-  left: -26.3%;
-  top: -0%;
+  max-height: 108px;
+  object-fit: contain;
+  /* Gentle levitation. Slow and small on purpose: this sits beside text the
+     student is reading, so it should register as alive, not as movement
+     competing for attention. The global prefers-reduced-motion rule in
+     index.css neutralises it for anyone who asks for stillness. */
+  animation: hm-levitate 3.5s ease-in-out infinite;
+  will-change: transform;
+}
+
+@keyframes hm-levitate {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-7px); }
 }
 .hm-buddy-text { min-width: 0; }
 .hm-buddy-name { margin: 0; font-size: 1.05rem; font-weight: 750; color: var(--ink); }
@@ -479,3 +477,87 @@ a.hm-pack:hover {
   text-decoration: none;
 }
 a.hm-pack:focus-visible { outline: 2px solid var(--coral); outline-offset: 2px; }
+
+/* ── Material selection ──────────────────────────────────────── */
+.hm-check {
+  position: relative;
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  cursor: pointer;
+}
+/* The real control stays in the DOM for keyboard and screen readers; the
+   circle is drawn beside it. */
+.hm-check input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.hm-check-dot {
+  width: 20px;
+  height: 20px;
+  border: 1.8px solid var(--line-strong);
+  border-radius: 50%;
+  background: var(--bg);
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+.hm-check:hover .hm-check-dot { border-color: var(--coral); }
+.hm-check input:checked + .hm-check-dot {
+  border-color: var(--coral);
+  background: var(--coral)
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'><path d='M5 12.5l4.5 4.5L19 7.5'/></svg>")
+    center / 12px 12px no-repeat;
+}
+.hm-check input:focus-visible + .hm-check-dot {
+  outline: 2px solid var(--coral);
+  outline-offset: 2px;
+}
+
+.hm-material.is-selected {
+  border-color: rgba(255, 107, 90, 0.45);
+  background: var(--coral-tint);
+}
+
+/* ── Selection bar ───────────────────────────────────────────── */
+.hm-selectbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 11px 14px;
+  border: 1px solid rgba(255, 107, 90, 0.25);
+  border-radius: var(--r-md);
+  background: var(--coral-tint);
+}
+.hm-selectbar-count { font-size: 0.88rem; font-weight: 680; color: var(--coral-active); }
+.hm-selectbar-warn {
+  flex: 1;
+  min-width: 220px;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: var(--ink-soft);
+}
+.hm-selectbar-danger,
+.hm-selectbar-ghost {
+  padding: 7px 15px;
+  border-radius: var(--r-sm);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 620;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+.hm-selectbar-danger { background: var(--danger); color: #fff; }
+.hm-selectbar-danger:hover:not(:disabled) { background: #b93a3a; }
+.hm-selectbar-danger:disabled { opacity: 0.6; cursor: not-allowed; }
+.hm-selectbar-ghost { background: transparent; border-color: var(--line-strong); color: var(--ink-soft); }
+.hm-selectbar-ghost:hover:not(:disabled) { background: var(--bg); }
+.hm-selectbar-danger:focus-visible,
+.hm-selectbar-ghost:focus-visible { outline: 2px solid var(--coral); outline-offset: 2px; }
+
+/* Selection bar sits between the heading and the list. */
+.hm-section .hm-selectbar { margin-bottom: 2px; }

@@ -154,6 +154,11 @@ export async function fetchInProgress(userId, limit = 4) {
     .select('id, mode, started_at, questions_answered, study_sets(id, title, subjects(name))')
     .eq('user_id', userId)
     .is('ended_at', null)
+    // study_sessions.study_set_id is ON DELETE SET NULL, so deleting a material
+    // leaves its sessions behind as orphans. They cannot be resumed into
+    // anything, so they must not appear here. The rows are kept rather than
+    // deleted because they still count toward study time and streaks.
+    .not('study_set_id', 'is', null)
     .order('started_at', { ascending: false })
     .limit(limit)
 

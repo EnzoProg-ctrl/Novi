@@ -14,9 +14,7 @@ export function BuddyCard({ buddyName, hasMaterial }) {
 
   return (
     <section className="hm-card hm-buddy" aria-label={`A note from ${name}`}>
-      <span className="hm-buddy-avatar">
-        <img src={avatar} alt="" width="1230" height="1278" />
-      </span>
+      <img className="hm-buddy-avatar" src={avatar} alt="" width="1230" height="1278" />
 
       <div className="hm-buddy-text">
         <p className="hm-buddy-name">{name}</p>

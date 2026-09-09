@@ -18,7 +18,7 @@ import {
   fetchSubjectProgress,
   fetchTodayActivity,
 } from '../lib/home'
-import { formatBytes, listMaterials } from '../lib/materials'
+import { deleteMaterials, formatBytes, listMaterials } from '../lib/materials'
 
 const STATUS_LABEL = {
   uploaded: { text: 'Waiting to process', tone: 'badge' },
@@ -53,6 +53,9 @@ export function Dashboard() {
   const [packs, setPacks] = useState([])
   const [recs, setRecs] = useState([])
   const [inProgress, setInProgress] = useState([])
+  const [selectedIds, setSelectedIds] = useState(() => new Set())
+  const [confirming, setConfirming] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
@@ -99,6 +102,35 @@ export function Dashboard() {
     return () => clearTimeout(timer)
   }, [materials, load])
 
+  const selected = materials.filter((m) => selectedIds.has(m.id))
+
+  const toggle = (id) =>
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+
+  const clearSelection = () => {
+    setSelectedIds(new Set())
+    setConfirming(false)
+  }
+
+  async function handleDelete() {
+    setDeleting(true)
+    try {
+      await deleteMaterials(selected)
+      clearSelection()
+      // Packs and in-progress sessions change too, so reload everything.
+      await load(true)
+    } catch (err) {
+      setError(err?.message ?? 'Could not delete those materials.')
+    } finally {
+      setDeleting(false)
+    }
+  }
+
   const firstName = user?.user_metadata?.display_name?.split(' ')[0]
 
   return (
@@ -130,8 +162,56 @@ export function Dashboard() {
         <section className="hm-section">
           <header className="hm-card-head">
             <h2 className="hm-section-title">Your material</h2>
-            <Link to="/upload" className="hm-muted-link">Add another</Link>
+            {selected.length === 0 && (
+              <Link to="/upload" className="hm-muted-link">Add another</Link>
+            )}
           </header>
+
+          {selected.length > 0 && (
+            <div className="hm-selectbar" role="status">
+              <span className="hm-selectbar-count">
+                {selected.length} selected
+              </span>
+
+              {confirming ? (
+                <>
+                  <span className="hm-selectbar-warn">
+                    Delete {selected.length === 1 ? 'this material' : 'these materials'} and
+                    {selected.length === 1 ? ' its' : ' their'} study {selected.length === 1 ? 'pack' : 'packs'}? This cannot be undone.
+                  </span>
+                  <button
+                    type="button"
+                    className="hm-selectbar-danger"
+                    onClick={handleDelete}
+                    disabled={deleting}
+                  >
+                    {deleting ? 'Deleting…' : 'Yes, delete'}
+                  </button>
+                  <button
+                    type="button"
+                    className="hm-selectbar-ghost"
+                    onClick={() => setConfirming(false)}
+                    disabled={deleting}
+                  >
+                    Keep
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    className="hm-selectbar-danger"
+                    onClick={() => setConfirming(true)}
+                  >
+                    Delete
+                  </button>
+                  <button type="button" className="hm-selectbar-ghost" onClick={clearSelection}>
+                    Cancel
+                  </button>
+                </>
+              )}
+            </div>
+          )}
 
           {loading ? (
             <p className="hm-empty-line">Loading your material…</p>
@@ -147,7 +227,20 @@ export function Dashboard() {
               {materials.map((material) => {
                 const status = STATUS_LABEL[material.status] ?? STATUS_LABEL.uploaded
                 return (
-                  <li key={material.id} className="hm-card hm-material">
+                  <li
+                    key={material.id}
+                    className={`hm-card hm-material${selectedIds.has(material.id) ? ' is-selected' : ''}`}
+                  >
+                    <label className="hm-check">
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.has(material.id)}
+                        onChange={() => toggle(material.id)}
+                      />
+                      <span className="hm-check-dot" aria-hidden="true" />
+                      <span className="sr-only">Select {material.title}</span>
+                    </label>
+
                     <span className="hm-material-type">
                       {TYPE_LABEL[material.source_type] ?? 'File'}
                     </span>
