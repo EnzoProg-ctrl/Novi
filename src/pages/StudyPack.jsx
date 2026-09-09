@@ -118,14 +118,14 @@ export function StudyPack() {
       </header>
 
       {pack.summary && (
-        <section className="hm-card card-pad sp-section" aria-label="Summary">
+        <section id="summary" className="hm-card card-pad sp-section" aria-label="Summary">
           <h2 className="sp-section-title">Summary</h2>
           <Markdown content={pack.summary} />
         </section>
       )}
 
       {pack.concepts.length > 0 && (
-        <section className="sp-section" aria-label="Key concepts">
+        <section id="concepts" className="sp-section" aria-label="Key concepts">
           <h2 className="sp-section-title">Key concepts</h2>
           <ul className="sp-concepts">
             {pack.concepts.map((concept) => (
@@ -151,7 +151,7 @@ export function StudyPack() {
       )}
 
       {pack.questions.length > 0 && (
-        <section className="sp-section" aria-label="Practice questions">
+        <section id="questions" className="sp-section" aria-label="Practice questions">
           <div className="hm-card-head">
             <h2 className="sp-section-title">Practice questions</h2>
             <span className="hm-sub">{pack.questions.length} questions</span>

@@ -7,6 +7,7 @@ import {
   IconPackGrid,
   IconPlus,
 } from '../components/home/HomeIcons'
+import { PackDetail } from '../components/study/PackDetail'
 import { IconGridView, IconListView } from '../components/study/PackIcons'
 import { useAuth } from '../context/auth-context'
 import { fetchPackList } from '../lib/packs'
@@ -54,6 +55,7 @@ export function Packs() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
+  const [selectedId, setSelectedId] = useState(null)
   const [subjectId, setSubjectId] = useState('')
   const [sort, setSort] = useState('updated')
   const [view, setView] = useState(() => {
@@ -87,6 +89,11 @@ export function Packs() {
   useEffect(() => {
     load()
   }, [load])
+
+  const selected = useMemo(
+    () => packs.find((p) => p.id === selectedId) ?? packs[0] ?? null,
+    [packs, selectedId],
+  )
 
   // Only offer subjects that actually have packs, so the filter can't come up empty.
   const subjects = useMemo(() => {
@@ -178,6 +185,7 @@ export function Packs() {
 
       {error && <div className="msg msg-error">{error}</div>}
 
+      <div className="pk-split">
       {loading ? (
         <p className="hm-empty-line">Loading your study packs…</p>
       ) : packs.length === 0 ? (
@@ -195,7 +203,12 @@ export function Packs() {
             const { tone, Icon } = TONES[i % TONES.length]
             return (
               <li key={pack.id}>
-                <Link to={`/pack/${pack.id}`} className="pk-card">
+                <button
+                  type="button"
+                  className={`pk-card${selected?.id === pack.id ? ' is-selected' : ''}`}
+                  aria-pressed={selected?.id === pack.id}
+                  onClick={() => setSelectedId(pack.id)}
+                >
                   <span className={`hm-pack-icon is-${tone}`}><Icon /></span>
 
                   <span className="pk-card-body">
@@ -211,12 +224,21 @@ export function Packs() {
                     </span>
                     <span className="pk-card-meta">{relativeDay(pack.updatedAt)}</span>
                   </span>
-                </Link>
+                </button>
               </li>
             )
           })}
         </ul>
       )}
+
+      {!loading && packs.length > 0 && (
+        <PackDetail
+          pack={selected}
+          tone={TONES[packs.findIndex((p) => p.id === selected?.id) % TONES.length].tone}
+          Icon={TONES[packs.findIndex((p) => p.id === selected?.id) % TONES.length].Icon}
+        />
+      )}
+      </div>
     </div>
   )
 }

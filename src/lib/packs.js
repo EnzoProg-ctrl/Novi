@@ -49,6 +49,19 @@ export async function fetchStudyPack(packId) {
  * Counts come from PostgREST's embedded aggregate, so this stays one round
  * trip rather than a query per pack.
  */
+/** First couple of sentences of a summary, stripped of markdown noise. */
+function excerptFrom(markdown, max = 180) {
+  if (!markdown) return null
+  const plain = markdown
+    .replace(/[#*`_>]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+  if (plain.length <= max) return plain
+  const cut = plain.slice(0, max)
+  const lastStop = Math.max(cut.lastIndexOf('. '), cut.lastIndexOf('? '))
+  return (lastStop > 80 ? cut.slice(0, lastStop + 1) : cut.trimEnd() + '…')
+}
+
 export async function fetchPackList(userId, { subjectId = null, sort = 'updated' } = {}) {
   let query = supabase
     .from('study_sets')
@@ -58,7 +71,7 @@ export async function fetchPackList(userId, { subjectId = null, sort = 'updated'
       materials ( title ),
       key_concepts ( count ),
       questions ( count ),
-      summaries ( count )
+      summaries ( kind, content )
     `)
     .eq('user_id', userId)
 
@@ -73,17 +86,24 @@ export async function fetchPackList(userId, { subjectId = null, sort = 'updated'
 
   const countOf = (rel) => (Array.isArray(rel) ? (rel[0]?.count ?? 0) : (rel?.count ?? 0))
 
-  return (data ?? []).map((row) => ({
-    id: row.id,
-    title: row.title,
-    status: row.status,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
-    subject: row.subjects?.name ?? null,
-    subjectId: row.subjects?.id ?? null,
-    sourceTitle: row.materials?.title ?? null,
-    concepts: countOf(row.key_concepts),
-    questions: countOf(row.questions),
-    summaries: countOf(row.summaries),
-  }))
+  return (data ?? []).map((row) => {
+    const summaries = row.summaries ?? []
+    const overview = summaries.find((s) => s.kind === 'overview') ?? summaries[0]
+    return {
+      id: row.id,
+      title: row.title,
+      status: row.status,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+      subject: row.subjects?.name ?? null,
+      subjectId: row.subjects?.id ?? null,
+      sourceTitle: row.materials?.title ?? null,
+      concepts: countOf(row.key_concepts),
+      questions: countOf(row.questions),
+      summaries: summaries.length,
+      // Stands in for a description: study_sets has no such column, so the
+      // opening of the summary is the most honest one-line account of a pack.
+      excerpt: excerptFrom(overview?.content),
+    }
+  })
 }
