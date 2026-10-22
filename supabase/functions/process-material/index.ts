@@ -1,6 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
-import { embed, generateJson } from "./gemini.ts";
+import { embed } from "./gemini.ts";
+import { generateJson } from "./generate.ts";
 
 /**
  * Turns an uploaded material into a study pack.
@@ -11,6 +12,9 @@ import { embed, generateJson } from "./gemini.ts";
  * Auth: verify_jwt is on, and every database call goes through a client
  * carrying the caller's JWT, so RLS still applies. The service role is used
  * only for ai_model_health, which holds no user data.
+ *
+ * Providers: embeddings are Gemini; the pack itself comes from the generation
+ * chain in generate.ts (Groq first, Gemini as fallback).
  */
 
 const CORS = {
@@ -28,6 +32,28 @@ const json = (body: unknown, status = 200) =>
 
 const TEXT_TYPES = new Set(["text"]);
 const MAX_CHARS = 60_000; // keep one generation call within sane limits
+
+// Question counts the student can ask for. Mirrored in src/lib/materials.js,
+// which greys out the same options in the upload form; this side is the one
+// that is actually enforced.
+const MIN_QUESTIONS = 5;
+const MAX_QUESTIONS = 20;
+const DEFAULT_QUESTIONS = 10;
+const WORDS_PER_QUESTION = 40;
+
+/**
+ * The most questions this much text can honestly support. Past roughly one
+ * question per 40 words the model starts repeating itself or padding.
+ */
+const questionCapFor = (words: number) =>
+  Math.max(MIN_QUESTIONS, Math.min(MAX_QUESTIONS, Math.floor(words / WORDS_PER_QUESTION)));
+
+/**
+ * Room the generated pack needs: summary, topics and concepts, plus each
+ * question with its choices and explanation, plus a little reasoning. Too low
+ * and the answer is cut off; too high and Groq refuses the request outright.
+ */
+const outputTokensFor = (questions: number) => 1_500 + 180 * questions;
 
 /** Split on blank lines, then pack paragraphs up to a target size with overlap. */
 function chunkText(text: string, target = 1400, overlap = 180): string[] {
@@ -213,9 +239,11 @@ Deno.serve(async (req: Request) => {
   if (!user) return json({ error: "Not authenticated" }, 401);
 
   let materialId: string | null = null;
+  let requestedQuestions = DEFAULT_QUESTIONS;
   try {
     const body = await req.json();
     materialId = body?.material_id ?? null;
+    requestedQuestions = clamp(body?.question_count, MIN_QUESTIONS, MAX_QUESTIONS, DEFAULT_QUESTIONS);
   } catch { /* handled below */ }
   if (!materialId) return json({ error: "material_id is required" }, 400);
 
@@ -256,10 +284,13 @@ Deno.serve(async (req: Request) => {
     if (!raw) return await fail("That file has no readable text.", 422);
     const text = raw.slice(0, MAX_CHARS);
 
+    const wordCount = text.split(/\s+/).length;
     await db.from("materials").update({
       extracted_text: text,
-      word_count: text.split(/\s+/).length,
+      word_count: wordCount,
     }).eq("id", materialId);
+
+    const questionTarget = Math.min(requestedQuestions, questionCapFor(wordCount));
 
     // ── 2. Chunk + embed ──────────────────────────────────────
     await db.from("materials").update({ status: "embedding" }).eq("id", materialId);
@@ -296,14 +327,17 @@ Deno.serve(async (req: Request) => {
       "names short and reusable, like 'Normal Forms' or 'Functional Dependencies', " +
       "not phrased as questions.\n" +
       "- 5 to 8 key concepts, each with a plain definition and importance 1-5\n" +
-      "- 5 to 8 practice questions with difficulty 1-5. Every multiple_choice " +
+      `- exactly ${questionTarget} practice questions with difficulty 1-5, spread ` +
+      "across the topics, each testing something different. Every multiple_choice " +
       "question must include exactly 4 choices, and correct_answer must match one " +
       "of them exactly.\n" +
       "Every key concept and every question must set `topic` to one of the topic " +
       "names above, spelled identically.\n" +
       "Only use what the material actually says.\n\nMATERIAL:\n" + text;
 
-    const { data: pack, model } = await generateJson<Pack>(prompt, PACK_SCHEMA);
+    const { data: pack, model } = await generateJson<Pack>(prompt, PACK_SCHEMA, {
+      outputTokens: outputTokensFor(questionTarget),
+    });
 
     // ── 4. Persist ────────────────────────────────────────────
     const { data: set, error: setError } = await db.from("study_sets").insert({
@@ -313,6 +347,11 @@ Deno.serve(async (req: Request) => {
       title: pack.title?.trim() || material.title,
       status: "ready",
       generation_model: model,
+      generation_params: {
+        questions_requested: requestedQuestions,
+        // Lower than requested when the material is too short to support more.
+        questions_target: questionTarget,
+      },
     }).select("id").single();
     if (setError || !set) return await fail(`Saving the study pack failed: ${setError?.message}`);
 
@@ -382,6 +421,8 @@ Deno.serve(async (req: Request) => {
       topics: topicIds.size,
       key_concepts: concepts.length,
       questions: questions.length,
+      questions_requested: requestedQuestions,
+      questions_target: questionTarget,
       questions_with_topic: questions.filter((q) => q.topic_id).length,
       dropped_questions: (pack.questions?.length ?? 0) - questions.length,
     });

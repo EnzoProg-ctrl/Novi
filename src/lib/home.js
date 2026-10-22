@@ -144,14 +144,15 @@ const MODE_LABEL = {
 
 /**
  * Sittings the student opened but never closed — `ended_at is null` is what
- * makes a session resumable. Progress is answered-so-far against the number of
- * questions in the set, counted in a second pass since PostgREST cannot
- * aggregate a child table inline.
+ * makes a session resumable. Progress is answered-so-far against the length the
+ * student chose for that sitting, or the whole set when they chose all of it.
+ * Set sizes are counted in a second pass since PostgREST cannot aggregate a
+ * child table inline.
  */
 export async function fetchInProgress(userId, limit = 4) {
   const { data, error } = await supabase
     .from('study_sessions')
-    .select('id, mode, started_at, questions_answered, study_sets(id, title, subjects(name))')
+    .select('id, mode, started_at, questions_answered, target_count, study_sets(id, title, subjects(name))')
     .eq('user_id', userId)
     .is('ended_at', null)
     // study_sessions.study_set_id is ON DELETE SET NULL, so deleting a material
@@ -181,7 +182,8 @@ export async function fetchInProgress(userId, limit = 4) {
 
   return sessions.map((s) => {
     const set = s.study_sets
-    const total = set ? (totals.get(set.id) ?? 0) : 0
+    const setSize = set ? (totals.get(set.id) ?? 0) : 0
+    const total = s.target_count ? Math.min(s.target_count, setSize) : setSize
     const done = s.questions_answered ?? 0
     return {
       id: s.id,

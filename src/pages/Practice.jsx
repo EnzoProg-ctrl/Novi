@@ -1,17 +1,21 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
+import { AnswerPanel } from '../components/study/AnswerPanel'
 import '../components/study/practice.css'
 import { useAuth } from '../context/auth-context'
 import { fetchStudyPack } from '../lib/packs'
 import {
+  findOpenSession,
   finishSession,
   gradeAnswer,
-  isAutoGraded,
+  orderForPractice,
   recordAttempt,
-  startOrResumeSession,
+  startSession,
 } from '../lib/practice'
 
-const TRUE_FALSE = ['true', 'false']
+// Session lengths offered before a sitting. A pack no bigger than the
+// smallest option just starts, since there is nothing to choose.
+const SESSION_SIZES = [5, 10, 15, 20]
 
 export function Practice() {
   const { packId } = useParams()
@@ -21,6 +25,10 @@ export function Practice() {
   const [pack, setPack] = useState(null)
   const [session, setSession] = useState(null)
   const [queue, setQueue] = useState([])
+  // Ordered questions waiting on the "how many?" choice; null once chosen.
+  const [pool, setPool] = useState(null)
+  // Answered in this session before this visit, so progress counts them.
+  const [startAnswered, setStartAnswered] = useState(0)
   const [index, setIndex] = useState(0)
   const [given, setGiven] = useState(null)
   const [verdict, setVerdict] = useState(null) // true | false | null
@@ -40,6 +48,15 @@ export function Practice() {
   // development, which is exactly how that surfaced.
   const bootstrapped = useRef(null)
 
+  function begin(s, questions, alreadyAnswered) {
+    setSession(s)
+    setQueue(questions)
+    setIndex(0)
+    setStartAnswered(alreadyAnswered)
+    setTally({ answered: s.questions_answered ?? 0, correct: s.questions_correct ?? 0 })
+    askedAt.current = Date.now()
+  }
+
   const load = useCallback(async () => {
     if (!user) return
     if (bootstrapped.current === packId) return
@@ -51,21 +68,43 @@ export function Practice() {
         setError('That study pack does not exist, or it is not yours.')
         return
       }
-
-      const { session: s, answeredIds, resumed: didResume } =
-        await startOrResumeSession(user.id, loaded.id)
-
-      // Anything already answered in this session is skipped, so resuming
-      // carries on rather than starting over.
-      const remaining = loaded.questions.filter((q) => !answeredIds.has(q.id))
-
       setPack(loaded)
-      setSession(s)
-      setQueue(remaining)
-      setResumed(didResume && answeredIds.size > 0)
-      setTally({ answered: s.questions_answered ?? 0, correct: s.questions_correct ?? 0 })
       setError(null)
-      askedAt.current = Date.now()
+
+      const open = await findOpenSession(user.id, loaded.id)
+      if (open) {
+        // Anything already answered in this session is skipped, and the
+        // session's own target still applies, so resuming carries on toward
+        // the length the student chose rather than switching to the whole pack.
+        const answered = open.answeredIds.size
+        const ordered = await orderForPractice(
+          loaded.questions.filter((q) => !open.answeredIds.has(q.id)),
+        )
+        const target = open.session.target_count
+        const left = target == null ? ordered.length : Math.max(0, target - answered)
+        const remaining = ordered.slice(0, left)
+
+        if (remaining.length === 0 && answered > 0) {
+          // Every question was answered but "Finish" was never pressed, e.g.
+          // the tab closed on the last one. Close it now; otherwise the pack
+          // would reopen onto this finished session forever.
+          await finishSession({ userId: user.id, session: open.session })
+          begin(open.session, [], answered)
+          setFinished(true)
+          return
+        }
+
+        begin(open.session, remaining, answered)
+        setResumed(answered > 0)
+        return
+      }
+
+      const ordered = await orderForPractice(loaded.questions)
+      if (ordered.length <= SESSION_SIZES[0]) {
+        begin(await startSession(user.id, loaded.id, null), ordered, 0)
+        return
+      }
+      setPool(ordered)
     } catch (err) {
       bootstrapped.current = null
       setError(err?.message ?? 'Could not start this practice session.')
@@ -74,22 +113,41 @@ export function Practice() {
     }
   }, [user, packId])
 
+  async function choose(size) {
+    if (!pool || saving) return
+    setSaving(true)
+    try {
+      // "All" is stored as null so the session follows the pack as it is.
+      const target = size >= pool.length ? null : size
+      const s = await startSession(user.id, pack.id, target)
+      begin(s, pool.slice(0, size), 0)
+      setPool(null)
+    } catch (err) {
+      setError(err?.message ?? 'Could not start this practice session.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  function again() {
+    setFinished(false)
+    setResumed(false)
+    setGiven(null)
+    setVerdict(null)
+    setQueue([])
+    setSession(null)
+    visit.current = { answered: 0, correct: 0 }
+    bootstrapped.current = null
+    load()
+  }
+
   useEffect(() => {
     load()
   }, [load])
 
   const question = queue[index] ?? null
-  const total = pack?.questions.length ?? 0
-  const doneCount = total - queue.length + index
-
-  const choices = useMemo(() => {
-    if (!question) return null
-    if (question.type === 'multiple_choice' && Array.isArray(question.choices)) {
-      return question.choices
-    }
-    if (question.type === 'true_false') return TRUE_FALSE
-    return null
-  }, [question])
+  const total = startAnswered + queue.length
+  const doneCount = startAnswered + index
 
   async function submit(answer, selfGraded) {
     // 'reveal' is an intermediate state, not an answer. Guarding on
@@ -150,9 +208,59 @@ export function Practice() {
     )
   }
 
+  if (pool) {
+    const sizes = SESSION_SIZES.filter((n) => n < pool.length)
+    return (
+      <div className="pr">
+        <header className="pr-head">
+          <div>
+            <p className="hm-sub">{pack.title}</p>
+            <h1 className="pr-title">How many questions this time?</h1>
+          </div>
+          <button type="button" className="pr-exit" onClick={() => navigate(`/pack/${packId}`)}>
+            Back
+          </button>
+        </header>
+
+        <section className="hm-card card-pad pr-card">
+          <div className="pr-pick">
+            {sizes.map((n) => (
+              <button
+                key={n}
+                type="button"
+                className="pr-pick-btn"
+                disabled={saving}
+                onClick={() => choose(n)}
+              >
+                <strong>{n}</strong>
+                <span>questions</span>
+              </button>
+            ))}
+            <button
+              type="button"
+              className="pr-pick-btn"
+              disabled={saving}
+              onClick={() => choose(pool.length)}
+            >
+              <strong>All {pool.length}</strong>
+              <span>the whole pack</span>
+            </button>
+          </div>
+          <p className="hm-sub">
+            {buddy?.name ?? 'Novi'} starts with questions you haven&rsquo;t tried yet, then the
+            ones you missed.
+          </p>
+        </section>
+      </div>
+    )
+  }
+
   if (finished || queue.length === 0) {
     const answered = tally.answered
     const score = answered > 0 ? Math.round((tally.correct / answered) * 100) : 0
+    // Once a sitting is over the student can always go again; "more" when the
+    // sitting covered only part of the pack.
+    const partial = answered > 0 && answered < (pack?.questions.length ?? 0)
     return (
       <div className="pr pr-done">
         <div className="hm-card card-pad pr-summary">
@@ -171,8 +279,19 @@ export function Practice() {
               : `${buddy?.name ?? 'Novi'} recorded that against your progress.`}
           </p>
           <div className="pr-done-actions">
-            <Link to={`/pack/${packId}`} className="hm-buddy-cta">Back to pack</Link>
-            <Link to="/dashboard" className="pd-secondary">Home</Link>
+            {answered > 0 ? (
+              <>
+                <button type="button" className="hm-buddy-cta" onClick={again}>
+                  {partial ? 'Practise more' : 'Practise again'}
+                </button>
+                <Link to={`/pack/${packId}`} className="pd-secondary">Back to pack</Link>
+              </>
+            ) : (
+              <>
+                <Link to={`/pack/${packId}`} className="hm-buddy-cta">Back to pack</Link>
+                <Link to="/dashboard" className="pd-secondary">Home</Link>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -202,62 +321,15 @@ export function Practice() {
       <section className="hm-card card-pad pr-card">
         <p className="pr-prompt">{question.prompt}</p>
 
-        {choices ? (
-          <ul className="pr-choices">
-            {choices.map((choice) => {
-              const chosen = given === choice
-              const isAnswer = verdict !== null && choice === question.correct_answer
-              return (
-                <li key={choice}>
-                  <button
-                    type="button"
-                    className={`pr-choice${chosen ? ' is-chosen' : ''}${isAnswer ? ' is-answer' : ''}${
-                      chosen && verdict === false ? ' is-wrong' : ''
-                    }`}
-                    disabled={verdict !== null}
-                    onClick={() => submit(choice)}
-                  >
-                    {choice}
-                  </button>
-                </li>
-              )
-            })}
-          </ul>
-        ) : verdict === null ? (
-          // Open-ended answers are graded by the student: string matching would
-          // mark perfectly good wording wrong.
-          <div className="pr-self">
-            <p className="hm-sub">Answer it in your head, then check yourself.</p>
-            <button type="button" className="hm-buddy-cta" onClick={() => setVerdict('reveal')}>
-              Show the answer
-            </button>
-          </div>
-        ) : null}
-
-        {verdict === 'reveal' && (
-          <div className="pr-reveal">
-            <p className="pr-answer"><span>Answer</span> {question.correct_answer}</p>
-            {question.explanation && <p className="hm-sub">{question.explanation}</p>}
-            <div className="pr-self-grade">
-              <button type="button" className="pr-grade is-yes" onClick={() => submit(null, true)}>
-                I got it right
-              </button>
-              <button type="button" className="pr-grade is-no" onClick={() => submit(null, false)}>
-                I got it wrong
-              </button>
-            </div>
-          </div>
-        )}
-
-        {verdict === true || verdict === false ? (
-          <div className={`pr-verdict${verdict ? ' is-right' : ' is-wrong'}`}>
-            <p className="pr-verdict-line">
-              {verdict ? 'Correct' : 'Not quite'}
-              {!verdict && <> — the answer is <strong>{question.correct_answer}</strong></>}
-            </p>
-            {question.explanation && <p className="hm-sub">{question.explanation}</p>}
-          </div>
-        ) : null}
+        <AnswerPanel
+          key={question.id}
+          question={question}
+          verdict={verdict}
+          given={given}
+          busy={saving}
+          onAnswer={submit}
+          onReveal={() => setVerdict('reveal')}
+        />
 
         {verdict === true || verdict === false ? (
           <button type="button" className="hm-buddy-cta pr-next" onClick={next} disabled={saving}>

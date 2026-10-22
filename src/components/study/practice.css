@@ -153,3 +153,37 @@
 .pr-score span { font-size: 1.3rem; font-weight: 650; color: var(--muted); }
 .pr-done-note { margin-top: 8px; max-width: 42ch; }
 .pr-done-actions { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; justify-content: center; }
+
+/* ── Session length picker ───────────────────────────────────── */
+.pr-pick {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+}
+.pr-pick-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 16px 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-md);
+  background: var(--bg);
+  font: inherit;
+  color: var(--ink);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+.pr-pick-btn strong { font-size: 1.25rem; font-weight: 730; }
+.pr-pick-btn span { font-size: 0.8rem; color: var(--muted); }
+.pr-pick-btn:hover:not(:disabled) { border-color: var(--coral); background: var(--coral-tint); }
+.pr-pick-btn:hover:not(:disabled) strong { color: var(--coral-active); }
+.pr-pick-btn:focus-visible { outline: 2px solid var(--coral); outline-offset: 2px; }
+.pr-pick-btn:disabled { opacity: 0.55; cursor: progress; }
+
+/* ── Shared answer panel ─────────────────────────────────────── */
+.pr-answer-area { display: flex; flex-direction: column; gap: 12px; }
+.pr-blank { display: flex; gap: 10px; flex-wrap: wrap; }
+.pr-blank-input { flex: 1; min-width: 180px; }
+.pr-blank-input.is-right { border-color: var(--success); background: var(--success-tint); color: #14663f; }
+.pr-blank-input.is-wrong { border-color: var(--danger); background: var(--danger-tint); color: #8f2f2f; }

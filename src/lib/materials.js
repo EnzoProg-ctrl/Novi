@@ -137,16 +137,51 @@ export async function deleteMaterial(material) {
 }
 
 /**
+ * How many practice questions a pack can be generated with.
+ *
+ * Mirrored in supabase/functions/process-material/index.ts, which enforces the
+ * same cap server-side. Keep the two in step.
+ */
+export const QUESTION_COUNTS = [5, 10, 15, 20]
+export const DEFAULT_QUESTION_COUNT = 10
+const WORDS_PER_QUESTION = 40
+const MAX_CHARS = 60_000 // the pipeline only reads this much of a file
+
+/**
+ * The most questions this much text can honestly support. Past roughly one
+ * question per 40 words the model starts repeating itself or padding.
+ */
+export function questionCapFor(wordCount) {
+  const min = QUESTION_COUNTS[0]
+  const max = QUESTION_COUNTS.at(-1)
+  return Math.max(min, Math.min(max, Math.floor(wordCount / WORDS_PER_QUESTION)))
+}
+
+/**
+ * Word count as the pipeline will see it, or null when it cannot be known in
+ * the browser (only text files are readable client-side).
+ */
+export async function estimateWordCount(file) {
+  if (resolveSourceType(file) !== 'text') return null
+  try {
+    const text = (await file.text()).trim().slice(0, MAX_CHARS)
+    return text ? text.split(/\s+/).length : 0
+  } catch {
+    return null
+  }
+}
+
+/**
  * Hands the material to the processing pipeline (extract, chunk, embed,
- * generate). Runs server-side in an Edge Function so the Gemini key never
- * reaches the browser.
+ * generate). Runs server-side in an Edge Function so the AI provider keys
+ * never reach the browser.
  *
  * Takes ~15s, so callers generally fire this and let the dashboard show
  * progress rather than blocking the upload screen on it.
  */
-export async function processMaterial(materialId) {
+export async function processMaterial(materialId, { questionCount } = {}) {
   const { data, error } = await supabase.functions.invoke('process-material', {
-    body: { material_id: materialId },
+    body: { material_id: materialId, question_count: questionCount },
   })
   if (error) throw error
   return data

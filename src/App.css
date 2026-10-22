@@ -232,3 +232,28 @@
   .greeting { flex-direction: column; align-items: flex-start; }
   .landing-bar { padding: 16px 0; }
 }
+
+/* ── Upload: question count ──────────────────────────────────── */
+.count-field { border: 0; padding: 0; margin: 18px 0 0; display: flex; flex-direction: column; gap: 6px; }
+.count-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.count-option {
+  display: grid;
+  place-items: center;
+  padding: 10px 0;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-md);
+  font-weight: 620;
+  font-size: 0.95rem;
+  color: var(--ink);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+.count-option:hover { border-color: var(--faint); background: var(--bg-soft); }
+.count-option.is-selected {
+  border-color: var(--coral);
+  background: var(--coral-tint);
+  color: var(--coral-active);
+  box-shadow: 0 0 0 3px var(--coral-ring);
+}
+.count-option.is-disabled { color: var(--faint); background: var(--bg-soft); border-color: var(--line); cursor: not-allowed; }
+.count-option:has(:focus-visible) { outline: 2px solid var(--coral); outline-offset: 2px; }

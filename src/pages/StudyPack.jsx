@@ -1,65 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Markdown } from '../components/study/Markdown'
+import { PackQuiz } from '../components/study/PackQuiz'
 import '../components/study/study-pack.css'
 import { fetchStudyPack } from '../lib/packs'
-
-const TYPE_LABEL = {
-  multiple_choice: 'Multiple choice',
-  true_false: 'True or false',
-  short_answer: 'Short answer',
-  fill_blank: 'Fill in the blank',
-  flashcard: 'Flashcard',
-}
-
-function Question({ question, index }) {
-  const [revealed, setRevealed] = useState(false)
-  const choices = Array.isArray(question.choices) ? question.choices : null
-
-  return (
-    <li className="sp-question">
-      <div className="sp-q-head">
-        <span className="sp-q-number">{index + 1}</span>
-        <p className="sp-q-prompt">{question.prompt}</p>
-      </div>
-
-      <div className="sp-q-meta">
-        <span className="badge">{TYPE_LABEL[question.type] ?? question.type}</span>
-        <span className="sp-q-difficulty" title={`Difficulty ${question.difficulty} of 5`}>
-          {'●'.repeat(question.difficulty)}
-          <span className="sp-q-dim">{'●'.repeat(Math.max(0, 5 - question.difficulty))}</span>
-        </span>
-      </div>
-
-      {choices && (
-        <ul className="sp-choices">
-          {choices.map((choice) => {
-            const isAnswer = revealed && choice === question.correct_answer
-            return (
-              <li key={choice} className={`sp-choice${isAnswer ? ' is-answer' : ''}`}>
-                {choice}
-              </li>
-            )
-          })}
-        </ul>
-      )}
-
-      {revealed ? (
-        <div className="sp-answer">
-          <p className="sp-answer-line">
-            <span className="sp-answer-label">Answer</span>
-            {question.correct_answer}
-          </p>
-          {question.explanation && <p className="hm-sub">{question.explanation}</p>}
-        </div>
-      ) : (
-        <button type="button" className="sp-reveal" onClick={() => setRevealed(true)}>
-          Show answer
-        </button>
-      )}
-    </li>
-  )
-}
 
 export function StudyPack() {
   const { packId } = useParams()
@@ -150,19 +94,7 @@ export function StudyPack() {
         </section>
       )}
 
-      {pack.questions.length > 0 && (
-        <section id="questions" className="sp-section" aria-label="Practice questions">
-          <div className="hm-card-head">
-            <h2 className="sp-section-title">Practice questions</h2>
-            <span className="hm-sub">{pack.questions.length} questions</span>
-          </div>
-          <ul className="sp-questions">
-            {pack.questions.map((question, i) => (
-              <Question key={question.id} question={question} index={i} />
-            ))}
-          </ul>
-        </section>
-      )}
+      {pack.questions.length > 0 && <PackQuiz key={pack.id} pack={pack} />}
     </div>
   )
 }

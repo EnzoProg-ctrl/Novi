@@ -4,8 +4,12 @@ import { Mascot } from '../components/Mascot'
 import { useAuth } from '../context/auth-context'
 import {
   ACCEPTED_EXTENSIONS,
+  DEFAULT_QUESTION_COUNT,
+  QUESTION_COUNTS,
+  estimateWordCount,
   formatBytes,
   processMaterial,
+  questionCapFor,
   uploadMaterial,
   validateFile,
 } from '../lib/materials'
@@ -14,12 +18,18 @@ export function Upload() {
   const { user, buddy } = useAuth()
   const navigate = useNavigate()
   const inputRef = useRef(null)
+  const measuring = useRef(null)
 
   const [file, setFile] = useState(null)
   const [title, setTitle] = useState('')
   const [error, setError] = useState(null)
   const [busy, setBusy] = useState(false)
   const [dragging, setDragging] = useState(false)
+  const [questionCount, setQuestionCount] = useState(DEFAULT_QUESTION_COUNT)
+  // Null until known; only text files can be measured in the browser.
+  const [wordCount, setWordCount] = useState(null)
+
+  const cap = wordCount === null ? QUESTION_COUNTS.at(-1) : questionCapFor(wordCount)
 
   function chooseFile(nextFile) {
     if (!nextFile) return
@@ -31,9 +41,24 @@ export function Upload() {
     }
     setError(null)
     setFile(nextFile)
+    measure(nextFile)
     if (!title.trim()) {
       // Default the title to the filename without its extension.
       setTitle(nextFile.name.replace(/\.[^.]+$/, ''))
+    }
+  }
+
+  async function measure(nextFile) {
+    measuring.current = nextFile
+    setWordCount(null)
+    const words = await estimateWordCount(nextFile)
+    // A different file may have been chosen while this one was being read.
+    if (measuring.current !== nextFile) return
+    setWordCount(words)
+    if (words !== null) {
+      // Pull the choice down if this file cannot support it.
+      const fits = QUESTION_COUNTS.filter((n) => n <= questionCapFor(words))
+      setQuestionCount((current) => (current <= fits.at(-1) ? current : fits.at(-1)))
     }
   }
 
@@ -59,7 +84,7 @@ export function Upload() {
 
       // Deliberately not awaited: processing takes ~15s and the dashboard
       // already shows live status. The request keeps running after we navigate.
-      processMaterial(material.id).catch((err) => {
+      processMaterial(material.id, { questionCount }).catch((err) => {
         // The function records its own failures on the material row, so this
         // only catches the case where the call never reached it.
         console.error('Could not start processing:', err?.message ?? err)
@@ -138,6 +163,39 @@ export function Upload() {
           />
           <span className="hint">How this shows up on your dashboard.</span>
         </div>
+
+        <fieldset className="count-field">
+          <legend className="label">Practice questions</legend>
+          <div className="count-grid">
+            {QUESTION_COUNTS.map((n) => {
+              const tooMany = n > cap
+              return (
+                <label
+                  key={n}
+                  className={`count-option${questionCount === n ? ' is-selected' : ''}${
+                    tooMany ? ' is-disabled' : ''
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="question-count"
+                    value={n}
+                    checked={questionCount === n}
+                    disabled={tooMany || busy}
+                    onChange={() => setQuestionCount(n)}
+                    className="sr-only"
+                  />
+                  {n}
+                </label>
+              )
+            })}
+          </div>
+          <span className="hint">
+            {cap < QUESTION_COUNTS.at(-1)
+              ? `This material is short, so ${cap} is the most ${buddy?.name ?? 'Novi'} can write without repeating itself.`
+              : 'How many questions to write for this pack. You choose how many to answer each time you practise.'}
+          </span>
+        </fieldset>
 
         <div className="form-actions">
           <button
