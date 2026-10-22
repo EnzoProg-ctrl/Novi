@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import capybara from '../../assets/capybara_landingpage.webp'
+import { MascotRig } from '../MascotRig'
 import { DashboardMockup } from './DashboardMockup'
 import {
   IconArrowRight,
@@ -70,11 +70,9 @@ export function HeroSection() {
             Study brighter together! <span className="nv-heart">♥</span>
           </p>
 
-          <img
+          <MascotRig
+            pose="waving"
             className="nv-mascot"
-            src={capybara}
-            width="1278"
-            height="1230"
             alt="Novi, a friendly capybara study buddy in an astronaut suit, waving"
           />
 

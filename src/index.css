@@ -251,3 +251,77 @@ a:hover { text-decoration: underline; }
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ── Mascot motion ───────────────────────────────────────────────
+   Whole-mascot movement: floating, hovering, hopping. Limbs and other parts
+   move inside the rigs (components/mascot-rig.css). Amplitudes are small and
+   periods differ so several mascots on one screen never move in lockstep.
+   Transform-only, and the reduced-motion rule above stills all of it. */
+
+/* Zero gravity: drifts up with a slow tilt. */
+.nv-anim-float {
+  animation: nv-float 7s ease-in-out infinite;
+  transform-origin: 50% 80%;
+  will-change: transform;
+}
+@keyframes nv-float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  25% { transform: translateY(-6px) rotate(-1.5deg); }
+  50% { transform: translateY(-11px) rotate(0.5deg); }
+  75% { transform: translateY(-5px) rotate(1.5deg); }
+}
+
+/* Asleep: slow rise and fall from the ground up (used by the sleeping rig). */
+@keyframes nv-breathe {
+  0%, 100% { transform: scale(1, 1); }
+  50% { transform: scale(1.015, 1.04); }
+}
+
+/* Gentle hover in place, for small avatars. */
+.nv-anim-levitate {
+  animation: nv-levitate 3.5s ease-in-out infinite;
+  will-change: transform;
+}
+@keyframes nv-levitate {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6%); }
+}
+
+/* Reactions. Re-key the element to replay them. */
+.nv-anim-hop { animation: nv-hop 0.65s cubic-bezier(0.3, 0.7, 0.4, 1.4) both; }
+.nv-anim-hop-float {
+  animation:
+    nv-hop 0.65s cubic-bezier(0.3, 0.7, 0.4, 1.4) both,
+    nv-float 7s ease-in-out 0.65s infinite;
+  transform-origin: 50% 80%;
+}
+@keyframes nv-hop {
+  0% { transform: translateY(0) scale(1, 1); }
+  20% { transform: translateY(0) scale(1.07, 0.93); }
+  50% { transform: translateY(-16%) scale(0.96, 1.05); }
+  80% { transform: translateY(0) scale(1.04, 0.96); }
+  100% { transform: translateY(0) scale(1, 1); }
+}
+
+/* Excited: something is being dragged over the dropzone. */
+.nv-anim-bounce { animation: nv-bounce 0.7s ease-in-out infinite; }
+@keyframes nv-bounce {
+  0%, 100% { transform: translateY(0) scale(1, 1); }
+  50% { transform: translateY(-14%) scale(0.98, 1.03); }
+}
+
+/* The logo is not animated at rest; it wiggles when pointed at. */
+.logo:hover .mascot,
+a:hover > .logo .mascot { animation: nv-wiggle 0.6s ease-in-out; }
+@keyframes nv-wiggle {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-10deg); }
+  50% { transform: rotate(8deg); }
+  75% { transform: rotate(-4deg); }
+}
+
+/* Landing hero entrance, before it settles into floating. */
+@keyframes nv-rise {
+  from { opacity: 0; transform: translateY(28px) scale(0.96); }
+  to { opacity: 1; transform: none; }
+}

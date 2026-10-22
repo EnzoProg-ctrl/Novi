@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Mascot } from '../components/Mascot'
+import { MascotRig } from '../components/MascotRig'
 import { useAuth } from '../context/auth-context'
 import {
   ACCEPTED_EXTENSIONS,
@@ -138,13 +138,13 @@ export function Upload() {
 
           {file ? (
             <>
-              <Mascot size={48} mood="happy" />
+              <MascotRig key={file.name} pose="waving-sm" size={48} className="nv-anim-hop" />
               <p className="dropzone-title">{file.name}</p>
               <p className="hint">{formatBytes(file.size)} · click to choose a different file</p>
             </>
           ) : (
             <>
-              <Mascot size={48} mood="calm" />
+              <MascotRig pose="waving-sm" size={48} className={dragging ? 'nv-anim-bounce' : 'nv-anim-float'} />
               <p className="dropzone-title">Drop a file here, or click to browse</p>
               <p className="hint">PDF, slides, documents, or images · up to 50 MB</p>
             </>

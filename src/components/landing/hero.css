@@ -156,7 +156,17 @@
   transform: rotate(-7deg);
   pointer-events: none;
 }
-.nv-heart { color: var(--nv-coral); }
+.nv-heart {
+  display: inline-block;
+  color: var(--nv-coral);
+  animation: nv-beat 2.6s ease-in-out infinite;
+}
+@keyframes nv-beat {
+  0%, 40%, 100% { transform: scale(1); }
+  10% { transform: scale(1.25); }
+  20% { transform: scale(1); }
+  30% { transform: scale(1.15); }
+}
 
 .nv-mascot {
   position: absolute;
@@ -168,6 +178,10 @@
   height: auto;
   pointer-events: none;
   filter: drop-shadow(0 18px 30px rgba(19, 26, 46, 0.12));
+  transform-origin: 50% 80%;
+  animation:
+    nv-rise 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) 0.15s both,
+    nv-float 7s ease-in-out 1.05s infinite;
 }
 
 /* ── Dashboard mockup ────────────────────────────────────────── */

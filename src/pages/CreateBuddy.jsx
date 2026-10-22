@@ -1,15 +1,16 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Logo, Mascot } from '../components/Mascot'
+import { Logo } from '../components/Mascot'
+import { MascotRig } from '../components/MascotRig'
 import { useAuth } from '../context/auth-context'
 
 // Values must match the personality CHECK constraint on public.buddies.
 const PERSONALITIES = [
-  { value: 'supportive', label: 'Supportive', blurb: 'Patient and encouraging', mood: 'happy' },
-  { value: 'cheerful', label: 'Cheerful', blurb: 'Upbeat and warm', mood: 'happy' },
-  { value: 'calm', label: 'Calm', blurb: 'Steady and unhurried', mood: 'calm' },
-  { value: 'witty', label: 'Witty', blurb: 'Light and a bit playful', mood: 'happy' },
-  { value: 'focused', label: 'Focused', blurb: 'Direct, keeps you on task', mood: 'thinking' },
+  { value: 'supportive', label: 'Supportive', blurb: 'Patient and encouraging' },
+  { value: 'cheerful', label: 'Cheerful', blurb: 'Upbeat and warm' },
+  { value: 'calm', label: 'Calm', blurb: 'Steady and unhurried' },
+  { value: 'witty', label: 'Witty', blurb: 'Light and a bit playful' },
+  { value: 'focused', label: 'Focused', blurb: 'Direct, keeps you on task' },
 ]
 
 export function CreateBuddy() {
@@ -21,7 +22,6 @@ export function CreateBuddy() {
   const [error, setError] = useState(null)
   const [busy, setBusy] = useState(false)
 
-  const selected = PERSONALITIES.find((p) => p.value === personality) ?? PERSONALITIES[0]
   const trimmedName = name.trim()
 
   async function handleSubmit(event) {
@@ -54,7 +54,7 @@ export function CreateBuddy() {
 
         <div className="buddy-preview">
           <div className="buddy-orb">
-            <Mascot size={92} mood={selected.mood} />
+            <MascotRig key={personality} pose="waving-sm" size={92} className="nv-anim-hop-float" />
           </div>
           <h2 className="auth-title">
             {trimmedName ? `Say hello to ${trimmedName}` : 'Meet your buddy'}

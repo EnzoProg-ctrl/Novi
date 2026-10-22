@@ -1,4 +1,4 @@
-import sleeping from '../../assets/sleeping.webp'
+import { MascotRig } from '../MascotRig'
 import { IconArrowRight, IconClock, IconFlame } from './HomeIcons'
 
 const DATE_FMT = { weekday: undefined, month: 'long', day: 'numeric', year: 'numeric' }
@@ -78,7 +78,7 @@ export function StatCards({ streakDays = 0, monthMinutes = 0 }) {
 export function QuoteCard() {
   return (
     <section className="hm-card hm-quote" aria-label="A note from Novi">
-      <img className="hm-quote-art" src={sleeping} alt="" width="1536" height="1024" />
+      <MascotRig pose="sleeping" className="hm-quote-art" />
       <blockquote className="hm-quote-text">
         <p>&ldquo;Consistency today, brighter tomorrow.&rdquo;</p>
         <footer>&mdash; Novi</footer>

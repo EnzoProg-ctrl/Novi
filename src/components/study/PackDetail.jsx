@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import capybara from '../../assets/capybara-avatar.webp'
+import { MascotRig } from '../MascotRig'
 import { IconBrain, IconCards, IconPencil } from '../home/HomeIcons'
 import { IconChevronRight, IconStar } from './PackIcons'
 
@@ -155,7 +155,7 @@ export function PackDetail({ pack, tone, Icon }) {
       </ul>
 
       <div className="pd-cheer">
-        <img src={capybara} alt="" width="320" height="320" />
+        <MascotRig pose="waving-sm" className="pd-cheer-art" />
         <div>
           <p className="pd-cheer-line">You&apos;ve got this! Keep going.</p>
           <p className="pd-cheer-quote">&ldquo;Progress looks good on you.&rdquo; — Novi</p>

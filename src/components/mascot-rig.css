@@ -1,0 +1,115 @@
+/* ── Mascot rigs ─────────────────────────────────────────────────
+   Layers share one box: the body sets the size, parts sit exactly on top.
+   Pivots are percentages of the original canvas, measured on the artwork
+   (the wrist, the base of each paw), so they hold at any rendered size. */
+
+.rig { position: relative; display: block; }
+.rig > img { display: block; width: 100%; height: auto; user-select: none; }
+.rig > .rig-part {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+/* ── Waving: the hand waves at the wrist, the motion lines flick with it ── */
+.rig-waving .rig-hand { transform-origin: 85.29% 53.01%; }
+.rig-waving-sm .rig-hand { transform-origin: 87.53% 55.17%; }
+.rig-waving .rig-lines { transform-origin: 87.64% 39.02%; }
+.rig-waving-sm .rig-lines { transform-origin: 89.93% 41.35%; }
+
+.rig-waving .rig-hand,
+.rig-waving-sm .rig-hand { animation: rig-wave 4.2s ease-in-out infinite; }
+.rig-waving .rig-lines,
+.rig-waving-sm .rig-lines { animation: rig-flick 4.2s ease-out infinite; }
+
+/* A burst of waving, then a rest, so it reads as a greeting, not a fidget. */
+@keyframes rig-wave {
+  0%, 46%, 100% { transform: rotate(0deg); }
+  52% { transform: rotate(12deg); }
+  60% { transform: rotate(-10deg); }
+  68% { transform: rotate(11deg); }
+  76% { transform: rotate(-8deg); }
+  84% { transform: rotate(4deg); }
+  92% { transform: rotate(0deg); }
+}
+@keyframes rig-flick {
+  0%, 46%, 100% { opacity: 1; transform: scale(1); }
+  52% { opacity: 0.35; transform: scale(0.85); }
+  58% { opacity: 1; transform: scale(1.12); }
+  66% { opacity: 0.5; transform: scale(0.94); }
+  74% { opacity: 1; transform: scale(1.08); }
+  86% { opacity: 1; transform: scale(1); }
+}
+
+/* ── Facing front: paws held up, pumped in turn ─────────────────── */
+.rig-front .rig-paw-l {
+  transform-origin: 32.11% 68.86%;
+  animation: rig-pump-l 3.6s ease-in-out infinite;
+}
+.rig-front .rig-paw-r {
+  transform-origin: 69.92% 68.86%;
+  animation: rig-pump-r 3.6s ease-in-out infinite;
+}
+@keyframes rig-pump-l {
+  0%, 55%, 68%, 84%, 100% { transform: translateY(0) rotate(0deg); }
+  61%, 77% { transform: translateY(-2.4%) rotate(-5deg); }
+}
+@keyframes rig-pump-r {
+  0%, 60%, 73%, 89%, 100% { transform: translateY(0) rotate(0deg); }
+  66%, 82% { transform: translateY(-2.4%) rotate(5deg); }
+}
+
+/* ── Laptop: typing in bursts, nodding to the music, hearts drifting ── */
+.rig-laptop .rig-paw {
+  transform-origin: 71.43% 74.9%;
+  animation: rig-type 2.6s ease-in-out infinite;
+}
+@keyframes rig-type {
+  0%, 16%, 32%, 48%, 100% { transform: rotate(0deg); }
+  8%, 40% { transform: rotate(4deg); }
+  24% { transform: rotate(3deg); }
+}
+.rig-laptop .rig-music {
+  transform-origin: 84.35% 34.31%;
+  animation: rig-beat 0.9s ease-out infinite;
+}
+@keyframes rig-beat {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  15% { opacity: 1; transform: scale(1.14); }
+  55% { opacity: 0.65; transform: scale(0.95); }
+}
+.rig-laptop .rig-hearts {
+  transform-origin: 8.36% 87.03%;
+  animation: rig-drift 3.2s ease-in-out infinite;
+}
+@keyframes rig-drift {
+  0%, 100% { opacity: 1; transform: translateY(0); }
+  50% { opacity: 0.7; transform: translateY(-1.4%); }
+}
+
+/* ── Sleeping: breathing, and the drawn Zs drift up one after another ── */
+.rig-sleeping .rig-body {
+  transform-origin: 50% 100%;
+  animation: nv-breathe 4.5s ease-in-out infinite;
+}
+.rig-sleeping .rig-z1,
+.rig-sleeping .rig-z2,
+.rig-sleeping .rig-z3 {
+  animation: rig-z 4.5s ease-in-out infinite backwards;
+}
+.rig-sleeping .rig-z1 { transform-origin: 77.86% 37.89%; }
+.rig-sleeping .rig-z2 { transform-origin: 81.25% 28.61%; animation-delay: 0.5s; }
+.rig-sleeping .rig-z3 { transform-origin: 90.36% 21.19%; animation-delay: 1s; }
+@keyframes rig-z {
+  0% { opacity: 0; transform: translate(-1%, 2%) scale(0.7); }
+  15% { opacity: 1; transform: translate(0, 0) scale(1); }
+  70% { opacity: 1; transform: translate(0.6%, -1.2%) scale(1); }
+  85%, 100% { opacity: 0; transform: translate(1%, -2.5%) scale(1.05); }
+}
+
+/* Anyone who asks for stillness gets the original artwork, Zs and all. */
+@media (prefers-reduced-motion: reduce) {
+  .rig > img { animation: none !important; }
+}

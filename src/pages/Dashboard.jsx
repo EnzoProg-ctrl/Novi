@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import laptopMascot from '../assets/laptop_mascot.webp'
+import { MascotRig } from '../components/MascotRig'
 import { BuddyCard } from '../components/home/BuddyCard'
 import { GoalRing } from '../components/home/GoalRing'
 import { ProgressCard } from '../components/home/ProgressCard'
@@ -271,7 +271,7 @@ export function Dashboard() {
       </div>
 
       <aside className="hm-rail">
-        <img className="hm-hero-art" src={laptopMascot} alt="" width="1316" height="1195" />
+        <MascotRig pose="laptop" className="hm-hero-art" />
         <ScheduleCard sessions={[]} />
         <StatCards streakDays={stats?.streakDays ?? 0} monthMinutes={stats?.monthMinutes ?? 0} />
         <QuoteCard />

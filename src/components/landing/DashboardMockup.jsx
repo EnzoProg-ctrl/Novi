@@ -76,7 +76,7 @@ export function DashboardMockup() {
         <div className="nv-mock-row">
           <div className="nv-mock-card nv-mock-buddy">
             <span className="nv-mock-avatar">
-              <img src={capybara} alt="" />
+              <img className="nv-anim-levitate" src={capybara} alt="" />
             </span>
             <div className="nv-mock-buddytext">
               <p className="nv-mock-buddyname">Novi</p>
