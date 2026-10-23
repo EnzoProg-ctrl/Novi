@@ -12,7 +12,6 @@ import { Practice } from './pages/Practice'
 import { SignIn } from './pages/SignIn'
 import { SignUp } from './pages/SignUp'
 import { StudyPack } from './pages/StudyPack'
-import { Upload } from './pages/Upload'
 import './App.css'
 
 /** Keeps signed-in students out of the landing and auth screens. */
@@ -48,7 +47,6 @@ function AppRoutes() {
         }
       >
         <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/upload" element={<Upload />} />
         <Route path="/packs" element={<Packs />} />
         <Route path="/pack/:packId" element={<StudyPack />} />
         <Route path="/pack/:packId/practice" element={<Practice />} />

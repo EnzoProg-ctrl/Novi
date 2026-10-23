@@ -8,7 +8,6 @@ import {
   IconPacks,
   IconProgress,
   IconSettings,
-  IconUpload,
   NoviMark,
 } from './AppIcons'
 
@@ -19,7 +18,6 @@ import {
  */
 const NAV = [
   { label: 'Home', Icon: IconHome, to: '/dashboard' },
-  { label: 'Upload', Icon: IconUpload, to: '/upload' },
   { label: 'Study Packs', Icon: IconPacks, to: '/packs' },
   { label: 'Calendar', Icon: IconCalendar },
   { label: 'Progress', Icon: IconProgress },

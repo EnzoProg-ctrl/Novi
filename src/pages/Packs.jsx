@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
 import '../components/study/packs-page.css'
 import {
   IconPackAtom,
@@ -10,6 +9,7 @@ import {
 import { PackDetail } from '../components/study/PackDetail'
 import { IconGridView, IconListView } from '../components/study/PackIcons'
 import { useAuth } from '../context/auth-context'
+import { useUpload } from '../context/upload-context'
 import { fetchPackList } from '../lib/packs'
 
 /** Cycled for visual variety; not tied to subject meaning. */
@@ -49,6 +49,7 @@ function relativeDay(iso) {
 }
 
 export function Packs() {
+  const { openUpload } = useUpload()
   const { user } = useAuth()
 
   const [packs, setPacks] = useState([])
@@ -112,10 +113,10 @@ export function Packs() {
           <p className="hm-sub">Organize your learning with AI-powered study packs.</p>
         </div>
         {/* Packs are generated from uploaded material, so "new" means "upload". */}
-        <Link to="/upload" className="pk-create">
+        <button type="button" className="pk-create" onClick={openUpload}>
           <IconPlus width={18} height={18} />
           Create New
-        </Link>
+        </button>
       </header>
 
       <div className="pk-toolbar">
@@ -195,7 +196,7 @@ export function Packs() {
               ? 'No packs in that subject yet.'
               : 'No study packs yet. Upload material and Novi will build your first one.'}
           </p>
-          <Link to="/upload" className="hm-buddy-cta">Upload material</Link>
+          <button type="button" className="hm-buddy-cta" onClick={openUpload}>Upload material</button>
         </div>
       ) : (
         <ul className={`pk-list is-${view}`}>

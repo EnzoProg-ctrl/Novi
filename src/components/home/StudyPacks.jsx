@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { IconPackAtom, IconPackBook, IconPackGrid, IconPlus } from './HomeIcons'
+import { useUpload } from '../../context/upload-context'
 
 /** Cycled so packs are visually distinguishable; not tied to subject meaning. */
 const TONES = [
@@ -23,6 +24,7 @@ function relativeDay(iso) {
 }
 
 export function StudyPacks({ packs = [], loading }) {
+  const { openUpload } = useUpload()
   return (
     <section className="hm-section" aria-label="Recent study packs">
       <header className="hm-card-head">
@@ -53,11 +55,11 @@ export function StudyPacks({ packs = [], loading }) {
               )
             })}
 
-            <Link to="/upload" className="hm-pack hm-pack-add">
+            <button type="button" className="hm-pack hm-pack-add" onClick={openUpload}>
               <IconPlus width={22} height={22} />
-              <p className="hm-pack-subject">Add New</p>
-              <p className="hm-pack-topic">Study Pack</p>
-            </Link>
+              <span className="hm-pack-subject">Add New</span>
+              <span className="hm-pack-topic">Study Pack</span>
+            </button>
           </div>
         </>
       )}

@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
 import { MascotRig } from '../components/MascotRig'
 import { BuddyCard } from '../components/home/BuddyCard'
 import { GoalRing } from '../components/home/GoalRing'
@@ -10,6 +9,7 @@ import { Recommendations } from '../components/home/Recommendations'
 import { StudyPacks } from '../components/home/StudyPacks'
 import '../components/home/home.css'
 import { useAuth } from '../context/auth-context'
+import { useUpload } from '../context/upload-context'
 import {
   fetchInProgress,
   fetchRecommendations,
@@ -92,6 +92,13 @@ export function Dashboard() {
     load()
   }, [load])
 
+  // A finished upload adds a material that is now processing; show it, and the
+  // polling below takes over from there.
+  const { uploads, openUpload } = useUpload()
+  useEffect(() => {
+    if (uploads > 0) load(true)
+  }, [uploads, load])
+
   // Processing runs server-side after upload, so poll while any material is
   // still moving through extract -> embed -> generate. Chained timeouts rather
   // than an interval, so a slow request can never stack up behind itself.
@@ -163,7 +170,7 @@ export function Dashboard() {
           <header className="hm-card-head">
             <h2 className="hm-section-title">Your material</h2>
             {selected.length === 0 && (
-              <Link to="/upload" className="hm-muted-link">Add another</Link>
+              <button type="button" className="hm-muted-link" onClick={openUpload}>Add another</button>
             )}
           </header>
 
@@ -220,7 +227,7 @@ export function Dashboard() {
               <p className="hm-empty-line">
                 Nothing here yet. Upload a lecture PDF, a slide deck, or a photo of your notes.
               </p>
-              <Link to="/upload" className="hm-buddy-cta">Upload your first material</Link>
+              <button type="button" className="hm-buddy-cta" onClick={openUpload}>Upload your first material</button>
             </div>
           ) : (
             <ul className="hm-materials">

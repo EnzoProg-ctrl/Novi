@@ -1,0 +1,94 @@
+/* ── Add-material pop-up ───────────────────────────────────────── */
+
+.up-dialog {
+  width: min(560px, calc(100% - 32px));
+  max-width: none;
+  max-height: calc(100dvh - 32px);
+  margin: auto;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-xl);
+  background: var(--bg);
+  color: var(--ink);
+  box-shadow: 0 30px 70px rgba(19, 26, 46, 0.22), 0 6px 18px rgba(19, 26, 46, 0.08);
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+.up-dialog[open] { animation: up-in 0.32s cubic-bezier(0.2, 0.9, 0.25, 1.05) both; }
+.up-dialog.is-closing { animation: up-out 0.18s ease-in both; }
+
+.up-dialog::backdrop {
+  background: rgba(19, 26, 46, 0.38);
+  backdrop-filter: blur(3px);
+  animation: up-fade-in 0.28s ease both;
+}
+.up-dialog.is-closing::backdrop { animation: up-fade-out 0.18s ease-in both; }
+
+@keyframes up-in {
+  from { opacity: 0; transform: translateY(18px) scale(0.96); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes up-out {
+  from { opacity: 1; transform: none; }
+  to { opacity: 0; transform: translateY(10px) scale(0.97); }
+}
+@keyframes up-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes up-fade-out { from { opacity: 1; } to { opacity: 0; } }
+
+/* The page behind should not scroll while the pop-up is open. */
+html:has(.up-dialog[open]) { overflow: hidden; }
+
+.up-panel { display: flex; flex-direction: column; gap: 18px; padding: 24px; }
+
+.up-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.up-title { margin: 0 0 4px; font-size: 1.25rem; font-weight: 740; letter-spacing: -0.02em; }
+
+.up-close {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  margin: -4px -6px 0 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.up-close:hover:not(:disabled) { background: var(--bg-soft); color: var(--ink); }
+.up-close:focus-visible { outline: 2px solid var(--coral); outline-offset: 2px; }
+.up-close:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.up-panel .count-field { margin: 0; }
+.up-actions { display: flex; justify-content: flex-end; gap: 10px; }
+
+@media (max-width: 520px) {
+  .up-panel { padding: 20px 18px; gap: 16px; }
+  .up-actions .btn { flex: 1; }
+}
+
+/* ── Buttons that used to be links to the upload page ──────────── */
+button.hm-muted-link,
+button.hm-rec-cta {
+  border: 0;
+  background: none;
+  padding-inline: 0;
+  padding-bottom: 0;
+  font-family: inherit;
+  cursor: pointer;
+}
+button.hm-muted-link { padding-top: 0; }
+button.hm-buddy-cta,
+button.pk-create {
+  border: 0;
+  font-family: inherit;
+  cursor: pointer;
+}
+button.hm-pack-add {
+  width: 100%;
+  font-family: inherit;
+  cursor: pointer;
+}
+button.hm-pack-add > span { display: block; }

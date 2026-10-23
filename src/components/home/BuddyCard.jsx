@@ -1,15 +1,15 @@
-import { Link } from 'react-router-dom'
 import { MascotRig } from '../MascotRig'
 import { IconArrowRight } from './HomeIcons'
+import { useUpload } from '../../context/upload-context'
 
 /**
  * The buddy's nudge. The name is real, from the student's own buddy row.
  *
- * "Start Studying" points at /upload: there is no practice session feature yet,
- * and adding material is genuinely the first step toward one. Worth revisiting
- * once sessions exist.
+ * Both labels open the add-material pop-up. "Start Studying" predates practice
+ * sessions; now that they exist it could point somewhere more useful.
  */
 export function BuddyCard({ buddyName, hasMaterial }) {
+  const { openUpload } = useUpload()
   const name = buddyName ?? 'Novi'
 
   return (
@@ -25,10 +25,10 @@ export function BuddyCard({ buddyName, hasMaterial }) {
             <>Add something to study<br />and we&apos;ll begin.</>
           )}
         </p>
-        <Link to="/upload" className="hm-buddy-cta">
+        <button type="button" className="hm-buddy-cta" onClick={openUpload}>
           {hasMaterial ? 'Start Studying' : 'Add material'}
           <IconArrowRight width={14} height={14} />
-        </Link>
+        </button>
       </div>
     </section>
   )

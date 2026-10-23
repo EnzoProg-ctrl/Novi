@@ -1,18 +1,20 @@
 import { Link } from 'react-router-dom'
 import { IconBrain, IconCards, IconClock, IconFlame, IconPencil, IconSparkle, IconUpload } from './HomeIcons'
+import { useUpload } from '../../context/upload-context'
 
 /**
  * How each recommendation kind presents itself.
  *
- * `to` is only set where the destination actually exists. The others render an
- * inert button rather than a link into a screen that has not been built, which
- * would fall through the catch-all route.
+ * `to` is only set where the destination actually exists, and `upload` opens
+ * the add-material pop-up. The others render an inert label rather than a link
+ * into a screen that has not been built, which would fall through the
+ * catch-all route.
  */
 const KINDS = {
   review_topic: { Icon: IconCards, tone: 'violet', action: 'Review' },
   practice_more: { Icon: IconBrain, tone: 'pink', action: 'Practice' },
   revisit_material: { Icon: IconPencil, tone: 'amber', action: 'Revisit' },
-  new_material: { Icon: IconUpload, tone: 'blue', action: 'Add material', to: '/upload' },
+  new_material: { Icon: IconUpload, tone: 'blue', action: 'Add material', upload: true },
   take_break: { Icon: IconClock, tone: 'blue', action: 'Take a break' },
   keep_streak: { Icon: IconFlame, tone: 'amber', action: 'Keep going' },
 }
@@ -20,6 +22,7 @@ const KINDS = {
 const FALLBACK = { Icon: IconCards, tone: 'violet', action: 'Open' }
 
 export function Recommendations({ items = [], loading }) {
+  const { openUpload } = useUpload()
   return (
     <section className="hm-section" aria-label="Recommended for you">
       <header className="hm-card-head hm-rec-head">
@@ -52,7 +55,9 @@ export function Recommendations({ items = [], loading }) {
                 <span className={`hm-rec-icon is-${kind.tone}`}><Icon /></span>
                 <p className="hm-rec-title">{item.title}</p>
                 {item.rationale && <p className="hm-rec-body">{item.rationale}</p>}
-                {kind.to ? (
+                {kind.upload ? (
+                  <button type="button" className="hm-rec-cta" onClick={openUpload}>{kind.action}</button>
+                ) : kind.to ? (
                   <Link to={kind.to} className="hm-rec-cta">{kind.action}</Link>
                 ) : (
                   <span className="hm-rec-cta is-inert">{kind.action}</span>

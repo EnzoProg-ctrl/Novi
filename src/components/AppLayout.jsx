@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom'
 import { useAuth } from '../context/auth-context'
 import { AppSidebar } from './app/AppSidebar'
 import { AppTopbar } from './app/AppTopbar'
+import { UploadProvider } from './upload/UploadProvider'
 import './app/app-shell.css'
 
 export function AppLayout() {
@@ -21,6 +22,7 @@ export function AppLayout() {
   }, [menuOpen])
 
   return (
+    <UploadProvider>
     <div className="nv-app">
       <AppSidebar open={menuOpen} onClose={() => setMenuOpen(false)} />
 
@@ -31,5 +33,6 @@ export function AppLayout() {
         </main>
       </div>
     </div>
+    </UploadProvider>
   )
 }
