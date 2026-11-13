@@ -1,0 +1,135 @@
+/* ── Date picker ───────────────────────────────────────────────────
+   The trigger is a .input styled like the Select trigger, with a calendar
+   icon in place of the arrow. The panel follows the Select list: fixed to the
+   button, same surface, border, shadow and easing. */
+
+.nv-date-trigger { color: var(--ink); }
+.nv-date-placeholder { color: var(--faint); }
+.nv-date-icon {
+  position: absolute;
+  right: 13px;
+  top: 50%;
+  margin-top: -8.5px;
+  color: var(--muted);
+  pointer-events: none;
+  transition: color 0.15s ease;
+}
+.nv-date.is-open .nv-date-icon { color: var(--coral-active); }
+
+.nv-date-panel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 60;
+  display: none;
+  width: 296px;
+  max-width: calc(100vw - 16px);
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg, 16px);
+  background: var(--bg);
+  box-shadow: var(--shadow-lg);
+  opacity: 0;
+  transform: translateY(-6px) scale(0.98);
+  transform-origin: top left;
+  transition:
+    opacity 0.14s ease,
+    transform 0.16s ease,
+    display 0.16s allow-discrete;
+}
+.nv-date-panel.is-up { top: auto; transform: translateY(6px) scale(0.98); transform-origin: bottom left; }
+.nv-date-panel.is-open {
+  display: block;
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 0.18s ease,
+    transform 0.22s cubic-bezier(0.2, 0.9, 0.25, 1.05),
+    display 0s allow-discrete;
+}
+@starting-style {
+  .nv-date-panel.is-open { opacity: 0; transform: translateY(-6px) scale(0.98); }
+  .nv-date-panel.is-up.is-open { transform: translateY(6px) scale(0.98); }
+}
+
+.nv-date-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+.nv-date-month { font-size: 0.95rem; font-weight: 720; color: var(--ink); }
+.nv-date-nav {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--ink-soft);
+  cursor: pointer;
+  transition: background-color 0.12s ease, color 0.12s ease, scale 0.16s var(--ease-press), translate 0.2s var(--ease-press);
+}
+.nv-date-nav:hover { background: var(--bg-sunken); color: var(--ink); }
+.nv-date-nav:focus-visible { outline: 2px solid var(--coral); outline-offset: 1px; }
+
+.nv-date-grid { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.nv-date-grid th {
+  padding: 4px 0 6px;
+  font-size: 0.72rem;
+  font-weight: 650;
+  color: var(--muted);
+  text-align: center;
+}
+.nv-date-grid td { padding: 1px; text-align: center; }
+
+.nv-date-day {
+  width: 100%;
+  aspect-ratio: 1;
+  max-height: 38px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  font: inherit;
+  font-size: 0.86rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-soft);
+  cursor: pointer;
+  transition: background-color 0.12s ease, color 0.12s ease, box-shadow 0.12s ease, scale 0.16s var(--ease-press), translate 0.2s var(--ease-press);
+}
+.nv-date-day:hover { background: var(--bg-sunken); color: var(--ink); }
+.nv-date-day:focus-visible { outline: 2px solid var(--coral); outline-offset: 0; }
+.nv-date-day.is-outside { color: var(--faint); }
+.nv-date-day.is-today { box-shadow: inset 0 0 0 1.5px var(--coral); color: var(--coral-active); font-weight: 700; }
+.nv-date-day.is-selected,
+.nv-date-day.is-selected:hover { background: var(--coral-active); color: #fff; font-weight: 700; box-shadow: none; }
+.nv-date-day.is-blocked,
+.nv-date-day.is-blocked:hover { background: transparent; color: var(--faint); opacity: 0.45; cursor: not-allowed; text-decoration: line-through; }
+
+.nv-date-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}
+.nv-date-today {
+  padding: 6px 10px;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: var(--coral-tint);
+  color: var(--coral-active);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: filter 0.12s ease, scale 0.16s var(--ease-press), translate 0.2s var(--ease-press);
+}
+.nv-date-today:hover { filter: brightness(0.96); }
+.nv-date-today:focus-visible { outline: 2px solid var(--coral); outline-offset: 1px; }
+.nv-date-today:disabled { opacity: 0.5; cursor: not-allowed; }
+.nv-date-chosen { font-size: 0.8rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+@media (prefers-reduced-motion: reduce) {
+  .nv-date-panel, .nv-date-panel.is-open { transition: none; }
+}

@@ -115,7 +115,7 @@
   font-weight: 560;
   color: var(--nv-ink);
   text-decoration: none;
-  transition: color 0.15s ease;
+  transition: color 0.15s ease, scale 0.16s var(--ease-press), translate 0.2s var(--ease-press);
 }
 .nv-signin:hover { color: var(--nv-coral); text-decoration: none; }
 
@@ -133,14 +133,14 @@
   white-space: nowrap;
   box-shadow: 0 1px 2px rgba(19, 26, 46, 0.06);
   transition: background-color 0.15s ease, transform 0.06s ease,
-    box-shadow 0.2s ease;
+    box-shadow 0.2s ease, scale 0.16s var(--ease-press), translate 0.2s var(--ease-press);
 }
 .nv-cta:hover {
   background: var(--nv-coral-hover);
   text-decoration: none;
   box-shadow: 0 6px 18px rgba(255, 107, 90, 0.28);
 }
-.nv-cta:active { background: var(--nv-coral-active); transform: translateY(1px); }
+.nv-cta:active { background: var(--nv-coral-active); }
 .nv-cta:focus-visible,
 .nv-signin:focus-visible,
 .nv-link:focus-visible,

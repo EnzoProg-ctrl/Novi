@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { IconPackAtom, IconPackBook, IconPackGrid, IconPlus } from './HomeIcons'
+import { LoadingRegion, Sk, SkText } from '../Skeleton'
 import { useUpload } from '../../context/upload-context'
 
 /** Cycled so packs are visually distinguishable; not tied to subject meaning. */
@@ -33,7 +34,14 @@ export function StudyPacks({ packs = [], loading }) {
       </header>
 
       {loading ? (
-        <p className="hm-empty-line">Loading your study packs…</p>
+        <LoadingRegion label="Loading your study packs…" className="hm-packs">
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className="hm-card hm-pack">
+              <Sk w={40} h={40} r={10} style={{ marginBottom: 14 }} />
+              <SkText lines={3} widths={['75%', '55%', '35%']} />
+            </div>
+          ))}
+        </LoadingRegion>
       ) : (
         <>
           {packs.length === 0 && (
@@ -46,7 +54,7 @@ export function StudyPacks({ packs = [], loading }) {
             {packs.map((pack, i) => {
               const { tone, Icon } = TONES[i % TONES.length]
               return (
-                <Link key={pack.id} to={`/pack/${pack.id}`} className="hm-card hm-pack">
+                <Link key={pack.id} to={`/packs?pack=${pack.id}`} className="hm-card hm-pack">
                   <span className={`hm-pack-icon is-${tone}`}><Icon /></span>
                   <p className="hm-pack-subject">{pack.subject ?? pack.title}</p>
                   <p className="hm-pack-topic">{pack.subject ? pack.title : 'Study pack'}</p>

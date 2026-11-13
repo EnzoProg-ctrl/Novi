@@ -91,10 +91,40 @@ export const IconClose = (props) => (
   </svg>
 )
 
+export const IconTarget = (props) => (
+  <svg {...base} {...props}>
+    <circle cx="12" cy="12" r="8.5" />
+    <circle cx="12" cy="12" r="4.5" />
+    <path d="M12 12l6.5-6.5M16 5.5h2.5V8" />
+  </svg>
+)
+
+export const IconQuestion = (props) => (
+  <svg {...base} {...props}>
+    <circle cx="12" cy="12" r="8.5" />
+    <path d="M9.6 9.4a2.5 2.5 0 014.8.9c0 1.7-2.4 2.2-2.4 3.7" />
+    <path d="M12 17.2h.01" />
+  </svg>
+)
+
+export const IconDoc = (props) => (
+  <svg {...base} {...props}>
+    <path d="M14 3.5H7.5A1.5 1.5 0 006 5v14a1.5 1.5 0 001.5 1.5h9A1.5 1.5 0 0018 19V7.5l-4-4z" />
+    <path d="M14 3.5v4h4M9 12.5h6M9 16h4" />
+  </svg>
+)
+
+export const IconChevronRight = (props) => (
+  <svg {...base} {...props}>
+    <path d="M9.5 6l6 6-6 6" />
+  </svg>
+)
+
 /** The coral double-bar wordmark. */
 export const NoviMark = ({ size = 26 }) => (
   <svg width={size} height={size} viewBox="0 0 34 34" fill="none" aria-hidden="true" focusable="false">
-    <rect x="3" y="4" width="11" height="26" rx="4" fill="var(--coral)" />
+    {/* Brand colours, fixed: the logo doesn't follow the accent colour setting. */}
+    <rect x="3" y="4" width="11" height="26" rx="4" fill="#ff6b5a" />
     <rect x="17" y="4" width="11" height="26" rx="4" fill="#ffa294" />
   </svg>
 )

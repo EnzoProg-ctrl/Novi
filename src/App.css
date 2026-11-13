@@ -11,22 +11,6 @@
   color: var(--ink);
 }
 
-/* ── Full page loader ────────────────────────────────────────── */
-.full-loader {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 14px;
-  background: var(--bg-soft);
-}
-.bob { animation: bob 1.6s ease-in-out infinite; }
-@keyframes bob {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-6px); }
-}
-
 /* ── Landing ─────────────────────────────────────────────────── */
 .landing {
   max-width: 1080px;
@@ -98,6 +82,21 @@
 .auth-card .hint, .buddy-card .hint { margin-top: 4px; }
 .auth-gap { margin-top: 20px; }
 .auth-foot { margin-top: 18px; text-align: center; }
+.auth-forgot { margin: 8px 0 0; text-align: right; font-size: 0.86rem; }
+.auth-forgot a { font-weight: 600; }
+/* Two-step verification code: large, spaced digits that are easy to check. */
+.mfa-code { font-size: 1.35rem; letter-spacing: 0.3em; text-align: center; font-variant-numeric: tabular-nums; }
+.mfa-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--coral-active);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.mfa-link:hover { text-decoration: underline; }
+.mfa-link:focus-visible { outline: 2px solid var(--coral); outline-offset: 2px; border-radius: 4px; }
 
 .buddy-preview { text-align: center; display: flex; flex-direction: column; align-items: center; }
 .buddy-orb {
@@ -125,7 +124,7 @@
   border: 1px solid var(--line-strong);
   border-radius: var(--r-md);
   cursor: pointer;
-  transition: border-color 0.15s ease, background-color 0.15s ease;
+  transition: border-color 0.15s ease, background-color 0.15s ease, scale 0.16s var(--ease-press), translate 0.2s var(--ease-press);
 }
 .personality-option:hover { border-color: var(--faint); background: var(--bg-soft); }
 .personality-option.is-selected {
@@ -210,7 +209,7 @@
   border-radius: var(--r-lg);
   background: var(--bg-soft);
   cursor: pointer;
-  transition: border-color 0.15s ease, background-color 0.15s ease;
+  transition: border-color 0.15s ease, background-color 0.15s ease, scale 0.16s var(--ease-press), translate 0.2s var(--ease-press);
 }
 .dropzone:hover { border-color: var(--coral); background: var(--coral-tint); }
 .dropzone.is-dragging { border-color: var(--coral); background: var(--coral-tint); }
@@ -246,7 +245,7 @@
   font-size: 0.95rem;
   color: var(--ink);
   cursor: pointer;
-  transition: border-color 0.15s ease, background-color 0.15s ease;
+  transition: border-color 0.15s ease, background-color 0.15s ease, scale 0.16s var(--ease-press), translate 0.2s var(--ease-press);
 }
 .count-option:hover { border-color: var(--faint); background: var(--bg-soft); }
 .count-option.is-selected {

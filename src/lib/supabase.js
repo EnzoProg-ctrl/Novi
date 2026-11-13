@@ -1,4 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
+// Must load before the client is created: it reads what an email link put in
+// the URL before supabase-js does (see the file for why).
+import './auth-redirect'
 
 const url = import.meta.env.VITE_SUPABASE_URL
 const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
@@ -25,5 +28,9 @@ export const supabase = createClient(url, key, {
     detectSessionInUrl: true,
   },
 })
+
+/** For calls supabase-js can't make itself, such as reading a streamed response. */
+export const SUPABASE_URL = url
+export const SUPABASE_KEY = key
 
 export const STUDY_MATERIALS_BUCKET = 'study-materials'

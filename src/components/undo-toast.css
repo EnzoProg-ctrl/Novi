@@ -1,0 +1,79 @@
+/* ── Undo toast ────────────────────────────────────────────────────
+   Bottom centre, like the other toasts, with an Undo button and a bar that
+   empties over the undo window. */
+
+.nv-undo {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  z-index: 65;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: max-content;
+  max-width: min(480px, calc(100vw - 32px));
+  padding: 10px 10px 12px 16px;
+  overflow: hidden;
+  border-radius: var(--r-md);
+  background: var(--tooltip-bg);
+  box-shadow: var(--shadow-lg);
+  color: var(--tooltip-ink);
+  font-size: 0.88rem;
+  translate: -50% 0;
+  animation: nv-undo-in 0.26s cubic-bezier(0.2, 0.9, 0.25, 1.05) both;
+}
+.nv-undo.is-error { background: var(--danger); }
+.nv-undo.is-done { padding-right: 16px; }
+
+.nv-undo-text { min-width: 0; line-height: 1.4; overflow-wrap: anywhere; }
+.nv-undo-text strong { font-weight: 700; }
+
+.nv-undo-btn {
+  flex: none;
+  padding: 7px 14px;
+  border: 1px solid color-mix(in srgb, currentColor 30%, transparent);
+  border-radius: var(--r-sm);
+  background: color-mix(in srgb, currentColor 10%, transparent);
+  color: inherit;
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.15s ease, scale 0.16s var(--ease-press, ease);
+}
+.nv-undo-btn:hover:not(:disabled) { background: color-mix(in srgb, currentColor 20%, transparent); }
+.nv-undo-btn:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+.nv-undo-btn:disabled { opacity: 0.55; cursor: progress; }
+
+/* Time left: empties from full to nothing over the undo window. */
+.nv-undo-bar {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 3px;
+  width: 100%;
+  background: var(--coral);
+  transform-origin: left center;
+  animation-name: nv-undo-drain;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+
+@keyframes nv-undo-in {
+  from { opacity: 0; translate: -50% 12px; }
+  to { opacity: 1; translate: -50% 0; }
+}
+@keyframes nv-undo-drain {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0); }
+}
+
+@media (max-width: 560px) {
+  .nv-undo { bottom: 16px; width: calc(100vw - 32px); }
+}
+/* With reduced motion the countdown still has to be visible: the bar keeps
+   running, only the entrance stops moving. */
+@media (prefers-reduced-motion: reduce) {
+  .nv-undo { animation: none; }
+  .nv-undo-bar { animation-duration: 5000ms !important; }
+}

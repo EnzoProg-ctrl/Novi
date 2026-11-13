@@ -1,0 +1,107 @@
+/* ── Dropdown ──────────────────────────────────────────────────────
+   The trigger takes its look from the class it is given (.input or
+   .pk-select); this adds the arrow, its spacing, and the animated list. */
+
+.nv-select { position: relative; display: inline-block; max-width: 100%; vertical-align: middle; }
+.nv-select.is-block { display: block; }
+
+.nv-select-trigger {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+  /* Room for the arrow, so text never runs under it and the arrow never
+     touches the edge. */
+  padding-right: 40px !important;
+  font: inherit;
+  text-align: left;
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+.nv-select-trigger:disabled { cursor: not-allowed; opacity: 0.6; }
+.nv-select-trigger:focus-visible { outline: 2px solid var(--coral); outline-offset: 1px; }
+.nv-select.is-open .nv-select-trigger { border-color: var(--coral); }
+.nv-select-value { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.nv-select-chevron {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  margin-top: -8px;
+  color: var(--muted);
+  pointer-events: none;
+  transition: transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1), color 0.15s ease;
+}
+.nv-select.is-open .nv-select-chevron { transform: rotate(180deg); color: var(--coral-active); }
+
+/* Closed, the list is display: none, so it takes no space and can never
+   stretch or scroll whatever it sits in. It still eases in and out: display
+   switches discretely at the end of the close transition, and @starting-style
+   gives the open transition its first frame. Browsers without those features
+   simply show and hide it without the motion. */
+.nv-select-list {
+  /* Coordinates are set inline when it opens (see Select.jsx). */
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 60;
+  display: none;
+  max-width: min(360px, 90vw);
+  max-height: 280px;
+  margin: 0;
+  padding: 6px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  list-style: none;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--bg);
+  box-shadow: var(--shadow-lg);
+  opacity: 0;
+  transform: translateY(-6px) scale(0.98);
+  transform-origin: top center;
+  transition:
+    opacity 0.14s ease,
+    transform 0.16s ease,
+    display 0.16s allow-discrete;
+}
+.nv-select-list.is-up {
+  top: auto;
+  transform: translateY(6px) scale(0.98);
+  transform-origin: bottom center;
+}
+.nv-select-list.is-open {
+  display: block;
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 0.18s ease,
+    transform 0.22s cubic-bezier(0.2, 0.9, 0.25, 1.05),
+    display 0s allow-discrete;
+}
+@starting-style {
+  .nv-select-list.is-open { opacity: 0; transform: translateY(-6px) scale(0.98); }
+  .nv-select-list.is-up.is-open { transform: translateY(6px) scale(0.98); }
+}
+.nv-select-list:focus { outline: none; }
+
+.nv-select-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 12px;
+  border-radius: var(--r-sm);
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 0.12s ease, color 0.12s ease;
+}
+.nv-select-option-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.nv-select-option-hint { margin-left: auto; font-size: 0.8rem; font-weight: 500; color: var(--muted); }
+.nv-select-option.is-selected .nv-select-option-hint { color: inherit; opacity: 0.75; }
+.nv-select-option.is-active { background: var(--bg-sunken); color: var(--ink); }
+.nv-select-option.is-selected { color: var(--coral-active); font-weight: 650; }
+.nv-select-option.is-selected svg { flex: none; }

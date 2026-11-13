@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Logo } from '../components/Mascot'
 import { MascotRig } from '../components/MascotRig'
 import { useAuth } from '../context/auth-context'
+import { friendlyError } from '../lib/errors'
 
 // Values must match the personality CHECK constraint on public.buddies.
 const PERSONALITIES = [
@@ -42,7 +43,7 @@ export function CreateBuddy() {
       await createBuddy({ name: trimmedName, personality })
       navigate('/dashboard', { replace: true })
     } catch (err) {
-      setError(err?.message ?? 'Could not save your buddy.')
+      setError(friendlyError(err, 'Could not save your buddy.'))
       setBusy(false)
     }
   }

@@ -179,6 +179,26 @@ save(take(img, music), 'laptop-music')
 save(take(img, hearts), 'laptop-hearts')
 pivots['laptop'] = {'size': [W, H], 'paw': [935, 900], 'music': [1150, 420], 'hearts': [110, 1040]}
 
+# The AI Chat avatar: head, headphones and sound lines, cropped square and
+# mirrored so Novi faces the conversation. The paw holds still at this size;
+# the sound lines stay a layer so they can pulse while Novi is typing.
+LS_BOX, LS_SIZE = (380, 100, 1260, 980), 320
+
+
+def save_avatar(arr, name):
+    im = Image.fromarray(np.clip(arr, 0, 255).astype(np.uint8), 'RGBA')
+    im = im.crop(LS_BOX).transpose(Image.FLIP_LEFT_RIGHT).resize((LS_SIZE, LS_SIZE), Image.LANCZOS)
+    im.save(f'{OUT}/{name}.webp', 'WEBP', quality=90, method=6)
+
+
+save_avatar(erase(img, music), 'laptop-sm-body')
+save_avatar(take(img, music), 'laptop-sm-music')
+pivots['laptop-sm'] = {
+    'size': [LS_SIZE, LS_SIZE],
+    'music_pct': [(LS_BOX[2] - 1150) / (LS_BOX[2] - LS_BOX[0]) * 100,
+                  (420 - LS_BOX[1]) / (LS_BOX[3] - LS_BOX[1]) * 100],
+}
+
 # ── Sleeping: the drawn Zs drift up one after another ────────────
 img = load('sleeping.webp')
 H, W = img.shape[:2]

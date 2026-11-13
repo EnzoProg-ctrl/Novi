@@ -1,4 +1,6 @@
+import { Link } from 'react-router-dom'
 import { IconClock, IconPackAtom, IconPackBook, IconPackGrid } from './HomeIcons'
+import { LoadingRegion, Sk, SkText } from '../Skeleton'
 
 const TONES = [
   { tone: 'green', Icon: IconPackGrid },
@@ -18,7 +20,17 @@ export function ContinueSection({ items = [], loading }) {
       </header>
 
       {loading ? (
-        <p className="hm-empty-line">Loading…</p>
+        <LoadingRegion label="Loading sessions in progress…" as="ul" className="hm-continue">
+          {[0, 1].map((i) => (
+            <li key={i} className="hm-card hm-continue-row">
+              <Sk w={40} h={40} r={10} />
+              <span className="hm-continue-meta"><SkText lines={2} widths={['70%', '40%']} /></span>
+              <Sk h={8} r={4} className="hm-continue-track" />
+              <Sk w={34} h={12} />
+              <Sk w={80} h={34} r={10} />
+            </li>
+          ))}
+        </LoadingRegion>
       ) : items.length === 0 ? (
         <div className="hm-card hm-rec-empty">
           <p className="hm-empty-line">
@@ -38,6 +50,7 @@ export function ContinueSection({ items = [], loading }) {
                     {item.subject ? `${item.subject} – ${item.title}` : item.title}
                   </span>
                   <span className="hm-sub">
+                    {item.topicName ? `${item.topicName} · ` : ''}
                     {item.modeLabel}
                     {item.total > 0 && ` · ${item.total} questions`}
                   </span>
@@ -51,8 +64,16 @@ export function ContinueSection({ items = [], loading }) {
                   {item.done}/{item.total || '—'}
                 </span>
 
-                {/* Inert until a session screen exists to resume into. */}
-                <span className="hm-continue-cta">Continue</span>
+                {item.packId ? (
+                  <Link
+                    to={`/pack/${item.packId}/practice${item.focusTopicId ? `?topic=${item.focusTopicId}` : ''}`}
+                    className="hm-continue-cta"
+                  >
+                    Continue
+                  </Link>
+                ) : (
+                  <span className="hm-continue-cta">Continue</span>
+                )}
               </li>
             )
           })}

@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { AnswerPanel } from '../components/study/AnswerPanel'
+import { LoadingRegion, Sk, SkText } from '../components/Skeleton'
 import '../components/study/practice.css'
 import { useAuth } from '../context/auth-context'
+import { usePreferences } from '../context/preferences-context'
 import { fetchStudyPack } from '../lib/packs'
 import {
+  fetchTopicName,
   findOpenSession,
   finishSession,
   gradeAnswer,
@@ -12,6 +15,10 @@ import {
   recordAttempt,
   startSession,
 } from '../lib/practice'
+import { friendlyError } from '../lib/errors'
+import { recommendationFromSearch, recordRecommendationEvent } from '../lib/recommendations'
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 // Session lengths offered before a sitting. A pack no bigger than the
 // smallest option just starts, since there is nothing to choose.
@@ -20,7 +27,24 @@ const SESSION_SIZES = [5, 10, 15, 20]
 export function Practice() {
   const { packId } = useParams()
   const { user, buddy } = useAuth()
+  const { prefs } = usePreferences()
   const navigate = useNavigate()
+  const location = useLocation()
+  // ?topic= practises one topic of the pack (a recommendation opens it so);
+  // ?rec= is the recommendation, told when the sitting starts and finishes.
+  const topicParam = new URLSearchParams(location.search).get('topic')
+  const focusTopicId = topicParam && UUID.test(topicParam) ? topicParam : null
+  const recId = recommendationFromSearch(location.search)
+  const [topicName, setTopicName] = useState(null)
+  // What this sitting covers: the topic's questions, or the whole pack.
+  const focusRef = useRef(null)
+  const [sittingSize, setSittingSize] = useState(0)
+  // The default session length from Settings (null = ask). A ref so loading
+  // reads the latest value without restarting the session bootstrap.
+  const practiceSize = useRef(prefs.practiceSessionSize)
+  useEffect(() => {
+    practiceSize.current = prefs.practiceSessionSize
+  }, [prefs.practiceSessionSize])
 
   const [pack, setPack] = useState(null)
   const [session, setSession] = useState(null)
@@ -49,6 +73,7 @@ export function Practice() {
   const bootstrapped = useRef(null)
 
   function begin(s, questions, alreadyAnswered) {
+    if (recId) recordRecommendationEvent(recId, 'started', { sessionId: s.id })
     setSession(s)
     setQueue(questions)
     setIndex(0)
@@ -59,8 +84,9 @@ export function Practice() {
 
   const load = useCallback(async () => {
     if (!user) return
-    if (bootstrapped.current === packId) return
-    bootstrapped.current = packId
+    const bootKey = `${packId}|${focusTopicId ?? ''}`
+    if (bootstrapped.current === bootKey) return
+    bootstrapped.current = bootKey
     setLoading(true)
     try {
       const loaded = await fetchStudyPack(packId)
@@ -71,14 +97,29 @@ export function Practice() {
       setPack(loaded)
       setError(null)
 
-      const open = await findOpenSession(user.id, loaded.id)
+      // A topic with no questions left in this pack falls back to the whole pack.
+      let focus = focusTopicId
+      let sitting = loaded.questions
+      if (focus) {
+        const onTopic = loaded.questions.filter((q) => q.topic_id === focus)
+        if (onTopic.length > 0) {
+          sitting = onTopic
+          fetchTopicName(focus).then(setTopicName).catch(() => {})
+        } else {
+          focus = null
+        }
+      }
+      focusRef.current = focus
+      setSittingSize(sitting.length)
+
+      const open = await findOpenSession(user.id, loaded.id, focus)
       if (open) {
         // Anything already answered in this session is skipped, and the
         // session's own target still applies, so resuming carries on toward
         // the length the student chose rather than switching to the whole pack.
         const answered = open.answeredIds.size
         const ordered = await orderForPractice(
-          loaded.questions.filter((q) => !open.answeredIds.has(q.id)),
+          sitting.filter((q) => !open.answeredIds.has(q.id)),
         )
         const target = open.session.target_count
         const left = target == null ? ordered.length : Math.max(0, target - answered)
@@ -99,19 +140,26 @@ export function Practice() {
         return
       }
 
-      const ordered = await orderForPractice(loaded.questions)
+      const ordered = await orderForPractice(sitting)
       if (ordered.length <= SESSION_SIZES[0]) {
-        begin(await startSession(user.id, loaded.id, null), ordered, 0)
+        begin(await startSession(user.id, loaded.id, null, focus), ordered, 0)
+        return
+      }
+      // A default length from Settings skips the "how many?" question.
+      const preferred = practiceSize.current
+      if (preferred) {
+        const target = preferred >= ordered.length ? null : preferred
+        begin(await startSession(user.id, loaded.id, target, focus), ordered.slice(0, preferred), 0)
         return
       }
       setPool(ordered)
     } catch (err) {
       bootstrapped.current = null
-      setError(err?.message ?? 'Could not start this practice session.')
+      setError(friendlyError(err, 'Could not start this practice session.'))
     } finally {
       setLoading(false)
     }
-  }, [user, packId])
+  }, [user, packId, focusTopicId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function choose(size) {
     if (!pool || saving) return
@@ -119,11 +167,11 @@ export function Practice() {
     try {
       // "All" is stored as null so the session follows the pack as it is.
       const target = size >= pool.length ? null : size
-      const s = await startSession(user.id, pack.id, target)
+      const s = await startSession(user.id, pack.id, target, focusRef.current)
       begin(s, pool.slice(0, size), 0)
       setPool(null)
     } catch (err) {
-      setError(err?.message ?? 'Could not start this practice session.')
+      setError(friendlyError(err, 'Could not start this practice session.'))
     } finally {
       setSaving(false)
     }
@@ -174,7 +222,7 @@ export function Practice() {
       setSession((s) => ({ ...s, ...next }))
       setTally({ answered: next.questions_answered, correct: next.questions_correct })
     } catch (err) {
-      setError(err?.message ?? 'Could not save that answer.')
+      setError(friendlyError(err, 'Could not save that answer.'))
     } finally {
       setSaving(false)
     }
@@ -192,18 +240,47 @@ export function Practice() {
 
     try {
       await finishSession({ userId: user.id, session })
+      if (recId) {
+        recordRecommendationEvent(recId, 'completed', {
+          sessionId: session.id,
+          detail: {
+            answered: tally.answered,
+            correct: tally.correct,
+            accuracy: tally.answered ? Number((tally.correct / tally.answered).toFixed(3)) : null,
+          },
+        })
+      }
     } catch (err) {
-      setError(err?.message ?? 'Could not close the session.')
+      setError(friendlyError(err, 'Could not close the session.'))
     }
     setFinished(true)
   }
 
-  if (loading) return <p className="hm-empty-line">Getting your questions ready…</p>
+  if (loading) {
+    return (
+      <LoadingRegion label="Getting your questions ready…" className="pr">
+        <header className="pr-head">
+          <span className="sk-stack" style={{ gap: 8 }}>
+            <Sk w={140} h={12} />
+            <Sk w={190} h={24} r={8} />
+          </span>
+          <Sk w={110} h={36} r={12} />
+        </header>
+        <Sk h={6} r={4} />
+        <section className="hm-card card-pad pr-card">
+          <SkText lines={2} h={16} gap={10} widths={['92%', '60%']} />
+          <span className="sk-stack" style={{ gap: 9 }}>
+            {[0, 1, 2, 3].map((i) => <Sk key={i} h={48} r={12} />)}
+          </span>
+        </section>
+      </LoadingRegion>
+    )
+  }
   if (error) {
     return (
       <div className="pr">
         <div className="msg msg-error">{error}</div>
-        <Link to="/packs" className="hm-buddy-cta">Back to study packs</Link>
+        <Link to={`/packs?pack=${packId}`} className="hm-buddy-cta">Back to study packs</Link>
       </div>
     )
   }
@@ -214,10 +291,10 @@ export function Practice() {
       <div className="pr">
         <header className="pr-head">
           <div>
-            <p className="hm-sub">{pack.title}</p>
+            <p className="hm-sub">{pack.title}{topicName ? ` · ${topicName}` : ''}</p>
             <h1 className="pr-title">How many questions this time?</h1>
           </div>
-          <button type="button" className="pr-exit" onClick={() => navigate(`/pack/${packId}`)}>
+          <button type="button" className="pr-exit" onClick={() => navigate(`/packs?pack=${packId}`)}>
             Back
           </button>
         </header>
@@ -250,6 +327,9 @@ export function Practice() {
             {buddy?.name ?? 'Novi'} starts with questions you haven&rsquo;t tried yet, then the
             ones you missed.
           </p>
+          <p className="hm-sub">
+            Always the same number? <Link to="/settings#study">Set a default in Settings</Link> to skip this step.
+          </p>
         </section>
       </div>
     )
@@ -260,12 +340,12 @@ export function Practice() {
     const score = answered > 0 ? Math.round((tally.correct / answered) * 100) : 0
     // Once a sitting is over the student can always go again; "more" when the
     // sitting covered only part of the pack.
-    const partial = answered > 0 && answered < (pack?.questions.length ?? 0)
+    const partial = answered > 0 && answered < sittingSize
     return (
       <div className="pr pr-done">
         <div className="hm-card card-pad pr-summary">
           <h1 className="pr-done-title">
-            {answered === 0 ? 'Nothing left to practise' : 'Session complete'}
+            {answered === 0 ? 'Nothing left to practice' : 'Session complete'}
           </h1>
           {answered > 0 && (
             <>
@@ -282,14 +362,14 @@ export function Practice() {
             {answered > 0 ? (
               <>
                 <button type="button" className="hm-buddy-cta" onClick={again}>
-                  {partial ? 'Practise more' : 'Practise again'}
+                  {partial ? 'Practice more' : 'Practice again'}
                 </button>
                 <Link to={`/pack/${packId}`} className="pd-secondary">Back to pack</Link>
               </>
             ) : (
               <>
                 <Link to={`/pack/${packId}`} className="hm-buddy-cta">Back to pack</Link>
-                <Link to="/dashboard" className="pd-secondary">Home</Link>
+                <Link to={`/packs?pack=${packId}`} className="pd-secondary">Study packs</Link>
               </>
             )}
           </div>
@@ -302,10 +382,10 @@ export function Practice() {
     <div className="pr">
       <header className="pr-head">
         <div>
-          <p className="hm-sub">{pack.title}</p>
+          <p className="hm-sub">{pack.title}{topicName ? ` · ${topicName}` : ''}</p>
           <h1 className="pr-title">Question {doneCount + 1} of {total}</h1>
         </div>
-        <button type="button" className="pr-exit" onClick={() => navigate(`/pack/${packId}`)}>
+        <button type="button" className="pr-exit" onClick={() => navigate(`/packs?pack=${packId}`)}>
           Save &amp; exit
         </button>
       </header>

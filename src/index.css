@@ -3,12 +3,14 @@
    Rounded cards, soft shadows. Friendly but mature.            */
 
 :root {
-  /* Brand */
+  /* Brand. "coral" is the accent: Settings can swap it (see data-accent
+     below), and tint and ring follow it automatically. */
   --coral: #ff6b5a;
   --coral-hover: #f04e3b;
   --coral-active: #d8402e;
-  --coral-tint: #fff1ee;
-  --coral-ring: rgba(255, 107, 90, 0.28);
+  --coral-tint: color-mix(in srgb, var(--coral) 10%, var(--bg));
+  --coral-ring: color-mix(in srgb, var(--coral) 28%, transparent);
+  --on-accent: #ffffff;
 
   /* Neutrals */
   --ink: #1c2024;
@@ -20,6 +22,10 @@
   --bg: #ffffff;
   --bg-soft: #fafafb;
   --bg-sunken: #f4f5f7;
+  --page: #f7f8fa;          /* behind the cards in the signed-in app */
+  --sk: #e9ebef;            /* skeleton placeholders */
+  --tooltip-bg: #1c2024;
+  --tooltip-ink: #ffffff;
 
   /* Feedback */
   --success: #1f9d63;
@@ -28,6 +34,9 @@
   --danger-tint: #fdeeee;
   --warn: #b7791f;
   --warn-tint: #fdf6e7;
+  --success-ink: #14663f;   /* text on the tints above */
+  --danger-ink: #8f2f2f;
+  --warn-ink: #7a5313;
 
   /* Shape */
   --r-sm: 8px;
@@ -47,16 +56,87 @@
   color-scheme: light;
 }
 
+/* ── Appearance settings ─────────────────────────────────────────
+   Set on <html> by PreferencesProvider (and before first paint by the script
+   in index.html) for signed-in students only; the landing and sign-in pages
+   always use the defaults. */
+
+/* Accents keep coral's weight, so white text on a filled button reads the
+   same in every option. */
+:root[data-accent="lavender"] { --coral: #8a6fe6; --coral-hover: #7a5edb; --coral-active: #6146c2; }
+:root[data-accent="blue"]     { --coral: #4a7ef0; --coral-hover: #3a6ce0; --coral-active: #2b56bd; }
+:root[data-accent="mint"]     { --coral: #1fa487; --coral-hover: #1a9078; --coral-active: #137662; }
+:root[data-accent="rose"]     { --coral: #e65f8b; --coral-hover: #d84a77; --coral-active: #bc3963; }
+
+:root[data-font="small"] { font-size: 93.75%; }
+:root[data-font="large"] { font-size: 112.5%; }
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --ink: #e9ecf0;
+  --ink-soft: #c3c9d1;
+  --muted: #9aa3ae;
+  --faint: #6f7884;
+  --line: #2a3039;
+  --line-strong: #3a414c;
+  --bg: #181c22;
+  --bg-soft: #1e232a;
+  --bg-sunken: #242a32;
+  --page: #111418;
+  --sk: #262c35;
+  --tooltip-bg: #e9ecf0;
+  --tooltip-ink: #1c2024;
+
+  /* Accent text sits on dark tints, so it lightens instead of darkening. */
+  --coral-hover: color-mix(in srgb, var(--coral) 88%, #fff);
+  --coral-active: color-mix(in srgb, var(--coral) 72%, #fff);
+  --coral-tint: color-mix(in srgb, var(--coral) 16%, var(--bg));
+
+  --success: #3cc285;
+  --success-tint: color-mix(in srgb, var(--success) 16%, var(--bg));
+  --danger: #ec6a6a;
+  --danger-tint: color-mix(in srgb, var(--danger) 16%, var(--bg));
+  --warn: #e0a548;
+  --warn-tint: color-mix(in srgb, var(--warn) 16%, var(--bg));
+  --success-ink: #8ee0b6;
+  --danger-ink: #f5a9a9;
+  --warn-ink: #f2cb87;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.35), 0 1px 2px rgba(0, 0, 0, 0.25);
+  --shadow-lg: 0 8px 28px rgba(0, 0, 0, 0.45), 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+/* Pastel fills are fixed light colours; in dark mode each derives from its own
+   ink or mark colour instead, so every badge, icon tile and session chip keeps
+   its hue on a dark card. */
+:root[data-theme="dark"] [class*="tone-"] {
+  --tone-bg: color-mix(in srgb, var(--tone-mark) 20%, var(--bg));
+  --tone-ink: color-mix(in srgb, var(--tone-mark) 55%, #fff);
+}
+:root[data-theme="dark"] :is(.hm-stat-icon, .hm-pack-icon, .hm-rec-icon)[class*="is-"] {
+  background: color-mix(in srgb, currentColor 20%, var(--bg));
+}
+:root[data-theme="dark"] .pd-stat.is-green  { background: color-mix(in srgb, #2fb36e 18%, var(--bg)); }
+:root[data-theme="dark"] .pd-stat.is-blue   { background: color-mix(in srgb, #5b8def 18%, var(--bg)); }
+:root[data-theme="dark"] .pd-stat.is-violet { background: color-mix(in srgb, #8b7cf0 18%, var(--bg)); }
+
 *,
 *::before,
 *::after { box-sizing: border-box; }
 
 html, body, #root { height: 100%; }
 
+/* Always reserve the scrollbar's space. Pop-ups stop the page scrolling while
+   open, which removes the scrollbar; without this the page widened by its
+   width and everything shifted sideways each time a pop-up opened. */
+html { scrollbar-gutter: stable; }
+
 body {
   margin: 0;
   font-family: var(--font);
-  font-size: 15px;
+  font-size: 0.9375rem; /* 15px at the default size; scales with font size setting */
   line-height: 1.55;
   color: var(--ink);
   background: var(--bg);
@@ -99,13 +179,12 @@ a:hover { text-decoration: underline; }
   font-size: 0.94rem;
   cursor: pointer;
   transition: background-color 0.15s ease, border-color 0.15s ease,
-    color 0.15s ease, box-shadow 0.15s ease, transform 0.06s ease;
+    color 0.15s ease, box-shadow 0.15s ease, transform 0.06s ease, scale 0.16s var(--ease-press), translate 0.2s var(--ease-press);
   white-space: nowrap;
 }
-.btn:active:not(:disabled) { transform: translateY(1px); }
 .btn:disabled { opacity: 0.55; cursor: not-allowed; }
 
-.btn-primary { background: var(--coral); color: #fff; box-shadow: var(--shadow-sm); }
+.btn-primary { background: var(--coral); color: var(--on-accent); box-shadow: var(--shadow-sm); }
 .btn-primary:hover:not(:disabled) { background: var(--coral-hover); }
 .btn-primary:active:not(:disabled) { background: var(--coral-active); }
 
@@ -181,7 +260,7 @@ a:hover { text-decoration: underline; }
   background: transparent;
   color: var(--muted);
   cursor: pointer;
-  transition: color 0.15s ease, background-color 0.15s ease;
+  transition: color 0.15s ease, background-color 0.15s ease, scale 0.16s var(--ease-press), translate 0.2s var(--ease-press);
 }
 .password-toggle:hover { color: var(--ink); background: var(--bg-sunken); }
 .password-toggle:focus-visible {
@@ -207,9 +286,9 @@ a:hover { text-decoration: underline; }
   font-size: 0.88rem;
   line-height: 1.45;
 }
-.msg-error   { background: var(--danger-tint);  color: #8f2f2f; }
-.msg-success { background: var(--success-tint); color: #14663f; }
-.msg-info    { background: var(--coral-tint);   color: #a33a2a; }
+.msg-error   { background: var(--danger-tint);  color: var(--danger-ink); }
+.msg-success { background: var(--success-tint); color: var(--success-ink); }
+.msg-info    { background: var(--coral-tint);   color: var(--coral-active); }
 
 /* ── Bits ────────────────────────────────────────────────────── */
 .badge {
@@ -250,6 +329,49 @@ a:hover { text-decoration: underline; }
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* ── Interaction motion ──────────────────────────────────────────
+   One feel for everything clickable: colours ease, a press gives a small
+   squeeze, and card-like links lift a little under a mouse.
+
+   Uses the `scale` and `translate` properties, which combine with an
+   element's own `transform` instead of replacing it, so nothing positioned
+   with a transform moves. Component rules that set their own `transition`
+   list scale and translate too; everything here is wrapped in :where() so
+   any component rule still wins. Dropdown and date triggers are left still:
+   their pop-ups are placed from the trigger's size when they open. */
+:root { --ease-press: cubic-bezier(0.2, 0.8, 0.2, 1); }
+
+/* Baseline for clickables without a transition of their own. */
+:where(button, a, summary, [role="button"], [role="tab"]) {
+  transition:
+    color 0.18s ease, background-color 0.18s ease, border-color 0.18s ease,
+    box-shadow 0.18s ease, opacity 0.18s ease,
+    scale 0.16s var(--ease-press), translate 0.2s var(--ease-press);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Press: buttons, links, chips and tabs. */
+  :where(button, a, summary, [role="button"], [role="tab"], label:has(> input:is([type="checkbox"], [type="radio"]))):where(:not(:disabled, [aria-disabled="true"], [aria-haspopup], .nv-select-trigger, .cal-cell)):active {
+    scale: 0.96;
+  }
+  /* Big targets (cards, rows, full-width buttons) squeeze less. */
+  :where(a.hm-pack, .hm-pack-add, .pk-card, .pg-pack, .ch-starter, .nv-focus-pack, .cal-item, .cal-up-item,
+    .pd-row, .pr-choice, .pr-pick-btn, .st-tile, .dropzone, .hm-material, .ch-recent-item, .ch-task,
+    .nv-side-item, .personality-option, .count-option, .cal-type-option, .btn-block):where(:not(:disabled, [aria-disabled="true"])):active {
+    scale: 0.985;
+  }
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  /* Lift: card-like links, only where a mouse can hover. */
+  :where(a.hm-pack, .hm-pack-add, .pk-list:not(.is-list) .pk-card, .ch-starter, .pr-pick-btn):where(:not(:disabled)):hover {
+    translate: 0 -2px;
+  }
+  /* Arrows in call-to-action buttons point the way. */
+  :where(.hm-buddy-cta, .hm-buddy-send) svg { transition: translate 0.2s var(--ease-press); }
+  :where(.hm-buddy-cta, .hm-buddy-send):hover svg { translate: 2px 0; }
 }
 
 /* ── Mascot motion ───────────────────────────────────────────────
@@ -324,4 +446,86 @@ a:hover > .logo .mascot { animation: nv-wiggle 0.6s ease-in-out; }
 @keyframes nv-rise {
   from { opacity: 0; transform: translateY(28px) scale(0.96); }
   to { opacity: 1; transform: none; }
+}
+
+/* ── Skeleton loading ────────────────────────────────────────────
+   Flat pulsing blocks; no gradients. The grey is a step darker than the
+   sunken surface so placeholders read both on white cards and on the grey
+   page background. Shapes come from components/Skeleton.jsx. Reduced motion
+   holds them still. */
+.sk {
+  display: block;
+  flex: none;
+  max-width: 100%;
+  border-radius: 6px;
+  background: var(--sk);
+  animation: sk-pulse 1.4s ease-in-out infinite;
+}
+.sk-text { display: flex; flex-direction: column; width: 100%; min-width: 0; }
+@keyframes sk-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sk { animation: none; }
+}
+
+/* Layout helpers for skeleton screens. */
+.sk-row { display: flex; align-items: center; gap: 10px; }
+.sk-stack { display: flex; flex-direction: column; width: 100%; min-width: 0; }
+.sk-grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.sk-page { display: flex; flex-direction: column; gap: 22px; max-width: 1400px; margin-inline: auto; }
+.sk-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.sk-card { display: flex; align-items: flex-start; gap: 14px; min-height: 110px; }
+.sk-panel { min-height: 320px; }
+.sk-auth { gap: 0; }
+.sk-landing { min-height: 100vh; background: var(--bg); }
+.sk-landing-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1400px;
+  height: 88px;
+  margin: 0 auto;
+  padding: 0 32px;
+}
+.sk-landing-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+  gap: 48px;
+  align-items: center;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 40px 32px;
+}
+@media (max-width: 900px) {
+  .sk-cards { grid-template-columns: minmax(0, 1fr); }
+  .sk-landing-hero { grid-template-columns: minmax(0, 1fr); }
+  .sk-landing-nav { padding: 0 20px; }
+  .sk-landing-nav .sk-row:last-child .sk:first-child { display: none; }
+}
+
+/* ── Toast (confirmation messages) ─────────────────────────────────────────────────────── */
+.nv-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  z-index: 60;
+  padding: 10px 18px;
+  border-radius: var(--r-md);
+  background: var(--tooltip-bg);
+  box-shadow: var(--shadow-lg);
+  font-size: 0.88rem;
+  font-weight: 620;
+  color: var(--tooltip-ink);
+  transform: translateX(-50%);
+  animation: nv-toast-in 0.25s ease both;
+}
+.nv-toast.is-error { background: var(--danger); }
+@keyframes nv-toast-in {
+  from { opacity: 0; transform: translate(-50%, 10px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nv-toast { animation: none; }
 }

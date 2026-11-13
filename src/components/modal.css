@@ -1,0 +1,72 @@
+/* ── Pop-up (shared by every <dialog> in the app) ─────────────────
+   Rises in over a blurred backdrop; `.is-closing` plays the exit before the
+   dialog is actually closed. */
+
+.nv-modal {
+  width: min(560px, calc(100% - 32px));
+  max-width: none;
+  max-height: calc(100dvh - 32px);
+  margin: auto;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-xl);
+  background: var(--bg);
+  color: var(--ink);
+  box-shadow: 0 30px 70px rgba(19, 26, 46, 0.22), 0 6px 18px rgba(19, 26, 46, 0.08);
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+/* `backwards`, not `both`: holding the final frame would leave an identity
+   transform on the dialog, which makes it the containing block for anything
+   position: fixed inside it (dropdown lists would open in the wrong place). */
+.nv-modal[open] { animation: nv-modal-in 0.32s cubic-bezier(0.2, 0.9, 0.25, 1.05) backwards; }
+.nv-modal.is-closing { animation: nv-modal-out 0.18s ease-in both; }
+
+.nv-modal::backdrop {
+  background: rgba(19, 26, 46, 0.38);
+  backdrop-filter: blur(3px);
+  animation: nv-modal-fade-in 0.28s ease both;
+}
+.nv-modal.is-closing::backdrop { animation: nv-modal-fade-out 0.18s ease-in both; }
+
+@keyframes nv-modal-in {
+  from { opacity: 0; transform: translateY(18px) scale(0.96); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes nv-modal-out {
+  from { opacity: 1; transform: none; }
+  to { opacity: 0; transform: translateY(10px) scale(0.97); }
+}
+@keyframes nv-modal-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes nv-modal-fade-out { from { opacity: 1; } to { opacity: 0; } }
+
+/* The page behind should not scroll while a pop-up is open. */
+html:has(.nv-modal[open]) { overflow: hidden; }
+
+/* Common inner layout. */
+.nv-modal-panel { display: flex; flex-direction: column; gap: 18px; padding: 24px; }
+.nv-modal-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.nv-modal-title { margin: 0 0 4px; font-size: 1.25rem; font-weight: 740; letter-spacing: -0.02em; }
+.nv-modal-close {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  margin: -4px -6px 0 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease, scale 0.16s var(--ease-press), translate 0.2s var(--ease-press);
+}
+.nv-modal-close:hover:not(:disabled) { background: var(--bg-soft); color: var(--ink); }
+.nv-modal-close:focus-visible { outline: 2px solid var(--coral); outline-offset: 2px; }
+.nv-modal-close:disabled { opacity: 0.5; cursor: not-allowed; }
+.nv-modal-actions { display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap; }
+
+@media (max-width: 520px) {
+  .nv-modal-panel { padding: 20px 18px; gap: 16px; }
+  .nv-modal-actions .btn { flex: 1; }
+}

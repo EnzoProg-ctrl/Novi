@@ -109,7 +109,7 @@ export function PackQuiz({ pack }) {
       <div className="hm-card-head">
         <h2 className="sp-section-title">Practice questions</h2>
         <Link to={`/pack/${pack.id}/practice`} className="sp-practice-link">
-          Practise for progress
+          Practice for progress
         </Link>
       </div>
       <p className="hm-sub sp-questions-note">

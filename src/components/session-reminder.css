@@ -1,0 +1,44 @@
+.nv-reminder {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 45;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: min(340px, calc(100vw - 32px));
+  padding: 14px 14px 14px 12px;
+  border: 1px solid color-mix(in srgb, var(--coral) 30%, var(--line));
+  border-radius: var(--r-lg);
+  background: var(--bg);
+  box-shadow: var(--shadow-lg);
+  animation: nv-reminder-in 0.3s cubic-bezier(0.2, 0.9, 0.25, 1.05) both;
+}
+.nv-reminder-art { flex: none; }
+.nv-reminder-body { flex: 1; min-width: 0; }
+.nv-reminder-kicker { margin: 0; font-size: 0.74rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--coral-active); }
+.nv-reminder-title { margin: 2px 0 0; font-weight: 700; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nv-reminder-time { margin: 0; font-size: 0.82rem; color: var(--muted); }
+.nv-reminder-link { display: inline-block; margin-top: 8px; font-size: 0.84rem; font-weight: 650; color: var(--coral-active); }
+.nv-reminder-close {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  margin: -4px -4px 0 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+.nv-reminder-close:hover { background: var(--bg-soft); color: var(--ink); }
+.nv-reminder-close:focus-visible, .nv-reminder-link:focus-visible { outline: 2px solid var(--coral); outline-offset: 2px; }
+@keyframes nv-reminder-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
+}
+@media (max-width: 620px) {
+  .nv-reminder { right: 16px; bottom: 16px; }
+}

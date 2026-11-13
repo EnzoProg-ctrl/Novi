@@ -1,5 +1,4 @@
-import { Link, NavLink } from 'react-router-dom'
-import { MascotRig } from '../MascotRig'
+import { Link, NavLink, useLocation } from 'react-router-dom'
 import {
   IconCalendar,
   IconChat,
@@ -10,6 +9,7 @@ import {
   IconSettings,
   NoviMark,
 } from './AppIcons'
+import { SidebarFocus } from './SidebarFocus'
 
 /**
  * `to` marks a screen that exists. Items without it are part of the design but
@@ -18,14 +18,17 @@ import {
  */
 const NAV = [
   { label: 'Home', Icon: IconHome, to: '/dashboard' },
-  { label: 'Study Packs', Icon: IconPacks, to: '/packs' },
-  { label: 'Calendar', Icon: IconCalendar },
-  { label: 'Progress', Icon: IconProgress },
-  { label: 'AI Chat', Icon: IconChat },
-  { label: 'Settings', Icon: IconSettings },
+  // A pack and its practice screen live under /pack/:id, so they count as
+  // Study Packs too.
+  { label: 'Study Packs', Icon: IconPacks, to: '/packs', also: ['/pack/'] },
+  { label: 'Calendar', Icon: IconCalendar, to: '/calendar' },
+  { label: 'Progress', Icon: IconProgress, to: '/progress' },
+  { label: 'AI Chat', Icon: IconChat, to: '/chat' },
+  { label: 'Settings', Icon: IconSettings, to: '/settings' },
 ]
 
 export function AppSidebar({ open, onClose }) {
+  const { pathname } = useLocation()
   return (
     <>
       <div
@@ -46,12 +49,13 @@ export function AppSidebar({ open, onClose }) {
         </div>
 
         <nav className="nv-side-nav">
-          {NAV.map(({ label, Icon, to }) =>
+          {NAV.map(({ label, Icon, to, also = [] }) =>
             to ? (
               <NavLink
                 key={label}
                 to={to}
-                className={({ isActive }) => `nv-side-item${isActive ? ' is-active' : ''}`}
+                className={({ isActive }) =>
+                  `nv-side-item${isActive || also.some((p) => pathname.startsWith(p)) ? ' is-active' : ''}`}
                 onClick={onClose}
               >
                 <Icon />
@@ -67,11 +71,7 @@ export function AppSidebar({ open, onClose }) {
           )}
         </nav>
 
-        <div className="nv-side-card">
-          <MascotRig pose="waving-sm" className="nv-side-art" />
-          <p className="nv-side-cardtitle">Good things take time.</p>
-          <p className="nv-side-cardsub">You&apos;re doing great!</p>
-        </div>
+        <SidebarFocus onNavigate={onClose} />
       </aside>
     </>
   )

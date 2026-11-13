@@ -13,6 +13,8 @@ import {
 } from '../../lib/materials'
 import { IconClose } from '../app/AppIcons'
 import { MascotRig } from '../MascotRig'
+import { friendlyError } from '../../lib/errors'
+import '../modal.css'
 import './upload-dialog.css'
 
 /**
@@ -51,7 +53,7 @@ export function UploadDialog({ state, session, onRequestClose, onClosed, onUploa
   return (
     <dialog
       ref={ref}
-      className={`up-dialog${state === 'closing' ? ' is-closing' : ''}`}
+      className={`nv-modal${state === 'closing' ? ' is-closing' : ''}`}
       aria-labelledby="upload-title"
       onCancel={(event) => {
         // Escape: animate out like every other way of closing.
@@ -68,7 +70,7 @@ export function UploadDialog({ state, session, onRequestClose, onClosed, onUploa
         if (event.target === ref.current && pressedBackdrop.current) tryClose()
       }}
       onAnimationEnd={(event) => {
-        if (event.target === ref.current && event.animationName === 'up-out') finishClose()
+        if (event.target === ref.current && event.animationName === 'nv-modal-out') finishClose()
       }}
     >
       {state !== 'closed' && (
@@ -163,16 +165,16 @@ function UploadForm({ onBusyChange, onCancel, onUploaded }) {
       onUploaded()
     } catch (err) {
       onBusyChange(false)
-      setError(err?.message ?? 'Upload failed. Try again.')
+      setError(friendlyError(err, 'Upload failed. Try again.'))
       setBusy(false)
     }
   }
 
   return (
-    <form className="up-panel" onSubmit={handleSubmit}>
-      <header className="up-head">
+    <form className="nv-modal-panel up-panel" onSubmit={handleSubmit}>
+      <header className="nv-modal-head">
         <div>
-          <h2 id="upload-title" className="up-title">Add study material</h2>
+          <h2 id="upload-title" className="nv-modal-title">Add study material</h2>
           <p className="hint">
             {buddy?.name ?? 'Your buddy'} builds a study pack from whatever your class
             actually covers.
@@ -180,7 +182,7 @@ function UploadForm({ onBusyChange, onCancel, onUploaded }) {
         </div>
         <button
           type="button"
-          className="up-close"
+          className="nv-modal-close"
           onClick={onCancel}
           disabled={busy}
           aria-label="Close"
@@ -228,7 +230,7 @@ function UploadForm({ onBusyChange, onCancel, onUploaded }) {
           <>
             <MascotRig pose="waving-sm" size={48} className={dragging ? 'nv-anim-bounce' : 'nv-anim-float'} />
             <p className="dropzone-title">Drop a file here, or click to browse</p>
-            <p className="hint">PDF, slides, documents, or images · up to 50 MB</p>
+            <p className="hint">PDF, PowerPoint (.pptx), Word (.docx), notes, or photos · up to 50 MB</p>
           </>
         )}
       </div>
@@ -280,7 +282,7 @@ function UploadForm({ onBusyChange, onCancel, onUploaded }) {
         </span>
       </fieldset>
 
-      <div className="up-actions">
+      <div className="nv-modal-actions">
         <button type="button" className="btn btn-secondary" onClick={onCancel} disabled={busy}>
           Cancel
         </button>

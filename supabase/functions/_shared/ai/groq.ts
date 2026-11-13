@@ -81,9 +81,11 @@ export async function groqGenerate<T>(
   prompt: string,
   schema: Schema,
   maxTokens: number,
+  signal: AbortSignal,
 ): Promise<T> {
   const res = await fetch(URL, {
     method: "POST",
+    signal,
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${Deno.env.get("GROQ_API_KEY")}`,

@@ -4,7 +4,7 @@
  * Deliberately not a library and deliberately not dangerouslySetInnerHTML: it
  * builds React elements, so generated text can never inject markup. Handles the
  * subset the model actually produces - headings, bullet and numbered lists,
- * bold, italic and inline code.
+ * bold, italic, inline code and fenced code blocks.
  */
 
 /** Splits a line into React nodes, honouring **bold**, *italic* and `code`. */
@@ -40,6 +40,7 @@ export function Markdown({ content, className = '' }) {
   const lines = content.replace(/\r\n/g, '\n').split('\n')
   const blocks = []
   let list = null // { ordered, items: [] }
+  let code = null // lines of an open ``` block, kept exactly as written
 
   const flushList = () => {
     if (!list) return
@@ -56,6 +57,23 @@ export function Markdown({ content, className = '' }) {
 
   lines.forEach((raw, index) => {
     const line = raw.trim()
+
+    if (line.startsWith('```')) {
+      if (code) {
+        blocks.push(
+          <pre key={`code-${index}`} className="md-code"><code>{code.join('\n')}</code></pre>,
+        )
+        code = null
+      } else {
+        flushList()
+        code = []
+      }
+      return
+    }
+    if (code) {
+      code.push(raw)
+      return
+    }
 
     if (!line) {
       flushList()
@@ -97,6 +115,10 @@ export function Markdown({ content, className = '' }) {
   })
 
   flushList()
+  // An unclosed block still shows its code.
+  if (code?.length) {
+    blocks.push(<pre key="code-end" className="md-code"><code>{code.join('\n')}</code></pre>)
+  }
 
   return <div className={`md ${className}`.trim()}>{blocks}</div>
 }

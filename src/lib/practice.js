@@ -84,20 +84,25 @@ async function bumpDailyActivity(userId, delta) {
 
 const MAX_ANSWER_MS = 5 * 60 * 1000
 
-const SESSION_COLUMNS = 'id, questions_answered, questions_correct, started_at, target_count'
+const SESSION_COLUMNS = 'id, questions_answered, questions_correct, started_at, target_count, focus_topic_id'
 
 /**
  * The open session for this pack, with the questions already answered in it,
  * or null. Resuming is what makes "Continue Where You Left Off" actually
  * continue rather than restart.
+ *
+ * A session practising one topic (focusTopicId, opened from a recommendation)
+ * is separate from the whole-pack one, so each resumes into itself.
  */
-export async function findOpenSession(userId, studySetId) {
-  const { data: open, error } = await supabase
+export async function findOpenSession(userId, studySetId, focusTopicId = null) {
+  let query = supabase
     .from('study_sessions')
     .select(SESSION_COLUMNS)
     .eq('user_id', userId)
     .eq('study_set_id', studySetId)
     .is('ended_at', null)
+  query = focusTopicId ? query.eq('focus_topic_id', focusTopicId) : query.is('focus_topic_id', null)
+  const { data: open, error } = await query
     .order('started_at', { ascending: false })
     .limit(1)
     .maybeSingle()
@@ -109,9 +114,9 @@ export async function findOpenSession(userId, studySetId) {
 
 /**
  * Starts a sitting. `targetCount` is how many questions the student chose to
- * do; null means the whole pack.
+ * do; null means the whole pack (or the whole topic, with focusTopicId).
  */
-export async function startSession(userId, studySetId, targetCount = null) {
+export async function startSession(userId, studySetId, targetCount = null, focusTopicId = null) {
   const { data: created, error } = await supabase
     .from('study_sessions')
     .insert({
@@ -119,6 +124,7 @@ export async function startSession(userId, studySetId, targetCount = null) {
       study_set_id: studySetId,
       mode: 'practice',
       target_count: targetCount,
+      focus_topic_id: focusTopicId,
     })
     .select(SESSION_COLUMNS)
     .single()
@@ -179,8 +185,9 @@ async function fetchAnsweredQuestionIds(sessionId) {
 /**
  * Records one answer and moves the counters that depend on it.
  *
- * Mastery is updated here rather than at the end so a student who abandons a
- * session halfway still keeps the progress they earned.
+ * Topic mastery is not updated here: the database does it for every recorded
+ * answer (Bayesian Knowledge Tracing, private.kt_apply_attempt), so a student
+ * who abandons a session halfway still keeps the progress they earned.
  */
 export async function recordAttempt({
   userId,
@@ -214,48 +221,14 @@ export async function recordAttempt({
 
   await bumpDailyActivity(userId, { answered: 1, correct: isCorrect ? 1 : 0 })
 
-  if (question.topic_id) {
-    await updateMastery(userId, question.topic_id, isCorrect)
-  }
-
   return { questions_answered: answered, questions_correct: correct }
 }
 
-/**
- * Rolling mastery for one topic.
- *
- * Deliberately simple: the score is the share of attempts answered correctly.
- * The spaced-repetition columns (ease_factor, review_interval_days,
- * next_review_at) exist in the schema but are left alone until there is enough
- * history for an SM-2 style schedule to mean anything.
- */
-async function updateMastery(userId, topicId, isCorrect) {
-  const { data: existing, error } = await supabase
-    .from('topic_mastery')
-    .select('attempts_total, attempts_correct, current_streak')
-    .eq('user_id', userId)
-    .eq('topic_id', topicId)
-    .maybeSingle()
+/** The name of a topic the student owns, or null. */
+export async function fetchTopicName(topicId) {
+  const { data, error } = await supabase.from('topics').select('name').eq('id', topicId).maybeSingle()
   if (error) throw error
-
-  const total = (existing?.attempts_total ?? 0) + 1
-  const correct = (existing?.attempts_correct ?? 0) + (isCorrect ? 1 : 0)
-  const streak = isCorrect ? (existing?.current_streak ?? 0) + 1 : 0
-
-  const { error: upsertError } = await supabase.from('topic_mastery').upsert(
-    {
-      user_id: userId,
-      topic_id: topicId,
-      attempts_total: total,
-      attempts_correct: correct,
-      // numeric(4,3): three decimals is all the column will hold.
-      mastery_score: Number((correct / total).toFixed(3)),
-      current_streak: streak,
-      last_practiced_at: new Date().toISOString(),
-    },
-    { onConflict: 'user_id,topic_id' },
-  )
-  if (upsertError) throw upsertError
+  return data?.name ?? null
 }
 
 /**

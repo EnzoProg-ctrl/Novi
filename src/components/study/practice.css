@@ -74,9 +74,9 @@
   text-align: left;
   color: var(--ink-soft);
   cursor: pointer;
-  transition: border-color 0.15s ease, background-color 0.15s ease;
+  transition: border-color 0.15s ease, background-color 0.15s ease, scale 0.16s var(--ease-press), translate 0.2s var(--ease-press);
 }
-.pr-choice:hover:not(:disabled) { border-color: var(--coral); background: #fffaf9; }
+.pr-choice:hover:not(:disabled) { border-color: var(--coral); background: color-mix(in srgb, var(--coral) 3%, var(--bg)); }
 .pr-choice:disabled { cursor: default; }
 .pr-choice:focus-visible { outline: 2px solid var(--coral); outline-offset: 2px; }
 .pr-choice.is-chosen { border-color: var(--coral); }
@@ -84,13 +84,13 @@
 .pr-choice.is-answer {
   border-color: var(--success);
   background: var(--success-tint);
-  color: #14663f;
+  color: var(--success-ink);
   font-weight: 620;
 }
 .pr-choice.is-wrong {
   border-color: var(--danger);
   background: var(--danger-tint);
-  color: #8f2f2f;
+  color: var(--danger-ink);
 }
 
 /* ── Self-graded types ───────────────────────────────────────── */
@@ -124,8 +124,8 @@
   font-weight: 620;
   cursor: pointer;
 }
-.pr-grade.is-yes { background: var(--success-tint); color: #14663f; border-color: rgba(31, 157, 99, 0.35); }
-.pr-grade.is-no { background: var(--danger-tint); color: #8f2f2f; border-color: rgba(214, 69, 69, 0.3); }
+.pr-grade.is-yes { background: var(--success-tint); color: var(--success-ink); border-color: color-mix(in srgb, var(--success) 35%, transparent); }
+.pr-grade.is-no { background: var(--danger-tint); color: var(--danger-ink); border-color: color-mix(in srgb, var(--danger) 30%, transparent); }
 .pr-grade:focus-visible { outline: 2px solid var(--coral); outline-offset: 2px; }
 
 /* ── Verdict ─────────────────────────────────────────────────── */
@@ -139,8 +139,8 @@
 .pr-verdict.is-right { background: var(--success-tint); }
 .pr-verdict.is-wrong { background: var(--danger-tint); }
 .pr-verdict-line { margin: 0; font-size: 0.95rem; font-weight: 650; }
-.pr-verdict.is-right .pr-verdict-line { color: #14663f; }
-.pr-verdict.is-wrong .pr-verdict-line { color: #8f2f2f; }
+.pr-verdict.is-right .pr-verdict-line { color: var(--success-ink); }
+.pr-verdict.is-wrong .pr-verdict-line { color: var(--danger-ink); }
 
 .pr-next { align-self: flex-start; }
 .pr-tally { text-align: center; }
@@ -172,7 +172,7 @@
   font: inherit;
   color: var(--ink);
   cursor: pointer;
-  transition: border-color 0.15s ease, background-color 0.15s ease;
+  transition: border-color 0.15s ease, background-color 0.15s ease, scale 0.16s var(--ease-press), translate 0.2s var(--ease-press);
 }
 .pr-pick-btn strong { font-size: 1.25rem; font-weight: 730; }
 .pr-pick-btn span { font-size: 0.8rem; color: var(--muted); }
@@ -185,5 +185,5 @@
 .pr-answer-area { display: flex; flex-direction: column; gap: 12px; }
 .pr-blank { display: flex; gap: 10px; flex-wrap: wrap; }
 .pr-blank-input { flex: 1; min-width: 180px; }
-.pr-blank-input.is-right { border-color: var(--success); background: var(--success-tint); color: #14663f; }
-.pr-blank-input.is-wrong { border-color: var(--danger); background: var(--danger-tint); color: #8f2f2f; }
+.pr-blank-input.is-right { border-color: var(--success); background: var(--success-tint); color: var(--success-ink); }
+.pr-blank-input.is-wrong { border-color: var(--danger); background: var(--danger-tint); color: var(--danger-ink); }

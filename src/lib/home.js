@@ -98,7 +98,7 @@ export async function fetchStudyStats(userId) {
 export async function fetchStudySets(userId, limit = 6) {
   const { data, error } = await supabase
     .from('study_sets')
-    .select('id, title, status, updated_at, subjects(name)')
+    .select('id, title, status, updated_at, material_id, subjects(name)')
     .eq('user_id', userId)
     .order('updated_at', { ascending: false })
     .limit(limit)
@@ -107,31 +107,12 @@ export async function fetchStudySets(userId, limit = 6) {
 
   return (data ?? []).map((set) => ({
     id: set.id,
+    materialId: set.material_id,
     subject: set.subjects?.name ?? null,
     title: set.title,
     status: set.status,
     updatedAt: set.updated_at,
   }))
-}
-
-/**
- * Pending recommendations, highest priority first.
- *
- * Nothing writes to this table yet — the learning engine that would generate
- * recommendations does not exist — so it returns [] in practice.
- */
-export async function fetchRecommendations(userId, limit = 3) {
-  const { data, error } = await supabase
-    .from('recommendations')
-    .select('id, kind, title, rationale, priority, study_set_id')
-    .eq('user_id', userId)
-    .eq('status', 'pending')
-    .order('priority', { ascending: false })
-    .order('created_at', { ascending: false })
-    .limit(limit)
-
-  if (error) throw error
-  return data ?? []
 }
 
 const MODE_LABEL = {
@@ -152,7 +133,7 @@ const MODE_LABEL = {
 export async function fetchInProgress(userId, limit = 4) {
   const { data, error } = await supabase
     .from('study_sessions')
-    .select('id, mode, started_at, questions_answered, target_count, study_sets(id, title, subjects(name))')
+    .select('id, mode, started_at, questions_answered, target_count, focus_topic_id, study_sets(id, title, material_id, subjects(name)), topics(name)')
     .eq('user_id', userId)
     .is('ended_at', null)
     // study_sessions.study_set_id is ON DELETE SET NULL, so deleting a material
@@ -187,6 +168,11 @@ export async function fetchInProgress(userId, limit = 4) {
     const done = s.questions_answered ?? 0
     return {
       id: s.id,
+      packId: set?.id ?? null,
+      // A session on one topic resumes through ?topic= (see Practice).
+      focusTopicId: s.focus_topic_id ?? null,
+      topicName: s.topics?.name ?? null,
+      materialId: set?.material_id ?? null,
       subject: set?.subjects?.name ?? null,
       title: set?.title ?? 'Study session',
       modeLabel: MODE_LABEL[s.mode] ?? 'Session',

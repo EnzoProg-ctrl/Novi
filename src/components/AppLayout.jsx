@@ -4,6 +4,8 @@ import { useAuth } from '../context/auth-context'
 import { AppSidebar } from './app/AppSidebar'
 import { AppTopbar } from './app/AppTopbar'
 import { UploadProvider } from './upload/UploadProvider'
+import { SessionReminder } from './SessionReminder'
+import { UndoToast } from './UndoToast'
 import './app/app-shell.css'
 
 export function AppLayout() {
@@ -32,6 +34,8 @@ export function AppLayout() {
           <Outlet context={{ user, buddy }} />
         </main>
       </div>
+      <SessionReminder />
+      <UndoToast />
     </div>
     </UploadProvider>
   )

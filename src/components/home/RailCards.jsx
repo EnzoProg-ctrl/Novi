@@ -1,5 +1,6 @@
 import { MascotRig } from '../MascotRig'
 import { IconArrowRight, IconClock, IconFlame } from './HomeIcons'
+import { Sk } from '../Skeleton'
 
 const DATE_FMT = { weekday: undefined, month: 'long', day: 'numeric', year: 'numeric' }
 
@@ -49,7 +50,7 @@ export function ScheduleCard({ sessions = [] }) {
   )
 }
 
-export function StatCards({ streakDays = 0, monthMinutes = 0 }) {
+export function StatCards({ streakDays = 0, monthMinutes = 0, loading = false }) {
   const hours = (monthMinutes / 60).toFixed(1)
 
   return (
@@ -57,19 +58,37 @@ export function StatCards({ streakDays = 0, monthMinutes = 0 }) {
       <section className="hm-card hm-stat" aria-label="Study streak">
         <span className="hm-stat-icon is-flame"><IconFlame /></span>
         <p className="hm-stat-label">Study Streak</p>
-        <p className="hm-stat-value">
-          {streakDays} <span>{streakDays === 1 ? 'day' : 'days'}</span>
-        </p>
-        <p className="hm-sub">{streakDays > 0 ? 'Keep it up!' : 'Start today'}</p>
+        {loading ? (
+          <span className="sk-stack" style={{ gap: 8, marginTop: 4 }} aria-hidden="true">
+            <Sk w="60%" h={22} r={6} />
+            <Sk w="45%" h={11} />
+          </span>
+        ) : (
+          <>
+            <p className="hm-stat-value">
+              {streakDays} <span>{streakDays === 1 ? 'day' : 'days'}</span>
+            </p>
+            <p className="hm-sub">{streakDays > 0 ? 'Keep it up!' : 'Start today'}</p>
+          </>
+        )}
       </section>
 
       <section className="hm-card hm-stat" aria-label="Total study time">
         <span className="hm-stat-icon is-clock"><IconClock /></span>
         <p className="hm-stat-label">Total Study Time</p>
-        <p className="hm-stat-value">
-          {hours} <span>hrs</span>
-        </p>
-        <p className="hm-sub">This month</p>
+        {loading ? (
+          <span className="sk-stack" style={{ gap: 8, marginTop: 4 }} aria-hidden="true">
+            <Sk w="60%" h={22} r={6} />
+            <Sk w="45%" h={11} />
+          </span>
+        ) : (
+          <>
+            <p className="hm-stat-value">
+              {hours} <span>hrs</span>
+            </p>
+            <p className="hm-sub">This month</p>
+          </>
+        )}
       </section>
     </div>
   )

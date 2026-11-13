@@ -1,3 +1,5 @@
+import { LoadingRegion, Sk } from '../Skeleton'
+
 /**
  * Per-subject mastery. Each row averages the topic_mastery scores of the
  * topics in that subject, so it stays empty until practice actually happens.
@@ -11,7 +13,15 @@ export function ProgressCard({ subjects = [], loading }) {
       </header>
 
       {loading ? (
-        <p className="hm-empty-line">Loading…</p>
+        <LoadingRegion label="Loading your progress…" as="ul" className="hm-progress-list">
+          {[0, 1, 2].map((i) => (
+            <li key={i}>
+              <Sk w={`${70 - i * 12}%`} h={11} />
+              <Sk h={8} r={4} />
+              <Sk w={30} h={11} />
+            </li>
+          ))}
+        </LoadingRegion>
       ) : subjects.length === 0 ? (
         <p className="hm-empty-line">
           Nothing measured yet. Practice questions will fill this in.

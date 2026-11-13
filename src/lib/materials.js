@@ -1,12 +1,10 @@
-import { STUDY_MATERIALS_BUCKET, supabase } from './supabase'
+import { STUDY_MATERIALS_BUCKET, SUPABASE_KEY, SUPABASE_URL, supabase } from './supabase'
 
 /** Mirrors the bucket's allowed_mime_types and the materials.source_type check. */
 const MIME_TO_SOURCE_TYPE = {
   'application/pdf': 'pdf',
   'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'pptx',
-  'application/vnd.ms-powerpoint': 'pptx',
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx',
-  'application/msword': 'docx',
   'text/plain': 'text',
   'text/markdown': 'text',
   'image/png': 'image',
@@ -19,7 +17,28 @@ const MIME_TO_SOURCE_TYPE = {
 export const MAX_FILE_BYTES = 50 * 1024 * 1024
 
 export const ACCEPTED_EXTENSIONS =
-  '.pdf,.pptx,.ppt,.docx,.doc,.txt,.md,.png,.jpg,.jpeg,.webp,.heic'
+  '.pdf,.pptx,.docx,.txt,.md,.png,.jpg,.jpeg,.webp,.heic'
+
+/** Used when the browser reports no type (common for HEIC photos and .md files). */
+const MIME_BY_EXT = {
+  pdf: 'application/pdf',
+  pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  txt: 'text/plain',
+  md: 'text/markdown',
+  png: 'image/png',
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  webp: 'image/webp',
+  heic: 'image/heic',
+}
+
+const extensionOf = (file) => file.name.split('.').pop()?.toLowerCase() ?? ''
+
+/** The file's type, from the browser if it knows, otherwise from the extension. */
+function mimeTypeOf(file) {
+  return MIME_TO_SOURCE_TYPE[file.type] ? file.type : (MIME_BY_EXT[extensionOf(file)] ?? null)
+}
 
 export function formatBytes(bytes) {
   if (!bytes && bytes !== 0) return ''
@@ -36,14 +55,13 @@ function resolveSourceType(file) {
   const byMime = MIME_TO_SOURCE_TYPE[file.type]
   if (byMime) return byMime
 
-  const ext = file.name.split('.').pop()?.toLowerCase()
   const byExt = {
     pdf: 'pdf',
-    pptx: 'pptx', ppt: 'pptx',
-    docx: 'docx', doc: 'docx',
+    pptx: 'pptx',
+    docx: 'docx',
     txt: 'text', md: 'text',
     png: 'image', jpg: 'image', jpeg: 'image', webp: 'image', heic: 'image',
-  }[ext]
+  }[extensionOf(file)]
   return byExt ?? null
 }
 
@@ -65,6 +83,12 @@ export function validateFile(file) {
   if (file.size === 0) return 'That file is empty.'
   if (file.size > MAX_FILE_BYTES) {
     return `That file is ${formatBytes(file.size)}. The limit is 50 MB.`
+  }
+  // The old binary Office formats can't be read; the newer ones can.
+  const ext = extensionOf(file)
+  if (ext === 'ppt' || ext === 'doc') {
+    const app = ext === 'ppt' ? 'PowerPoint' : 'Word'
+    return `Old .${ext} files can't be read. Open it in ${app}, save it as .${ext}x or PDF, then upload that.`
   }
   if (!resolveSourceType(file)) {
     return 'That file type is not supported yet. Try a PDF, slide deck, document, or image.'
@@ -89,7 +113,7 @@ export async function uploadMaterial({ userId, file, title, subjectId = null }) 
 
   const { error: uploadError } = await supabase.storage
     .from(STUDY_MATERIALS_BUCKET)
-    .upload(storagePath, file, { contentType: file.type || undefined, upsert: false })
+    .upload(storagePath, file, { contentType: mimeTypeOf(file) ?? undefined, upsert: false })
 
   if (uploadError) throw uploadError
 
@@ -102,7 +126,7 @@ export async function uploadMaterial({ userId, file, title, subjectId = null }) 
       title: title?.trim() || file.name,
       source_type: resolveSourceType(file),
       storage_path: storagePath,
-      mime_type: file.type || null,
+      mime_type: mimeTypeOf(file),
       file_size_bytes: file.size,
       status: 'uploaded',
     })
@@ -215,5 +239,32 @@ export async function deleteMaterials(materials) {
       // Not surfaced: the material is gone from the student's point of view.
       console.warn('Material deleted, but its file could not be removed:', storageError.message)
     }
+  }
+}
+
+/**
+ * deleteMaterials for when the page is closing (the tab shut during the undo
+ * countdown). An ordinary request would be cancelled with the page, so these
+ * use fetch's `keepalive`, which lets them finish afterwards. It can't wait
+ * for a session, so the caller passes the access token it saved earlier.
+ * Best effort: if it doesn't go through, the material is simply still there.
+ */
+export function deleteMaterialsOnExit(materials, accessToken) {
+  if (!accessToken || materials.length === 0) return
+  const headers = { apikey: SUPABASE_KEY, Authorization: `Bearer ${accessToken}` }
+  const ids = materials.map((m) => `"${m.id}"`).join(',')
+  fetch(`${SUPABASE_URL}/rest/v1/materials?id=in.(${encodeURIComponent(ids)})`, {
+    method: 'DELETE',
+    headers,
+    keepalive: true,
+  }).catch(() => {})
+  const paths = materials.map((m) => m.storage_path).filter(Boolean)
+  if (paths.length > 0) {
+    fetch(`${SUPABASE_URL}/storage/v1/object/${STUDY_MATERIALS_BUCKET}`, {
+      method: 'DELETE',
+      headers: { ...headers, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prefixes: paths }),
+      keepalive: true,
+    }).catch(() => {})
   }
 }

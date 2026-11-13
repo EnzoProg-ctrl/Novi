@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import '../components/study/packs-page.css'
 import {
   IconPackAtom,
@@ -8,9 +9,12 @@ import {
 } from '../components/home/HomeIcons'
 import { PackDetail } from '../components/study/PackDetail'
 import { IconGridView, IconListView } from '../components/study/PackIcons'
+import { LoadingRegion, Sk, SkText } from '../components/Skeleton'
+import { Select } from '../components/Select'
 import { useAuth } from '../context/auth-context'
 import { useUpload } from '../context/upload-context'
 import { fetchPackList } from '../lib/packs'
+import { friendlyError } from '../lib/errors'
 
 /** Cycled for visual variety; not tied to subject meaning. */
 const TONES = [
@@ -56,7 +60,19 @@ export function Packs() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  const [selectedId, setSelectedId] = useState(null)
+  // The selected pack lives in the link (/packs?pack=<id>), so Home, the pack
+  // page and practice can all come back to the same pack.
+  const [params, setParams] = useSearchParams()
+  const [selectedId, setSelectedId] = useState(() => params.get('pack'))
+  const arrivedFor = useRef(params.get('pack'))
+  const select = (id) => {
+    setSelectedId(id)
+    setParams((p) => {
+      const next = new URLSearchParams(p)
+      next.set('pack', id)
+      return next
+    }, { replace: true })
+  }
   const [subjectId, setSubjectId] = useState('')
   const [sort, setSort] = useState('updated')
   const [view, setView] = useState(() => {
@@ -81,7 +97,7 @@ export function Packs() {
       setPacks(await fetchPackList(user.id, { subjectId: subjectId || null, sort }))
       setError(null)
     } catch (err) {
-      setError(err?.message ?? 'Could not load your study packs.')
+      setError(friendlyError(err, 'Could not load your study packs.'))
     } finally {
       setLoading(false)
     }
@@ -95,6 +111,22 @@ export function Packs() {
     () => packs.find((p) => p.id === selectedId) ?? packs[0] ?? null,
     [packs, selectedId],
   )
+
+  // Arriving with a pack in the link: bring it into view once. On narrower
+  // screens its details sit below the list, so show those instead.
+  useEffect(() => {
+    const id = arrivedFor.current
+    if (loading || !id) return
+    arrivedFor.current = null
+    if (!packs.some((p) => p.id === id)) return
+    if (window.matchMedia('(max-width: 1080px)').matches) {
+      document.querySelector('.pk .pd')?.scrollIntoView({ block: 'start' })
+      return
+    }
+    const card = document.querySelector(`.pk-card[data-pack-id="${CSS.escape(id)}"]`)
+    const box = card?.getBoundingClientRect()
+    if (box && (box.top < 0 || box.bottom > window.innerHeight)) card.scrollIntoView({ block: 'center' })
+  }, [loading, packs])
 
   // Only offer subjects that actually have packs, so the filter can't come up empty.
   const subjects = useMemo(() => {
@@ -136,30 +168,23 @@ export function Packs() {
         </nav>
 
         <div className="pk-controls">
-          <label className="sr-only" htmlFor="pk-subject">Filter by subject</label>
-          <select
+          <Select
             id="pk-subject"
             className="pk-select"
+            ariaLabel="Filter by subject"
             value={subjectId}
-            onChange={(e) => setSubjectId(e.target.value)}
-          >
-            <option value="">All Subjects</option>
-            {subjects.map((s) => (
-              <option key={s.id} value={s.id}>{s.name}</option>
-            ))}
-          </select>
+            onChange={setSubjectId}
+            options={[{ value: '', label: 'All Subjects' }, ...subjects.map((s) => ({ value: s.id, label: s.name }))]}
+          />
 
-          <label className="sr-only" htmlFor="pk-sort">Sort packs</label>
-          <select
+          <Select
             id="pk-sort"
             className="pk-select"
+            ariaLabel="Sort packs"
             value={sort}
-            onChange={(e) => setSort(e.target.value)}
-          >
-            {SORTS.map((s) => (
-              <option key={s.value} value={s.value}>{s.label}</option>
-            ))}
-          </select>
+            onChange={setSort}
+            options={SORTS}
+          />
 
           <div className="pk-view" role="group" aria-label="View">
             <button
@@ -167,6 +192,7 @@ export function Packs() {
               className={`pk-view-btn${view === 'grid' ? ' is-active' : ''}`}
               aria-pressed={view === 'grid'}
               aria-label="Grid view"
+              title="Grid view"
               onClick={() => setView('grid')}
             >
               <IconGridView />
@@ -176,6 +202,7 @@ export function Packs() {
               className={`pk-view-btn${view === 'list' ? ' is-active' : ''}`}
               aria-pressed={view === 'list'}
               aria-label="List view"
+              title="List view"
               onClick={() => setView('list')}
             >
               <IconListView />
@@ -188,7 +215,40 @@ export function Packs() {
 
       <div className="pk-split">
       {loading ? (
-        <p className="hm-empty-line">Loading your study packs…</p>
+        <>
+          <LoadingRegion label="Loading your study packs…" as="ul" className={`pk-list is-${view}`}>
+            {[0, 1, 2, 3, 4].map((i) => (
+              <li key={i}>
+                <div className="pk-card">
+                  <Sk className="pk-card-icon" w={38} h={38} r={10} />
+                  <span className="pk-card-title"><Sk w={`${78 - i * 9}%`} h={13} /></span>
+                  <span className="pk-card-counts"><Sk w="85%" h={11} /></span>
+                  <span className="pk-card-meta"><Sk w={90} h={10} /></span>
+                </div>
+              </li>
+            ))}
+          </LoadingRegion>
+          <aside className="pd" aria-hidden="true">
+            <span className="sk-row" style={{ alignItems: 'flex-start' }}>
+              <Sk w={44} h={44} r={12} />
+              <SkText lines={2} h={13} widths={['65%', '40%']} />
+            </span>
+            <SkText lines={3} widths={['100%', '95%', '70%']} />
+            <div className="pd-stats">
+              {[0, 1, 2].map((i) => <Sk key={i} h={62} r={12} />)}
+            </div>
+            <div className="pd-actions">
+              <Sk h={44} r={12} />
+              <Sk h={44} r={12} />
+            </div>
+            {[0, 1, 2].map((i) => (
+              <span key={i} className="sk-row">
+                <Sk w={32} h={32} r={9} />
+                <SkText lines={2} widths={['50%', '35%']} />
+              </span>
+            ))}
+          </aside>
+        </>
       ) : packs.length === 0 ? (
         <div className="hm-card pk-empty">
           <p className="hm-empty-line">
@@ -202,29 +262,26 @@ export function Packs() {
         <ul className={`pk-list is-${view}`}>
           {packs.map((pack, i) => {
             const { tone, Icon } = TONES[i % TONES.length]
+            const name = pack.subject ? `${pack.subject} – ${pack.title}` : pack.title
             return (
               <li key={pack.id}>
                 <button
                   type="button"
                   className={`pk-card${selected?.id === pack.id ? ' is-selected' : ''}`}
                   aria-pressed={selected?.id === pack.id}
-                  onClick={() => setSelectedId(pack.id)}
+                  data-pack-id={pack.id}
+                  onClick={() => select(pack.id)}
                 >
-                  <span className={`hm-pack-icon is-${tone}`}><Icon /></span>
-
-                  <span className="pk-card-body">
-                    <span className="pk-card-title">
-                      {pack.subject ? `${pack.subject} – ${pack.title}` : pack.title}
-                    </span>
-                    <span className="pk-card-counts">
-                      {pack.concepts} concepts
-                      <span className="pk-dot">•</span>
-                      {pack.questions} questions
-                      <span className="pk-dot">•</span>
-                      {pack.summaries} {pack.summaries === 1 ? 'summary' : 'summaries'}
-                    </span>
-                    <span className="pk-card-meta">{relativeDay(pack.updatedAt)}</span>
+                  <span className={`hm-pack-icon pk-card-icon is-${tone}`}><Icon /></span>
+                  {/* Laid out by the view: a card in the grid, a single row in the list.
+                      Long text is clamped or truncated, so title shows in full on hover. */}
+                  <span className="pk-card-title" title={name}>{name}</span>
+                  <span className="pk-card-counts">
+                    <span>{pack.concepts} {pack.concepts === 1 ? 'concept' : 'concepts'}</span>
+                    <span>{pack.questions} {pack.questions === 1 ? 'question' : 'questions'}</span>
+                    <span>{pack.summaries} {pack.summaries === 1 ? 'summary' : 'summaries'}</span>
                   </span>
+                  <span className="pk-card-meta">{relativeDay(pack.updatedAt)}</span>
                 </button>
               </li>
             )

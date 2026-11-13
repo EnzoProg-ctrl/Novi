@@ -84,6 +84,9 @@
   transform-origin: 8.36% 87.03%;
   animation: rig-drift 3.2s ease-in-out infinite;
 }
+/* The chat avatar: sound lines pulse only while Novi is typing (see chat.css). */
+.rig-laptop-sm .rig-music { transform-origin: 12.5% 36.36%; }
+
 @keyframes rig-drift {
   0%, 100% { opacity: 1; transform: translateY(0); }
   50% { opacity: 0.7; transform: translateY(-1.4%); }

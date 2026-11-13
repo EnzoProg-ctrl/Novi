@@ -1,3 +1,5 @@
+import { LoadingRegion, SkCircle } from '../Skeleton'
+
 /**
  * Today's session goal as a ring.
  *
@@ -10,13 +12,18 @@ export const DAILY_SESSION_GOAL = 5
 const R = 46
 const CIRC = 2 * Math.PI * R
 
-export function GoalRing({ done = 0, goal = DAILY_SESSION_GOAL }) {
+export function GoalRing({ done = 0, goal = DAILY_SESSION_GOAL, loading = false }) {
   const ratio = goal > 0 ? Math.min(done / goal, 1) : 0
 
   return (
     <section className="hm-card hm-goal" aria-label="Today's goal">
       <p className="hm-card-title">Today&apos;s Goal</p>
 
+      {loading ? (
+        <LoadingRegion label="Loading today's goal…" className="hm-ring">
+          <SkCircle size={132} />
+        </LoadingRegion>
+      ) : (
       <div className="hm-ring">
         <svg viewBox="0 0 110 110" role="img" aria-label={`${done} of ${goal} sessions today`}>
           <circle className="hm-ring-track" cx="55" cy="55" r={R} />
@@ -34,6 +41,7 @@ export function GoalRing({ done = 0, goal = DAILY_SESSION_GOAL }) {
           <span className="hm-ring-unit">sessions</span>
         </div>
       </div>
+      )}
     </section>
   )
 }

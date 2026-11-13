@@ -82,7 +82,7 @@
   font-size: 1.05rem;
   font-weight: 600;
   text-decoration: none;
-  transition: border-color 0.15s ease, background-color 0.15s ease;
+  transition: border-color 0.15s ease, background-color 0.15s ease, scale 0.16s var(--ease-press), translate 0.2s var(--ease-press);
 }
 .nv-btn-outline:hover {
   border-color: var(--nv-coral);

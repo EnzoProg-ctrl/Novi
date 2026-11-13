@@ -5,6 +5,8 @@ import laptopBody from '../assets/rig/laptop-body.webp'
 import laptopHearts from '../assets/rig/laptop-hearts.webp'
 import laptopMusic from '../assets/rig/laptop-music.webp'
 import laptopPaw from '../assets/rig/laptop-paw.webp'
+import laptopSmBody from '../assets/rig/laptop-sm-body.webp'
+import laptopSmMusic from '../assets/rig/laptop-sm-music.webp'
 import sleepingBody from '../assets/rig/sleeping-body.webp'
 import sleepingZ1 from '../assets/rig/sleeping-z1.webp'
 import sleepingZ2 from '../assets/rig/sleeping-z2.webp'
@@ -24,6 +26,8 @@ import './mascot-rig.css'
  * back to the original artwork. How each part moves lives in mascot-rig.css.
  *
  * `waving-sm` is the square avatar framing of the waving pose, for small spots.
+ * `laptop-sm` is Novi's AI Chat profile picture: the laptop pose's head and
+ * headphones, mirrored to face the conversation.
  */
 const POSES = {
   waving: { size: [1278, 1230], body: wavingBody, parts: { hand: wavingHand, lines: wavingLines } },
@@ -34,6 +38,7 @@ const POSES = {
     body: laptopBody,
     parts: { paw: laptopPaw, music: laptopMusic, hearts: laptopHearts },
   },
+  'laptop-sm': { size: [320, 320], body: laptopSmBody, parts: { music: laptopSmMusic } },
   sleeping: { size: [1536, 1024], body: sleepingBody, parts: { z1: sleepingZ1, z2: sleepingZ2, z3: sleepingZ3 } },
 }
 
