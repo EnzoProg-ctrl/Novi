@@ -376,7 +376,8 @@ export async function runChat(
   if (userMessage) userMessage = { ...userMessage, metadata: userMeta };
 
   // ── A quiz with no number: their default size, or they choose ─
-  if (verdict.category === "quiz" && !verdict.question_count && defaultQuizSize) {
+  // (Not for resizing: "make it smaller" with no number needs them to say how small.)
+  if (verdict.category === "quiz" && !verdict.question_count && defaultQuizSize && verdict.quiz_action !== "set_total") {
     verdict = { ...verdict, question_count: defaultQuizSize };
   }
   if (verdict.category === "quiz" && !verdict.question_count) {

@@ -75,9 +75,12 @@ export function BuddyMessage({ message, canRegenerate, busy, isLast, onRegenerat
             <div className="ch-quiz">
               <span className="ch-quiz-icon"><IconQuiz /></span>
               <span className="ch-quiz-text">
-                <span className="ch-quiz-title">{quiz.created ? 'New study pack' : 'Added to your pack'}</span>
+                <span className="ch-quiz-title">
+                  {quiz.created ? 'New study pack' : quiz.total != null ? 'Pack resized' : 'Added to your pack'}
+                </span>
                 <span className="ch-quiz-sub" title={quiz.pack_title}>
-                  {quiz.pack_title} · {quiz.added} {quiz.added === 1 ? 'question' : 'questions'}
+                  {/* A resized pack shows its new size; otherwise, how many were added. */}
+                  {quiz.pack_title} · {quiz.total ?? quiz.added} {(quiz.total ?? quiz.added) === 1 ? 'question' : 'questions'}
                 </span>
               </span>
               <span className="ch-quiz-actions">

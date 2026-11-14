@@ -23,6 +23,8 @@ export type Verdict = {
   quiz_topic?: string;
   question_count?: number;
   about?: "chosen_pack" | "existing_material" | "new_topic";
+  /** "add": write new questions. "set_total": make the quiz end up with question_count questions. */
+  quiz_action?: "add" | "set_total";
 };
 
 const GUARD_SCHEMA = {
@@ -33,6 +35,7 @@ const GUARD_SCHEMA = {
     quiz_topic: { type: "STRING" },
     question_count: { type: "INTEGER" },
     about: { type: "STRING", enum: ["chosen_pack", "existing_material", "new_topic"] },
+    quiz_action: { type: "STRING", enum: ["add", "set_total"] },
   },
   required: ["category", "reason"],
 };
@@ -42,7 +45,7 @@ Classify the student's NEW message. Use the conversation for context (for exampl
 
 Categories:
 - "study": learning help. Explaining concepts and topics (including programming concepts in plain words), summaries, study plans, study strategies, memory techniques, exam preparation, checking or giving feedback on the student's own attempt, explaining how to solve a type of problem, motivation, greetings, questions about Novi or their study packs.
-- "quiz": the student wants practice questions or a practice quiz created for them, or more or different questions added to one ("quiz me on X", "make 10 questions about chapter 2", "add 5 harder ones").
+- "quiz": the student wants practice questions or a practice quiz created for them, more or different questions added to one, or a quiz made bigger or smaller ("quiz me on X", "make 10 questions about chapter 2", "add 5 harder ones", "cut it down to 20", "I asked for 30, not 15").
 - "cheating": help that would be academic dishonesty. Answering questions from a test, quiz or exam they are taking now or that is graded; doing graded homework, assignments or essays for them to hand in; writing anything they will submit as their own work; getting around proctoring, plagiarism checkers or AI detectors. Asking how to solve a kind of problem in order to learn it is "study".
 - "code": asks Novi to write, complete, fix, convert or output code: programs, scripts, functions, commands, SQL, regex, spreadsheet formulas, HTML or CSS. Explaining what a programming idea means, in words, is "study".
 - "off_topic": anything not about learning or studying: entertainment, personal errands, role-play, unrelated writing, general chit-chat.
@@ -53,6 +56,7 @@ For "quiz", also fill in:
 - quiz_topic: short, for example "cell biology" or "attributes of global cities"
 - question_count: only if the student gave a number
 - about: "chosen_pack" if it is about the study pack the student has selected, "existing_material" if it is about material they uploaded before, "new_topic" if it is a topic not tied to their uploads.
+- quiz_action: "set_total" when the student wants the quiz they already have to end up with a certain number of questions in total: making it smaller ("reduce it to 20", "only keep 10", "too many, make it 15"), or correcting a quiz that came out the wrong size ("I requested 30 items, not 15", "where are the other 15?"). question_count is then the TOTAL they want, never the difference. Otherwise "add": new questions are written and added (question_count is how many to add).
 
 reason: a few words explaining the decision.`;
 

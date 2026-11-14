@@ -13,7 +13,12 @@
  *
  * Up to 50 questions. More than 20 are written in parallel batches, each with
  * its own focus so they don't repeat each other; one call that large would be
- * slow and all-or-nothing.
+ * slow and all-or-nothing. A batch that fails is retried once on its own.
+ *
+ * "Make it 20" / "I asked for 30, not 15" (verdict.quiz_action "set_total")
+ * resizes the pack this chat is working on to that many questions in total:
+ * writing only the missing ones, or removing the extras. Without this, every
+ * such message was read as "add N more".
  */
 
 import type { SupabaseClient } from "jsr:@supabase/supabase-js@2";
@@ -53,7 +58,17 @@ type PackRow = { id: string; title: string; material_id: string | null; subject_
 export type QuizResult = {
   reply: string;
   followUps: string[];
-  quiz: { pack_id: string; pack_title: string; added: number; requested: number; created: boolean; grounded: boolean };
+  quiz: {
+    pack_id: string;
+    pack_title: string;
+    added: number;
+    requested: number;
+    created: boolean;
+    grounded: boolean;
+    /** Set when the pack was resized: questions removed, and the pack's new size. */
+    removed?: number;
+    total?: number;
+  };
   model: string;
   packId: string;
 };
@@ -84,6 +99,11 @@ export async function makeQuiz({ db, userId, verdict, question, chosenPackId, co
   signal: AbortSignal;
 }): Promise<QuizResult> {
   const schemas = schemasFor(questionTypes);
+  if (verdict.quiz_action === "set_total") {
+    const pack = await packToResize(db, chosenPackId, verdict, conversationId);
+    // Nothing to resize yet: treat it as a request for a quiz of that size.
+    if (pack) return await resizePack({ db, userId, pack, verdict, question, history, schemas, learner, signal });
+  }
   const requested = Number.isFinite(Number(verdict.question_count)) ? Math.round(Number(verdict.question_count)) : 0;
   const count = clamp(verdict.question_count, MIN_QUESTIONS, MAX_QUESTIONS, DEFAULT_QUESTIONS);
   const topic = verdict.quiz_topic?.trim() || question;
@@ -126,7 +146,7 @@ export async function makeQuiz({ db, userId, verdict, question, chosenPackId, co
   const short = count - result.quiz.added;
   if (short > 0) {
     notes.push(
-      `You asked for ${count}, but part of the quiz couldn't be written this time. Ask for ${short} more and I'll add them to the same pack.`,
+      `You asked for ${count}, but part of the quiz couldn't be written this time. Ask me to make it ${count} and I'll write the rest.`,
     );
   }
   if (deletedPack && result.quiz.created) notes.unshift(`Your earlier pack **${deletedPack}** was deleted, so I started a new one.`);
@@ -150,8 +170,116 @@ async function lastQuizPackIfDeleted(db: SupabaseClient, conversationId: string)
 }
 
 /**
- * Writes the batches in parallel. Batches that fail are skipped, so one slow
- * model costs some questions, not the whole quiz; throws only if all fail.
+ * The pack a "make it N questions" message is about: the selected pack, else
+ * the one this chat's latest quiz went into. Null if neither exists.
+ */
+async function packToResize(
+  db: SupabaseClient,
+  chosenPackId: string | null,
+  verdict: Verdict,
+  conversationId: string,
+): Promise<PackRow | null> {
+  let id = chosenPackId && verdict.about !== "new_topic" ? chosenPackId : null;
+  if (!id) {
+    const { data } = await db.from("chat_messages").select("metadata")
+      .eq("conversation_id", conversationId).eq("role", "buddy")
+      .order("created_at", { ascending: false }).limit(20);
+    id = (data ?? []).map((m) => m.metadata?.quiz?.pack_id).find(Boolean) ?? null;
+  }
+  if (!id) return null;
+  const { data } = await db.from("study_sets").select("id, title, material_id, subject_id").eq("id", id).maybeSingle();
+  return data;
+}
+
+/** Most questions a pack can be resized to. */
+const MAX_TOTAL = 200;
+
+/**
+ * Brings the pack to exactly `verdict.question_count` questions. Extras are
+ * removed newest first, and questions the student hasn't answered yet go
+ * before ones they have, so practice history is kept where possible.
+ */
+async function resizePack({ db, userId, pack, verdict, question, history, schemas, learner, signal }: {
+  db: SupabaseClient;
+  userId: string;
+  pack: PackRow;
+  verdict: Verdict;
+  question: string;
+  history: { role: string; content: string }[];
+  schemas: QuestionSchemas;
+  learner: string;
+  signal: AbortSignal;
+}): Promise<QuizResult> {
+  const total = clamp(verdict.question_count, 1, MAX_TOTAL, DEFAULT_QUESTIONS);
+  const { data: rows, error } = await db.from("questions").select("id, position, created_at")
+    .eq("study_set_id", pack.id);
+  if (error) throw new Error(`Reading the pack failed: ${error.message}`);
+  const current = rows ?? [];
+  const meta = { pack_id: pack.id, pack_title: pack.title, created: false, grounded: true, requested: total };
+  const followUps = ["Start practising", "Make the questions harder", "Explain the first question"];
+
+  if (current.length === total) {
+    return {
+      reply: `Your pack **${pack.title}** already has **${total} ${total === 1 ? "question" : "questions"}**, so I left it as it is.`,
+      followUps,
+      quiz: { ...meta, added: 0, removed: 0, total },
+      model: "",
+      packId: pack.id,
+    };
+  }
+
+  if (current.length > total) {
+    const { data: attempts } = await db.from("question_attempts").select("question_id")
+      .in("question_id", current.map((q) => q.id));
+    const answered = new Set((attempts ?? []).map((a) => a.question_id));
+    const newestFirst = (a: typeof current[number], b: typeof current[number]) =>
+      (b.position ?? 0) - (a.position ?? 0) || Date.parse(b.created_at) - Date.parse(a.created_at);
+    const drop = [
+      ...current.filter((q) => !answered.has(q.id)).sort(newestFirst),
+      ...current.filter((q) => answered.has(q.id)).sort(newestFirst),
+    ].slice(0, current.length - total);
+    const { error: delError } = await db.from("questions").delete().in("id", drop.map((q) => q.id));
+    if (delError) throw new Error(`Removing questions failed: ${delError.message}`);
+    await db.from("study_sets").update({ updated_at: new Date().toISOString() }).eq("id", pack.id);
+    const lostHistory = drop.filter((q) => answered.has(q.id)).length;
+    return {
+      reply:
+        `Done! I removed **${drop.length} ${drop.length === 1 ? "question" : "questions"}** from **${pack.title}**, ` +
+        `so it now has **${total}**.` +
+        (lostHistory ? ` ${lostHistory} of them you'd already answered, so their results went with them.` : ""),
+      followUps,
+      quiz: { ...meta, added: 0, removed: drop.length, total },
+      model: "",
+      packId: pack.id,
+    };
+  }
+
+  // Too few: write only the missing ones.
+  const missing = Math.min(total - current.length, MAX_QUESTIONS);
+  const topic = verdict.quiz_topic?.trim() || pack.title;
+  const [vector] = await embedMany([topic], signal);
+  const recent = history.slice(-6)
+    .map((m) => `${m.role === "user" ? "Student" : "Novi"}: ${m.content.replace(/\s+/g, " ").slice(0, 500)}`)
+    .join("\n");
+  const added = await addToPack({ db, userId, target: pack, topic, count: missing, vector, recent: recent || question, schemas, learner, signal });
+  const now = current.length + added.quiz.added;
+  let reply =
+    `Done! I added **${added.quiz.added} ${added.quiz.added === 1 ? "question" : "questions"}** to **${pack.title}**, ` +
+    `so it now has **${now}**.`;
+  if (now < total) {
+    reply += total - current.length > MAX_QUESTIONS
+      ? ` I can write up to ${MAX_QUESTIONS} at a time. Ask me again to make it ${total}.`
+      : ` A few couldn't be written this time. Ask me to make it ${total} and I'll write the rest.`;
+  }
+  return { ...added, reply, followUps, quiz: { ...added.quiz, requested: total, removed: 0, total: now } };
+}
+
+/**
+ * Writes the batches in parallel. A batch that fails is retried once, on its
+ * own and with every model allowed (parallel calls skip Groq, so when Gemini
+ * is overloaded the first round can fail outright). Batches that still fail
+ * are skipped, so a bad moment costs some questions, not the whole quiz;
+ * throws only if every batch fails.
  */
 async function writeBatches(
   sizes: number[],
@@ -167,18 +295,28 @@ async function writeBatches(
   ));
   const quizzes: Quiz[] = [];
   const models: string[] = [];
-  for (const s of settled) {
+  let lastError: unknown = null;
+  for (const [i, s] of settled.entries()) {
     if (s.status === "fulfilled") {
       quizzes.push(s.value.data);
       models.push(s.value.model);
-    } else {
-      console.log(JSON.stringify({ quiz_batch_failed: s.reason instanceof Error ? s.reason.message : String(s.reason) }));
+      continue;
+    }
+    console.log(JSON.stringify({ quiz_batch_failed: s.reason instanceof Error ? s.reason.message : String(s.reason) }));
+    lastError = s.reason;
+    // A lone batch already went through every model. Otherwise retry one at a
+    // time: Groq's per-minute cap is shared between calls.
+    if (alone || signal.aborted) continue;
+    try {
+      const retry = await generateJson<Quiz>(promptFor(sizes[i], i), schema, { outputTokens: outputTokensFor(sizes[i]), signal });
+      quizzes.push(retry.data);
+      models.push(retry.model);
+    } catch (err) {
+      lastError = err;
+      console.log(JSON.stringify({ quiz_batch_retry_failed: err instanceof Error ? err.message : String(err) }));
     }
   }
-  if (quizzes.length === 0) {
-    const first = settled.find((s) => s.status === "rejected") as PromiseRejectedResult | undefined;
-    throw first?.reason ?? new Error("No usable questions came back");
-  }
+  if (quizzes.length === 0) throw lastError ?? new Error("No usable questions came back");
   return { quizzes, models };
 }
 
