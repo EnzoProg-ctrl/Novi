@@ -313,13 +313,18 @@
   color: var(--coral-active);
 }
 
-/* ── Responsive ──────────────────────────────────────────────── */
-@media (max-width: 1240px) {
+/* ── Responsive ──────────────────────────────────────────────────
+   Breakpoints are window widths, but above 1024px the sidebar and page
+   padding take 308px of it, so they are set for the space Home actually
+   gets. Three top cards need a main column of about 880px (the buddy card's
+   button must not wrap); the rail stays only while the main column keeps
+   at least about 610px for two cards beside it. */
+@media (max-width: 1599px) {
   .hm-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
   .hm-progress { grid-column: 1 / -1; }
 }
 
-@media (max-width: 1080px) {
+@media (max-width: 1264px) {
   .hm { grid-template-columns: minmax(0, 1fr); }
   .hm-hero-art { max-width: 380px; margin: 0 auto; }
 }
