@@ -60,3 +60,6 @@ Thumbs.db
 *.njsproj
 *.sln
 *.sw?
+
+# Local MCP server config
+.mcp.json

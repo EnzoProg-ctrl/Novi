@@ -143,8 +143,13 @@ export function AuthProvider({ children }) {
     })
     if (error) throw error
     if (data.session) markActive()
-    // With email confirmation on, Supabase returns a user but no session.
-    return { needsEmailConfirmation: !data.session, user: data.user }
+    // With email confirmation on, an email that already has an account still
+    // gets a "success" answer, but sends nothing: the user returned has no
+    // identities. Without this check the page would say a confirmation email
+    // is on its way when none is coming.
+    const alreadyRegistered = !data.session && data.user?.identities?.length === 0
+    // Otherwise, with email confirmation on, Supabase returns a user but no session.
+    return { needsEmailConfirmation: !data.session && !alreadyRegistered, alreadyRegistered, user: data.user }
   }, [])
 
   const signIn = useCallback(async ({ email, password }) => {

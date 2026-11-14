@@ -3,14 +3,11 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Logo } from '../components/Mascot'
 import { PasswordField } from '../components/PasswordField'
 import { useAuth } from '../context/auth-context'
+import { friendlyError } from '../lib/errors'
 
-function friendlyError(err) {
-  const msg = err?.message ?? 'Something went wrong.'
-  if (/already registered|already exists/i.test(msg)) {
-    return 'That email already has an account. Try signing in instead.'
-  }
-  return msg
-}
+/** Supabase's error for an email that already has an account (when it reports one at all). */
+const isAlreadyRegistered = (err) =>
+  err?.code === 'user_already_exists' || err?.code === 'email_exists' || /already registered|already exists/i.test(err?.message ?? '')
 
 export function SignUp() {
   const { signUp } = useAuth()
@@ -18,15 +15,20 @@ export function SignUp() {
 
   const [form, setForm] = useState({ displayName: '', email: '', password: '' })
   const [error, setError] = useState(null)
+  // The email entered already has an account: shown with ways in, not as a plain error.
+  const [emailTaken, setEmailTaken] = useState(false)
   const [confirmSent, setConfirmSent] = useState(false)
   const [busy, setBusy] = useState(false)
 
-  const update = (key) => (event) =>
+  const update = (key) => (event) => {
+    if (key === 'email') setEmailTaken(false)
     setForm((current) => ({ ...current, [key]: event.target.value }))
+  }
 
   async function handleSubmit(event) {
     event.preventDefault()
     setError(null)
+    setEmailTaken(false)
 
     if (form.password.length < 8) {
       setError('Use at least 8 characters for your password.')
@@ -35,14 +37,17 @@ export function SignUp() {
 
     setBusy(true)
     try {
-      const { needsEmailConfirmation } = await signUp(form)
-      if (needsEmailConfirmation) {
+      const { needsEmailConfirmation, alreadyRegistered } = await signUp(form)
+      if (alreadyRegistered) {
+        setEmailTaken(true)
+      } else if (needsEmailConfirmation) {
         setConfirmSent(true)
       } else {
         navigate('/buddy/new', { replace: true })
       }
     } catch (err) {
-      setError(friendlyError(err))
+      if (isAlreadyRegistered(err)) setEmailTaken(true)
+      else setError(friendlyError(err, 'Novi couldn’t create your account. Try again.'))
     } finally {
       setBusy(false)
     }
@@ -74,6 +79,12 @@ export function SignUp() {
         <p className="hint">Next, you get to name your buddy.</p>
 
         {error && <div className="msg msg-error auth-gap">{error}</div>}
+        {emailTaken && (
+          <div className="msg msg-error auth-gap" role="alert">
+            That email already has a Novi account. <Link to="/signin">Sign in</Link> instead, or{' '}
+            <Link to="/forgot-password">reset your password</Link> if you&apos;ve forgotten it.
+          </div>
+        )}
 
         <div className="auth-gap">
           <div className="field">
