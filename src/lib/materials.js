@@ -119,7 +119,7 @@ export async function findDuplicateMaterial(userId, contentHash) {
   if (!contentHash) return null
   const { data, error } = await supabase
     .from('materials')
-    .select('id, title, status, created_at, study_sets ( id )')
+    .select('id, title, source_type, status, created_at, study_sets ( id )')
     .eq('user_id', userId)
     .eq('content_hash', contentHash)
     .order('created_at', { ascending: false })

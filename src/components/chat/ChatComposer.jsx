@@ -14,7 +14,7 @@ const attachmentStatus = (status, buddyName) =>
  * Novi has read it; it then becomes the chat's study pack.
  */
 export const ChatComposer = forwardRef(function ChatComposer(
-  { value, onChange, onSubmit, busy, packs, packsLoading, pack, onPackChange, attachment, onAttach, onRemoveAttachment, hint, buddyName = 'Novi' },
+  { value, onChange, onSubmit, busy, packs, packsLoading, pack, onPackChange, attachment, onAttach, onAttachAnyway, onRemoveAttachment, hint, buddyName = 'Novi' },
   textareaRef,
 ) {
   const [menuOpen, setMenuOpen] = useState(false)
@@ -98,8 +98,15 @@ export const ChatComposer = forwardRef(function ChatComposer(
               <span className="ch-file-status" role="status">
                 {attachment.status === 'failed'
                   ? attachment.error ?? 'This file could not be read.'
-                  : `${formatBytes(attachment.size)} · ${attachmentStatus(attachment.status, buddyName)}`}
+                  : attachment.existing
+                    ? `Already in your packs as \u201c${attachment.existing}\u201d \u00b7 ${attachment.status === 'ready' ? 'using that pack' : `${buddyName} is still reading it\u2026`}`
+                    : `${formatBytes(attachment.size)} · ${attachmentStatus(attachment.status, buddyName)}`}
               </span>
+              {attachment.existing && onAttachAnyway && (
+                <button type="button" className="ch-file-anyway" onClick={onAttachAnyway}>
+                  Upload a new copy
+                </button>
+              )}
             </span>
             <button type="button" className="ch-chip-x" onClick={onRemoveAttachment} aria-label={`Remove ${attachment.name}`}>
               <IconX width={14} height={14} />

@@ -25,13 +25,15 @@ import {
 } from '../lib/chat'
 import { NEW_CHAT, inflight } from '../lib/chatInflight'
 import { initialsFrom } from '../lib/initials'
-import { deleteMaterials, processMaterial, uploadMaterial, validateFile } from '../lib/materials'
+import { deleteMaterials, fileFingerprint, findDuplicateMaterial, processMaterial, uploadMaterial, validateFile } from '../lib/materials'
 import { fetchPackOptions } from '../lib/schedule'
 import { friendlyError } from '../lib/errors'
 
 /** How long after a message, with no reply yet, the page keeps waiting for one. */
 const AWAIT_REPLY_MS = 120_000
 const POLL_MS = 3000
+/** A material whose pack is still being built. */
+const IN_PROGRESS = new Set(['uploaded', 'extracting', 'embedding', 'generating'])
 
 /**
  * AI Chat.
@@ -412,7 +414,11 @@ export function Chat() {
   // ── Attaching a file ──────────────────────────────────────────
   // The file is uploaded and read straight away, without practice questions:
   // the student chooses how many after sending it.
-  const onAttach = async (file) => {
+  //
+  // A file the student already has a pack for (same contents, whatever its
+  // name) is not uploaded again: the chat uses that pack, and the chip says
+  // so. `anyway` uploads a fresh copy instead.
+  const onAttach = async (file, { anyway = false } = {}) => {
     const problem = validateFile(file)
     if (problem) {
       setAttachment({ key: null, name: file.name, size: file.size, status: 'failed', error: problem })
@@ -420,9 +426,29 @@ export function Chat() {
     }
     const key = crypto.randomUUID()
     attachKey.current = key
-    setAttachment({ key, name: file.name, size: file.size, status: 'uploading', error: null, material: null })
+    setAttachment({ key, file, name: file.name, size: file.size, status: 'uploading', error: null, material: null })
     try {
-      const material = await uploadMaterial({ userId: user.id, file, title: file.name.replace(/\.[^.]+$/, '') })
+      const contentHash = await fileFingerprint(file)
+      if (!anyway) {
+        // A courtesy check: if it fails, the file is simply uploaded.
+        const match = await findDuplicateMaterial(user.id, contentHash).catch(() => null)
+        if (attachKey.current !== key) return
+        const usable = match && ((match.status === 'ready' && match.packId) || IN_PROGRESS.has(match.status))
+        if (usable) {
+          setAttachment((a) => (a?.key === key
+            ? {
+              ...a,
+              status: match.status === 'ready' ? 'ready' : 'reading',
+              material: { id: match.id, title: match.title, source_type: match.source_type },
+              packId: match.packId,
+              // Already the student's: never deleted when the chip is removed.
+              existing: match.title,
+            }
+            : a))
+          return
+        }
+      }
+      const material = await uploadMaterial({ userId: user.id, file, title: file.name.replace(/\.[^.]+$/, ''), contentHash })
       if (attachKey.current !== key) {
         // Removed while uploading.
         deleteMaterials([material]).catch(() => {})
@@ -468,8 +494,9 @@ export function Chat() {
     const current = attachment
     attachKey.current = null
     setAttachment(null)
-    // Not sent, so not wanted: remove the upload and the pack it became.
-    if (current?.material) deleteMaterials([current.material]).catch(() => {})
+    // Not sent, so not wanted: remove the upload and the pack it became
+    // (but never a pack the student already had before attaching).
+    if (current?.material && !current.existing) deleteMaterials([current.material]).catch(() => {})
   }
 
   // ── Sending ────────────────────────────────────────────────────
@@ -922,6 +949,7 @@ export function Chat() {
               onPackChange={(p) => setPackId(p?.id ?? null)}
               attachment={attachment}
               onAttach={onAttach}
+              onAttachAnyway={() => attachment?.file && onAttach(attachment.file, { anyway: true })}
               onRemoveAttachment={removeAttachment}
               hint={hint}
             />

@@ -1028,3 +1028,19 @@
   .ch-row-menu-item { padding: 12px; font-size: 0.94rem; }
 }
 @media (prefers-reduced-motion: reduce) { .ch-row-menu { animation: none; } }
+
+/* An attached file the student already had a pack for. */
+.ch-file-anyway {
+  align-self: flex-start;
+  margin-top: 2px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 0.74rem;
+  font-weight: 620;
+  color: var(--coral-active);
+  cursor: pointer;
+}
+.ch-file-anyway:hover { text-decoration: underline; }
+.ch-file-anyway:focus-visible { outline: 2px solid var(--coral); outline-offset: 2px; border-radius: 4px; }
