@@ -80,9 +80,14 @@ export function SignUp() {
 
         {error && <div className="msg msg-error auth-gap">{error}</div>}
         {emailTaken && (
+          // One paragraph: .msg is a flex row, so loose text and links would
+          // otherwise be laid out as separate columns.
           <div className="msg msg-error auth-gap" role="alert">
-            That email already has a Novi account. <Link to="/signin">Sign in</Link> instead, or{' '}
-            <Link to="/forgot-password">reset your password</Link> if you&apos;ve forgotten it.
+            <p>
+              <strong>That email already has a Novi account.</strong>
+              <br />
+              <Link to="/signin">Sign in</Link> or <Link to="/forgot-password">reset your password</Link>.
+            </p>
           </div>
         )}
 

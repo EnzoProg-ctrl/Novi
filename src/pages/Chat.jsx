@@ -165,6 +165,19 @@ export function Chat() {
       if (applied) return
       applied = true
       flushSync(apply)
+      // The morph draws the reply above the page, where the chat card's
+      // scrolling can't clip it. A reply taller than the visible chat would
+      // spill over the header or composer until the morph ends, so it fades
+      // in instead (the typing pill still fades out).
+      const scroller = scrollRef.current
+      const msg = scroller?.querySelector('.ch-msg.is-arrived-morph')
+      if (scroller && msg) {
+        const box = scroller.getBoundingClientRect()
+        const r = msg.getBoundingClientRect()
+        if (r.top < box.top - 1 || r.bottom > box.bottom + 1) {
+          flushSync(() => setArrived({ id: reply.id, mode: 'fade' }))
+        }
+      }
     }
     const transition = document.startViewTransition(run)
     // The swap waits for the browser to draw a frame. If none comes (a

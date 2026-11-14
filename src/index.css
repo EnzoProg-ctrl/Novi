@@ -286,6 +286,7 @@ a:hover { text-decoration: underline; }
   font-size: 0.88rem;
   line-height: 1.45;
 }
+.msg > p { margin: 0; }
 .msg-error   { background: var(--danger-tint);  color: var(--danger-ink); }
 .msg-success { background: var(--success-tint); color: var(--success-ink); }
 .msg-info    { background: var(--coral-tint);   color: var(--coral-active); }
