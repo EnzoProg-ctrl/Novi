@@ -97,17 +97,55 @@ export function validateFile(file) {
 }
 
 /**
+ * SHA-256 of the file's bytes as hex, or null if the browser can't compute it
+ * (it needs a secure page: https or localhost). Same contents, same value,
+ * whatever the file is called.
+ */
+export async function fileFingerprint(file) {
+  try {
+    const digest = await crypto.subtle.digest('SHA-256', await file.arrayBuffer())
+    return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, '0')).join('')
+  } catch {
+    return null
+  }
+}
+
+/**
+ * The student's latest material with exactly this file's contents, with its
+ * study pack's id if it has one, or null. Only materials uploaded after
+ * fingerprints were added can match.
+ */
+export async function findDuplicateMaterial(userId, contentHash) {
+  if (!contentHash) return null
+  const { data, error } = await supabase
+    .from('materials')
+    .select('id, title, status, created_at, study_sets ( id )')
+    .eq('user_id', userId)
+    .eq('content_hash', contentHash)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  if (error) throw error
+  if (!data) return null
+  return { ...data, packId: data.study_sets?.[0]?.id ?? null }
+}
+
+/**
  * Uploads the file, then records it in `materials`.
  *
  * Storage path follows the RLS convention `<user_id>/<material_id>/<filename>`,
  * so the storage policies can check the first folder segment against auth.uid().
  * If the database insert fails we remove the just-uploaded object, otherwise the
  * bucket would slowly collect files no row points at.
+ *
+ * `contentHash` is the file's fingerprint if the caller already has it; it is
+ * worked out here otherwise, so every upload can be matched later.
  */
-export async function uploadMaterial({ userId, file, title, subjectId = null }) {
+export async function uploadMaterial({ userId, file, title, subjectId = null, contentHash }) {
   const validationError = validateFile(file)
   if (validationError) throw new Error(validationError)
 
+  const hash = contentHash === undefined ? await fileFingerprint(file) : contentHash
   const materialId = crypto.randomUUID()
   const storagePath = `${userId}/${materialId}/${sanitizeFilename(file.name)}`
 
@@ -128,6 +166,7 @@ export async function uploadMaterial({ userId, file, title, subjectId = null }) 
       storage_path: storagePath,
       mime_type: mimeTypeOf(file),
       file_size_bytes: file.size,
+      content_hash: hash,
       status: 'uploaded',
     })
     .select()

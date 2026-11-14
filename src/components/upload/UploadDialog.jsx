@@ -1,10 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/auth-context'
 import {
   ACCEPTED_EXTENSIONS,
   DEFAULT_QUESTION_COUNT,
   QUESTION_COUNTS,
   estimateWordCount,
+  fileFingerprint,
+  findDuplicateMaterial,
   formatBytes,
   processMaterial,
   questionCapFor,
@@ -85,14 +88,53 @@ export function UploadDialog({ state, session, onRequestClose, onClosed, onUploa
   )
 }
 
+/** Statuses of a material whose pack is still being built. */
+const PROCESSING = new Set(['uploaded', 'extracting', 'embedding', 'generating'])
+
+/**
+ * Shown when the chosen file has the same contents as one the student already
+ * uploaded. The main button then reads "Upload anyway", so they can still go
+ * ahead (to get a pack with a different number of questions, say).
+ */
+function DuplicateNotice({ match, onOpenPack, onGoHome }) {
+  const name = `\u201c${match.title}\u201d`
+  let heading = 'You\u2019ve already uploaded this file.'
+  let detail = `It\u2019s on Home as ${name}.`
+  let action = null
+  if (match.status === 'ready' && match.packId) {
+    heading = 'You already have a pack for this file.'
+    detail = `${name} was made from it.`
+    action = <button type="button" className="btn btn-secondary" onClick={onOpenPack}>Open pack</button>
+  } else if (PROCESSING.has(match.status)) {
+    heading = 'This file is already being turned into a pack.'
+    detail = `${name} is still processing. You\u2019ll find it on Home.`
+    action = <button type="button" className="btn btn-secondary" onClick={onGoHome}>Go to Home</button>
+  } else if (match.status === 'failed') {
+    heading = 'You uploaded this file before, but its pack didn\u2019t finish.'
+    detail = 'Upload it again to have another go.'
+  }
+  return (
+    <div className="msg msg-info up-dup" role="status">
+      <div className="up-dup-body">
+        <p><strong>{heading}</strong></p>
+        <p>{detail}</p>
+        {action && <div className="up-dup-actions">{action}</div>}
+      </div>
+    </div>
+  )
+}
+
 function UploadForm({ onBusyChange, onCancel, onUploaded }) {
   const { user, buddy } = useAuth()
+  const navigate = useNavigate()
   const inputRef = useRef(null)
   const measuring = useRef(null)
 
   const [file, setFile] = useState(null)
   const [title, setTitle] = useState('')
   const [error, setError] = useState(null)
+  // An earlier material with the same contents as `file`, once found.
+  const [duplicate, setDuplicate] = useState(null)
   const [busy, setBusy] = useState(false)
   const [dragging, setDragging] = useState(false)
   const [questionCount, setQuestionCount] = useState(DEFAULT_QUESTION_COUNT)
@@ -103,6 +145,7 @@ function UploadForm({ onBusyChange, onCancel, onUploaded }) {
 
   function chooseFile(nextFile) {
     if (!nextFile) return
+    setDuplicate(null)
     const problem = validateFile(nextFile)
     if (problem) {
       setError(problem)
@@ -151,7 +194,20 @@ function UploadForm({ onBusyChange, onCancel, onUploaded }) {
     setBusy(true)
     onBusyChange(true)
     try {
-      const material = await uploadMaterial({ userId: user.id, file, title })
+      const contentHash = await fileFingerprint(file)
+      // Once the notice is showing, the button means "upload anyway".
+      if (!duplicate) {
+        // The check is a courtesy: if it fails, the upload still goes ahead.
+        const match = await findDuplicateMaterial(user.id, contentHash).catch(() => null)
+        if (match) {
+          setDuplicate(match)
+          onBusyChange(false)
+          setBusy(false)
+          return
+        }
+      }
+
+      const material = await uploadMaterial({ userId: user.id, file, title, contentHash })
 
       // Deliberately not awaited: processing takes ~15s and Home shows live
       // status. The request keeps running after the pop-up closes.
@@ -192,6 +248,19 @@ function UploadForm({ onBusyChange, onCancel, onUploaded }) {
       </header>
 
       {error && <div className="msg msg-error">{error}</div>}
+      {duplicate && !busy && (
+        <DuplicateNotice
+          match={duplicate}
+          onOpenPack={() => {
+            onCancel()
+            navigate(`/pack/${duplicate.packId}`)
+          }}
+          onGoHome={() => {
+            onCancel()
+            navigate('/dashboard')
+          }}
+        />
+      )}
 
       <div
         className={`dropzone${dragging ? ' is-dragging' : ''}${file ? ' has-file' : ''}`}
@@ -288,7 +357,7 @@ function UploadForm({ onBusyChange, onCancel, onUploaded }) {
         </button>
         <button className="btn btn-primary" disabled={busy || !file}>
           {busy && <span className="spinner" />}
-          {busy ? 'Uploading...' : 'Upload'}
+          {busy ? 'Uploading...' : duplicate ? 'Upload anyway' : 'Upload'}
         </button>
       </div>
     </form>
