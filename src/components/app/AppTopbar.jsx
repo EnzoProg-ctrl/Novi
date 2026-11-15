@@ -2,13 +2,13 @@ import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/auth-context'
 import { initialsFrom } from '../../lib/initials'
-import { IconBell, IconChevronDown, IconMenu, IconSearch } from './AppIcons'
+import { IconBell, IconChevronDown, IconMenu } from './AppIcons'
+import { TopbarSearch } from './TopbarSearch'
 
 export function AppTopbar({ onMenuClick }) {
   const { user, signOut } = useAuth()
   const navigate = useNavigate()
   const [menuOpen, setMenuOpen] = useState(false)
-  const [query, setQuery] = useState('')
   const closeTimer = useRef(null)
 
   const displayName = user?.user_metadata?.display_name ?? null
@@ -43,19 +43,7 @@ export function AppTopbar({ onMenuClick }) {
         <IconMenu />
       </button>
 
-      {/* Search is presentational for now: there is no search feature behind it
-          yet, so submitting is a no-op rather than a route that does not exist. */}
-      <form className="nv-search" role="search" onSubmit={(e) => e.preventDefault()}>
-        <IconSearch width={18} height={18} />
-        <input
-          type="search"
-          className="nv-search-input"
-          placeholder="Search anything..."
-          aria-label="Search"
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-        />
-      </form>
+      <TopbarSearch />
 
       <div className="nv-top-end">
         {/* No notifications feature yet, so the bell carries no unread dot. */}

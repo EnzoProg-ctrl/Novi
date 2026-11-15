@@ -257,12 +257,15 @@ a.nv-focus-pack:focus-visible { outline: 2px solid var(--coral); outline-offset:
 }
 .nv-top-menu:hover { background: var(--bg-sunken); }
 
+.nv-search-wrap {
+  position: relative;
+  width: min(420px, 100%);
+  margin-left: auto;
+}
 .nv-search {
   display: flex;
   align-items: center;
   gap: 10px;
-  width: min(420px, 100%);
-  margin-left: auto;
   padding: 0 16px;
   height: 44px;
   border: 1px solid var(--line);
@@ -287,6 +290,58 @@ a.nv-focus-pack:focus-visible { outline: 2px solid var(--coral); outline-offset:
 .nv-search-input::placeholder { color: var(--faint); }
 .nv-search-input:focus { outline: none; }
 .nv-search-input::-webkit-search-cancel-button { -webkit-appearance: none; }
+
+/* Results dropdown */
+.nv-search-pop {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  z-index: 40;
+  max-height: min(70vh, 460px);
+  overflow-y: auto;
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg, 16px);
+  background: var(--bg);
+  box-shadow: var(--shadow-lg);
+}
+.nv-search-note { margin: 0; padding: 12px 12px; font-size: 0.86rem; color: var(--muted); }
+.nv-search-list, .nv-search-list ul { list-style: none; margin: 0; padding: 0; }
+.nv-search-group {
+  margin: 0;
+  padding: 10px 12px 4px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+.nv-search-item {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 9px 12px;
+  border-radius: var(--r-md, 10px);
+  cursor: pointer;
+}
+.nv-search-item.is-active { background: var(--coral-tint); }
+.nv-search-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.9rem;
+  font-weight: 620;
+  color: var(--ink);
+}
+.nv-search-item.is-active .nv-search-label { color: var(--coral-active); }
+.nv-search-detail {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.76rem;
+  color: var(--muted);
+}
 
 .nv-top-end { display: flex; align-items: center; gap: 10px; flex: none; }
 
@@ -392,7 +447,7 @@ a.nv-focus-pack:focus-visible { outline: 2px solid var(--coral); outline-offset:
   .nv-top { padding: 0 16px; gap: 10px; }
   .nv-app-content { padding: 20px 16px 48px; }
   /* Shrink to fit: at its default width it pushed the profile button off-screen. */
-  .nv-search { width: auto; flex: 1; min-width: 0; }
+  .nv-search-wrap { width: auto; flex: 1; min-width: 0; }
   .nv-user-btn { padding: 3px; }
   .nv-user-btn svg { display: none; }
 }

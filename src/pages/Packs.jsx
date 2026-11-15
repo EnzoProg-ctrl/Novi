@@ -65,6 +65,8 @@ export function Packs() {
   const [params, setParams] = useSearchParams()
   const [selectedId, setSelectedId] = useState(() => params.get('pack'))
   const arrivedFor = useRef(params.get('pack'))
+  // Bumped when a link selects a pack while this page is already open.
+  const [arrivals, setArrivals] = useState(0)
   const select = (id) => {
     setSelectedId(id)
     setParams((p) => {
@@ -112,6 +114,16 @@ export function Packs() {
     [packs, selectedId],
   )
 
+  // A link to another pack while this page is open (the top-bar search, say):
+  // select it as if the page had just opened with it.
+  const linkedId = params.get('pack')
+  useEffect(() => {
+    if (!linkedId || linkedId === selectedId) return
+    setSelectedId(linkedId)
+    arrivedFor.current = linkedId
+    setArrivals((n) => n + 1)
+  }, [linkedId]) // eslint-disable-line react-hooks/exhaustive-deps
+
   // Arriving with a pack in the link: bring it into view once. On narrower
   // screens its details sit below the list, so show those instead.
   useEffect(() => {
@@ -126,7 +138,7 @@ export function Packs() {
     const card = document.querySelector(`.pk-card[data-pack-id="${CSS.escape(id)}"]`)
     const box = card?.getBoundingClientRect()
     if (box && (box.top < 0 || box.bottom > window.innerHeight)) card.scrollIntoView({ block: 'center' })
-  }, [loading, packs])
+  }, [loading, packs, arrivals])
 
   // Only offer subjects that actually have packs, so the filter can't come up empty.
   const subjects = useMemo(() => {
