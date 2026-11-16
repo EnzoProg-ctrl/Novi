@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { ACCENTS } from '../../lib/accents'
 import { LoadingRegion, Sk } from '../Skeleton'
 import { Select } from '../Select'
 
@@ -367,13 +368,6 @@ const THEMES = [
   { value: 'light', label: 'Light' },
   { value: 'dark', label: 'Dark' },
   { value: 'system', label: 'System' },
-]
-const ACCENTS = [
-  { value: 'coral', label: 'Coral', color: '#ff6b5a' },
-  { value: 'lavender', label: 'Lavender', color: '#8a6fe6' },
-  { value: 'blue', label: 'Blue', color: '#4a7ef0' },
-  { value: 'mint', label: 'Mint', color: '#1fa487' },
-  { value: 'rose', label: 'Rose', color: '#e65f8b' },
 ]
 const FONT_SIZES = [
   { value: 'small', label: 'Small', sample: 'Aa' },

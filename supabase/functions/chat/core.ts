@@ -403,6 +403,7 @@ export async function runChat(
         history,
         questionTypes,
         learner,
+        personality: buddy.personality,
         signal,
       });
     } catch (err) {

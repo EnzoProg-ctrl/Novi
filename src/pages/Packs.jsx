@@ -15,6 +15,8 @@ import { useAuth } from '../context/auth-context'
 import { useUpload } from '../context/upload-context'
 import { fetchPackList } from '../lib/packs'
 import { friendlyError } from '../lib/errors'
+// Shared card styles (hm-card, hm-sub) live with Home; pages load on their own now.
+import '../components/home/home.css'
 
 /** Cycled for visual variety; not tied to subject meaning. */
 const TONES = [

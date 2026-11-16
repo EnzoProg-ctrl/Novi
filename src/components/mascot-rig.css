@@ -112,6 +112,29 @@
   85%, 100% { opacity: 0; transform: translate(1%, -2.5%) scale(1.05); }
 }
 
+/* ── Writing notes (Home's buddy card) ───────────────────────────
+   The paw and pen write a line along the clipboard: small strokes that
+   climb with the paper's tilt, the pen rocking at the wrist, then a lift
+   back to the start of the line and a short pause. Steps are in % of the
+   layer's own box (the full canvas), so they scale with the mascot. */
+.rig-writing .rig-hand {
+  transform-origin: 40% 60%;
+  animation: rig-write 3.4s ease-in-out infinite;
+}
+@keyframes rig-write {
+  0%        { translate: 0 0;          rotate: 0deg; }
+  7%        { translate: 0.3% -0.3%;   rotate: -3deg; }
+  14%       { translate: 0.6% -0.05%;  rotate: 2deg; }
+  21%       { translate: 0.9% -0.5%;   rotate: -3deg; }
+  28%       { translate: 1.2% -0.25%;  rotate: 2deg; }
+  35%       { translate: 1.5% -0.65%;  rotate: -3deg; }
+  42%       { translate: 1.8% -0.4%;   rotate: 1deg; }
+  50%       { translate: 2% -0.7%;     rotate: -1deg; }
+  /* lift the pen and carry it back to the start of the next line */
+  60%       { translate: 1.1% -1.15%;  rotate: -5deg; }
+  70%, 100% { translate: 0 0;          rotate: 0deg; }
+}
+
 /* Anyone who asks for stillness gets the original artwork, Zs and all. */
 @media (prefers-reduced-motion: reduce) {
   .rig > img { animation: none !important; }

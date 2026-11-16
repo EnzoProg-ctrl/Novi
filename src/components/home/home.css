@@ -64,11 +64,14 @@
   display: flex;
   align-items: center;
   gap: 14px;
-  background: var(--coral-tint);
-  border-color: color-mix(in srgb, var(--coral) 20%, transparent);
+  background: var(--buddy-tint);
+  border-color: var(--buddy-line);
 }
 /* Full mascot, no frame. Height is capped as well as width so a taller pose
    can never outgrow the card's text column. */
+/* The writing-notes pose is taller than it is wide: narrower, so it keeps
+   within the card's height cap. */
+.hm-buddy-avatar.rig-writing { width: 86px; }
 .hm-buddy-avatar {
   flex: none;
   display: block;
@@ -76,17 +79,6 @@
   height: auto;
   max-height: 108px;
   object-fit: contain;
-  /* Gentle levitation. Slow and small on purpose: this sits beside text the
-     student is reading, so it should register as alive, not as movement
-     competing for attention. The global prefers-reduced-motion rule in
-     index.css neutralises it for anyone who asks for stillness. */
-  animation: hm-levitate 3.5s ease-in-out infinite;
-  will-change: transform;
-}
-
-@keyframes hm-levitate {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-7px); }
 }
 .hm-buddy-text { flex: 1; min-width: 0; }
 /* Ask box: a question typed here opens AI Chat with it already sent. */

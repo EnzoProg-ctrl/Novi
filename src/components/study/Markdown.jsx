@@ -1,3 +1,7 @@
+// Markdown's own styles (md-*) live in the AI Chat stylesheet; imported here
+// so the pack page gets them too now that pages load on their own.
+import '../chat/chat.css'
+
 /**
  * Minimal markdown renderer for AI-written summaries.
  *

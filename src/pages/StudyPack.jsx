@@ -6,6 +6,8 @@ import '../components/study/study-pack.css'
 import { fetchStudyPack } from '../lib/packs'
 import { LoadingRegion, Sk, SkText } from '../components/Skeleton'
 import { friendlyError } from '../lib/errors'
+// Shared card styles (hm-card, hm-sub, …) live with Home; pages load on their own now.
+import '../components/home/home.css'
 
 export function StudyPack() {
   const { packId } = useParams()

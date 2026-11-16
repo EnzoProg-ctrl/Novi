@@ -105,7 +105,7 @@
   margin-top: 22px;
   display: grid;
   place-items: center;
-  background: var(--coral-tint);
+  background: var(--buddy-tint);
   border-radius: var(--r-xl);
 }
 
@@ -256,3 +256,37 @@
 }
 .count-option.is-disabled { color: var(--faint); background: var(--bg-soft); border-color: var(--line); cursor: not-allowed; }
 .count-option:has(:focus-visible) { outline: 2px solid var(--coral); outline-offset: 2px; }
+
+/* ── Buddy outfit and colour (Edit your buddy) ─────────────────── */
+.buddy-outfits {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+  gap: 8px;
+  margin-top: 8px;
+}
+.buddy-outfit { align-items: center; text-align: center; gap: 6px; }
+.buddy-colours { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
+.buddy-colour {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+}
+.buddy-swatch {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 700;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+  transition: box-shadow 0.15s ease, scale 0.16s var(--ease-press);
+}
+.buddy-colour:hover .buddy-swatch { scale: 1.06; }
+.buddy-colour.is-selected .buddy-swatch { box-shadow: 0 0 0 3px var(--bg), 0 0 0 5px var(--ink-soft); }
+.buddy-colour:has(:focus-visible) .buddy-swatch { outline: 2px solid var(--coral); outline-offset: 4px; }
+.buddy-colour-label { font-size: 0.76rem; color: var(--muted); }
+.buddy-colour.is-selected .buddy-colour-label { color: var(--ink); font-weight: 620; }

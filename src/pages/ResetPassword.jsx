@@ -8,6 +8,8 @@ import { useAuth } from '../context/auth-context'
 import { authErrorMessage, PASSWORD_MIN, setNewPassword } from '../lib/account'
 import { clearRecoveryPending, peekAuthRedirectNotice, takeAuthRedirectNotice } from '../lib/auth-redirect'
 import { supabase } from '../lib/supabase'
+// Shared card style (hm-card) lives with Home; pages load on their own now.
+import '../components/home/home.css'
 
 /**
  * Where a password reset link lands. The link signs the student in with a

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { MascotRig } from '../MascotRig'
 import { IconArrowRight } from './HomeIcons'
 import { useUpload } from '../../context/upload-context'
+import { homeLines } from '../../lib/buddyVoice'
 import { MAX_MESSAGE_CHARS } from '../../lib/chat'
 import { Sk } from '../Skeleton'
 
@@ -15,11 +16,13 @@ import { Sk } from '../Skeleton'
  * other buttons cover uploading and practising. Before any material, adding
  * some is the only useful next step, so that stays the button.
  */
-export function BuddyCard({ buddyName, hasMaterial, loading = false }) {
+export function BuddyCard({ buddyName, personality, hasMaterial, loading = false }) {
   const { openUpload } = useUpload()
   const navigate = useNavigate()
   const name = buddyName ?? 'Novi'
   const [question, setQuestion] = useState('')
+  // In the buddy's personality; the same line all day, a new one tomorrow.
+  const [lineA, lineB] = homeLines(personality, { hasMaterial, seed: new Date().toDateString() })
 
   function ask(event) {
     event.preventDefault()
@@ -30,7 +33,7 @@ export function BuddyCard({ buddyName, hasMaterial, loading = false }) {
 
   return (
     <section className="hm-card hm-buddy" aria-label={`A note from ${name}`}>
-      <MascotRig pose="front" className="hm-buddy-avatar" />
+      <MascotRig pose="writing" className="hm-buddy-avatar" />
 
       <div className="hm-buddy-text">
         <p className="hm-buddy-name">{name}</p>
@@ -45,7 +48,7 @@ export function BuddyCard({ buddyName, hasMaterial, loading = false }) {
         ) : hasMaterial ? (
           <>
             <p className="hm-buddy-line">
-              You&apos;ve got this!<br />Stuck on something? Ask me.
+              {lineA}<br />{lineB}
             </p>
             <form className="hm-buddy-ask" onSubmit={ask} aria-label={`Ask ${name}`}>
               <input
@@ -71,7 +74,7 @@ export function BuddyCard({ buddyName, hasMaterial, loading = false }) {
         ) : (
           <>
             <p className="hm-buddy-line">
-              Add something to study<br />and we&apos;ll begin.
+              {lineA}<br />{lineB}
             </p>
             <button type="button" className="hm-buddy-cta" onClick={openUpload}>
               Add material

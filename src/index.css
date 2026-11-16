@@ -10,6 +10,11 @@
   --coral-active: #d8402e;
   --coral-tint: color-mix(in srgb, var(--coral) 10%, var(--bg));
   --coral-ring: color-mix(in srgb, var(--coral) 28%, transparent);
+  /* The buddy's own colour ("Edit your buddy"): the circle behind the mascot,
+     the chat avatar and the Home buddy card. Set by [data-buddy-accent]. */
+  --buddy: #ff6b5a;
+  --buddy-tint: color-mix(in srgb, var(--buddy) 10%, var(--bg));
+  --buddy-line: color-mix(in srgb, var(--buddy) 20%, transparent);
   --on-accent: #ffffff;
 
   /* Neutrals */
@@ -68,6 +73,11 @@
 :root[data-accent="mint"]     { --coral: #1fa487; --coral-hover: #1a9078; --coral-active: #137662; }
 :root[data-accent="rose"]     { --coral: #e65f8b; --coral-hover: #d84a77; --coral-active: #bc3963; }
 
+:root[data-buddy-accent="lavender"] { --buddy: #8a6fe6; }
+:root[data-buddy-accent="blue"]     { --buddy: #4a7ef0; }
+:root[data-buddy-accent="mint"]     { --buddy: #1fa487; }
+:root[data-buddy-accent="rose"]     { --buddy: #e65f8b; }
+
 :root[data-font="small"] { font-size: 93.75%; }
 :root[data-font="large"] { font-size: 112.5%; }
 
@@ -92,6 +102,7 @@
   --coral-hover: color-mix(in srgb, var(--coral) 88%, #fff);
   --coral-active: color-mix(in srgb, var(--coral) 72%, #fff);
   --coral-tint: color-mix(in srgb, var(--coral) 16%, var(--bg));
+  --buddy-tint: color-mix(in srgb, var(--buddy) 16%, var(--bg));
 
   --success: #3cc285;
   --success-tint: color-mix(in srgb, var(--success) 16%, var(--bg));

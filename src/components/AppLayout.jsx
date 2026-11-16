@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { Outlet } from 'react-router-dom'
 import { useAuth } from '../context/auth-context'
 import { AppSidebar } from './app/AppSidebar'
 import { AppTopbar } from './app/AppTopbar'
+import { PageBodySkeleton } from './RouteSkeletons'
 import { UploadProvider } from './upload/UploadProvider'
 import { SessionReminder } from './SessionReminder'
 import { UndoToast } from './UndoToast'
@@ -31,7 +32,11 @@ export function AppLayout() {
       <div className="nv-app-body">
         <AppTopbar onMenuClick={() => setMenuOpen(true)} />
         <main className="nv-app-content">
-          <Outlet context={{ user, buddy }} />
+          {/* Pages load the first time they're opened (App.jsx); the shell
+              stays up and the page area shows its skeleton meanwhile. */}
+          <Suspense fallback={<PageBodySkeleton />}>
+            <Outlet context={{ user, buddy }} />
+          </Suspense>
         </main>
       </div>
       <SessionReminder />

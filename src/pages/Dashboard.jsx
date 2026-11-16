@@ -255,7 +255,7 @@ export function Dashboard() {
         {error && <div className="msg msg-error">{error}</div>}
 
         <div className="hm-row">
-          <BuddyCard buddyName={buddy?.name} hasMaterial={materials.length > 0} loading={loading} />
+          <BuddyCard buddyName={buddy?.name} personality={buddy?.personality} hasMaterial={materials.length > 0} loading={loading} />
           <GoalRing done={activity?.sessions_count ?? 0} loading={loading} />
           <ProgressCard subjects={subjects} loading={loading} />
         </div>

@@ -84,7 +84,27 @@ export function batchSizes(count: number): number[] {
 
 const promptKey = (prompt: string) => prompt.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim();
 
-export async function makeQuiz({ db, userId, verdict, question, chosenPackId, conversationId, history, questionTypes, learner = "", signal }: {
+/**
+ * How the buddy opens a "your quiz is ready" reply, in the personality chosen
+ * in "Edit your buddy" (same tone rules as core.ts). Only the opener changes;
+ * the counts and pack names after it are the same for everyone.
+ */
+const OPENERS: Record<string, string> = {
+  supportive: "Done, nice!",
+  cheerful: "All set! 🎉",
+  calm: "Your questions are ready.",
+  witty: "Fresh questions, hot off the press!",
+  focused: "Done.",
+};
+
+export async function makeQuiz(args: Parameters<typeof buildQuiz>[0] & { personality?: string }): Promise<QuizResult> {
+  const result = await buildQuiz(args);
+  const opener = OPENERS[args.personality ?? ""] ?? OPENERS.supportive;
+  if (result.reply.startsWith("Done! ")) result.reply = `${opener} ${result.reply.slice("Done! ".length)}`;
+  return result;
+}
+
+async function buildQuiz({ db, userId, verdict, question, chosenPackId, conversationId, history, questionTypes, learner = "", signal }: {
   db: SupabaseClient;
   userId: string;
   verdict: Verdict;

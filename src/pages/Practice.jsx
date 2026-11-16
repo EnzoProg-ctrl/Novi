@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { doneLines } from '../lib/buddyVoice'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { AnswerPanel } from '../components/study/AnswerPanel'
 import { LoadingRegion, Sk, SkText } from '../components/Skeleton'
@@ -17,6 +18,10 @@ import {
 } from '../lib/practice'
 import { friendlyError } from '../lib/errors'
 import { recommendationFromSearch, recordRecommendationEvent } from '../lib/recommendations'
+// Shared card styles from Home, and the secondary button from Study Packs;
+// pages load on their own now.
+import '../components/home/home.css'
+import '../components/study/packs-page.css'
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
@@ -345,7 +350,7 @@ export function Practice() {
       <div className="pr pr-done">
         <div className="hm-card card-pad pr-summary">
           <h1 className="pr-done-title">
-            {answered === 0 ? 'Nothing left to practice' : 'Session complete'}
+            {answered === 0 ? 'Nothing left to practice' : doneLines(buddy?.personality)[0]}
           </h1>
           {answered > 0 && (
             <>
@@ -356,7 +361,7 @@ export function Practice() {
           <p className="hm-sub pr-done-note">
             {answered === 0
               ? 'You have already answered every question in this pack.'
-              : `${buddy?.name ?? 'Novi'} recorded that against your progress.`}
+              : `${doneLines(buddy?.personality)[1]} ${buddy?.name ?? 'Novi'} recorded it against your progress.`}
           </p>
           <div className="pr-done-actions">
             {answered > 0 ? (
@@ -409,6 +414,7 @@ export function Practice() {
           busy={saving}
           onAnswer={submit}
           onReveal={() => setVerdict('reveal')}
+          personality={buddy?.personality}
         />
 
         {verdict === true || verdict === false ? (

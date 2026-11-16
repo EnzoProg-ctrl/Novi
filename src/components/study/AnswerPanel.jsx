@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { verdictLine } from '../../lib/buddyVoice'
 import './practice.css'
 
 const TRUE_FALSE = ['True', 'False']
@@ -15,7 +16,7 @@ const same = (a, b) => (a ?? '').trim().toLowerCase() === (b ?? '').trim().toLow
  * `given`, and decides what an answer means through `onAnswer(answer,
  * selfGraded)`. Key it by question so typed input resets between questions.
  */
-export function AnswerPanel({ question, verdict, given, busy = false, onAnswer, onReveal }) {
+export function AnswerPanel({ question, verdict, given, busy = false, onAnswer, onReveal, personality }) {
   const [typed, setTyped] = useState('')
   const answered = verdict === true || verdict === false
 
@@ -100,7 +101,8 @@ export function AnswerPanel({ question, verdict, given, busy = false, onAnswer, 
       {answered && (
         <div className={`pr-verdict${verdict ? ' is-right' : ' is-wrong'}`} role="status">
           <p className="pr-verdict-line">
-            {verdict ? 'Correct' : 'Not quite'}
+            {/* In the buddy's personality, but always starting "Correct" or "Not quite". */}
+            {verdictLine(personality, verdict, question.id)}
             {!verdict && <> — the answer is <strong>{question.correct_answer}</strong></>}
           </p>
           {question.explanation && <p className="hm-sub">{question.explanation}</p>}

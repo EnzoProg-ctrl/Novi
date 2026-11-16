@@ -1,7 +1,13 @@
 """
 Cuts each mascot illustration into animatable layers for MascotRig.
 
-    python scripts/build_mascot_rigs.py      (needs numpy and Pillow)
+    python scripts/build_mascot_rigs.py                     (needs numpy and Pillow)
+    python scripts/build_mascot_rigs.py --outfit formal     (one outfit)
+
+An outfit is the same four paintings with different clothes, in
+src/assets/outfits/<outfit>/ (PNG or WebP, same file names and canvas sizes,
+same pose). Its layers go to src/assets/rig/<outfit>/, where MascotRig finds
+them; the cut lines and pivots below are shared, so the pose must not move.
 
 Re-run after replacing any of the source illustrations; if a pose changes,
 the polygons and pivots below (and the matching percentages in
@@ -11,19 +17,41 @@ Every layer keeps the full canvas size of its source, so layers stack exactly
 by sharing one box, and a pivot can be written as a percentage of that box.
 At rest, the layers composite back to the original artwork pixel for pixel.
 """
+import argparse
 import json
 import os
+import sys
 import numpy as np
 from PIL import Image, ImageDraw, ImageFilter
 
+OUTFITS = ('smart_casual', 'formal', 'uniform')
+parser = argparse.ArgumentParser(description='Cut the mascot paintings into rig layers.')
+parser.add_argument('--outfit', choices=OUTFITS, help='build one outfit instead of the default look')
+parser.add_argument('--pose', choices=('waving', 'front', 'laptop', 'sleeping', 'writing'),
+                    help='build only this pose (default: all)')
+args = parser.parse_args()
+outfit, only_pose = args.outfit, args.pose
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SRC = os.path.join(ROOT, 'src', 'assets')
-OUT = os.path.join(SRC, 'rig')
+ASSETS = os.path.join(ROOT, 'src', 'assets')
+SRC = os.path.join(ASSETS, 'outfits', outfit) if outfit else ASSETS
+OUT = os.path.join(ASSETS, 'rig', outfit) if outfit else os.path.join(ASSETS, 'rig')
 os.makedirs(OUT, exist_ok=True)
 
 
 def load(name):
-    return np.array(Image.open(f'{SRC}/{name}').convert('RGBA')).astype(np.float64)
+    """A source painting; an outfit may supply it as .png instead of .webp."""
+    path = f'{SRC}/{name}'
+    if outfit and not os.path.exists(path):
+        png = path.rsplit('.', 1)[0] + '.png'
+        path = png if os.path.exists(png) else path
+    im = Image.open(path).convert('RGBA')
+    if outfit:
+        default = Image.open(f'{ASSETS}/{name}')
+        if im.size != default.size:
+            raise SystemExit(f'{path} is {im.size[0]}x{im.size[1]}; it must match the default art, '
+                             f'{default.size[0]}x{default.size[1]}, so the moving parts line up.')
+    return np.array(im).astype(np.float64)
 
 
 def poly_mask(shape, points):
@@ -122,101 +150,183 @@ def save_small(arr, name, scale, offset, size):
 pivots = {}
 
 # ── Waving (landing hero + the square avatar) ─────────────────────
-img = load('capybara_landingpage.webp')
-H, W = img.shape[:2]
-# The hand waves at the wrist. Swinging the whole arm from the shoulder opened a
-# gap beside the head; a wave is mostly the hand anyway.
-cuff = [(1022, 604), (1160, 700)]                    # where the paw meets the sleeve
-hand = poly_mask(img.shape, [
-    cuff[0], (1031, 585), (1040, 556), (1053, 539), (1073, 514), (1097, 488),  # head side
-    (1125, 478), (1170, 480), (1212, 505), (1236, 560), (1238, 640), (1205, 700),  # over background
-    cuff[1],
-])
-# A band of paw just above the cuff stays on the body, so the wrist never opens
-# up while the hand turns over it.
-band = hand & poly_mask(img.shape, [cuff[0], (1038, 581), (1176, 677), cuff[1]])
-alpha = img[..., 3] > 0
-lines = rect_mask(img.shape, (1065, 255, 1250, 472)) & alpha
-body = erase(erase(img, hand & ~band), lines)
-save(body, 'waving-body')
-save(take(img, hand), 'waving-hand')
-save(take(img, lines), 'waving-lines')
-pivots['waving'] = {'size': [W, H], 'hand': [1090, 652], 'lines': [1150, 380]}
+def build_waving():
+    """Waving pose and its square avatar."""
+    img = load('capybara_landingpage.webp')
+    H, W = img.shape[:2]
+    # The hand waves at the wrist. Swinging the whole arm from the shoulder opened a
+    # gap beside the head; a wave is mostly the hand anyway.
+    cuff = [(1022, 604), (1160, 700)]                    # where the paw meets the sleeve
+    hand = poly_mask(img.shape, [
+        cuff[0], (1031, 585), (1040, 556), (1053, 539), (1073, 514), (1097, 488),  # head side
+        (1125, 478), (1170, 480), (1212, 505), (1236, 560), (1238, 640), (1205, 700),  # over background
+        cuff[1],
+    ])
+    # A band of paw just above the cuff stays on the body, so the wrist never opens
+    # up while the hand turns over it.
+    band = hand & poly_mask(img.shape, [cuff[0], (1038, 581), (1176, 677), cuff[1]])
+    alpha = img[..., 3] > 0
+    lines = rect_mask(img.shape, (1065, 255, 1250, 472)) & alpha
+    body = erase(erase(img, hand & ~band), lines)
+    save(body, 'waving-body')
+    save(take(img, hand), 'waving-hand')
+    save(take(img, lines), 'waving-lines')
+    pivots['waving'] = {'size': [W, H], 'hand': [1090, 652], 'lines': [1150, 380]}
 
-AV_SCALE, AV_OFFSET = 0.25696, (0, 9)
-for part, arr in [('body', body), ('hand', take(img, hand)), ('lines', take(img, lines))]:
-    save_small(arr, f'waving-sm-{part}', AV_SCALE, AV_OFFSET, 320)
-pivots['waving-sm'] = {
-    'size': [320, 320],
-    'hand': [1090 * AV_SCALE + AV_OFFSET[0], 652 * AV_SCALE + AV_OFFSET[1]],
-    'lines': [1150 * AV_SCALE + AV_OFFSET[0], 380 * AV_SCALE + AV_OFFSET[1]],
-}
+    AV_SCALE, AV_OFFSET = 0.25696, (0, 9)
+    for part, arr in [('body', body), ('hand', take(img, hand)), ('lines', take(img, lines))]:
+        save_small(arr, f'waving-sm-{part}', AV_SCALE, AV_OFFSET, 320)
+    pivots['waving-sm'] = {
+        'size': [320, 320],
+        'hand': [1090 * AV_SCALE + AV_OFFSET[0], 652 * AV_SCALE + AV_OFFSET[1]],
+        'lines': [1150 * AV_SCALE + AV_OFFSET[0], 380 * AV_SCALE + AV_OFFSET[1]],
+    }
+
 
 # ── Facing front (buddy card): paws held up, pumped in turn ──────
-img = load('facingfront_mascot.webp')
-H, W = img.shape[:2]
-paw_l = ellipse_mask(img.shape, (250, 650, 480, 885))
-paw_r = ellipse_mask(img.shape, (755, 650, 1005, 885))
-body = inpaint(erase(img, paw_l | paw_r), paw_l | paw_r)
-save(body, 'front-body')
-save(take(img, paw_l), 'front-paw-l')
-save(take(img, paw_r), 'front-paw-r')
-pivots['front'] = {'size': [W, H], 'paw_l': [395, 880], 'paw_r': [860, 880]}
+def build_front():
+    """Facing-front pose."""
+    img = load('facingfront_mascot.webp')
+    H, W = img.shape[:2]
+    paw_l = ellipse_mask(img.shape, (250, 650, 480, 885))
+    paw_r = ellipse_mask(img.shape, (755, 650, 1005, 885))
+    body = inpaint(erase(img, paw_l | paw_r), paw_l | paw_r)
+    save(body, 'front-body')
+    save(take(img, paw_l), 'front-paw-l')
+    save(take(img, paw_r), 'front-paw-r')
+    pivots['front'] = {'size': [W, H], 'paw_l': [395, 880], 'paw_r': [860, 880]}
+
 
 # ── Laptop: typing paw, music lines, drifting hearts ─────────────
-img = load('laptop_mascot.webp')
-H, W = img.shape[:2]
-paw = poly_mask(img.shape, [
-    (842, 888), (900, 878), (952, 886), (968, 930), (965, 1000), (952, 1032),
-    (905, 1052), (800, 1054), (770, 1036), (757, 990), (765, 948), (800, 912),
-])
-music = poly_mask(img.shape, [(1140, 270), (1310, 270), (1310, 505), (1185, 505), (1165, 400), (1140, 400)]) & dilate(coral(img), 1)
-hearts = rect_mask(img.shape, (12, 990, 212, 1082)) & dilate(coral(img), 1)
-body = inpaint(erase(img, paw), paw)
-save(erase(erase(body, music), hearts), 'laptop-body')
-save(take(img, paw), 'laptop-paw')
-save(take(img, music), 'laptop-music')
-save(take(img, hearts), 'laptop-hearts')
-pivots['laptop'] = {'size': [W, H], 'paw': [935, 900], 'music': [1150, 420], 'hearts': [110, 1040]}
+def build_laptop():
+    """Laptop pose and the AI Chat avatar."""
+    img = load('laptop_mascot.webp')
+    H, W = img.shape[:2]
+    paw = poly_mask(img.shape, [
+        (842, 888), (900, 878), (952, 886), (968, 930), (965, 1000), (952, 1032),
+        (905, 1052), (800, 1054), (770, 1036), (757, 990), (765, 948), (800, 912),
+    ])
+    music = poly_mask(img.shape, [(1140, 270), (1310, 270), (1310, 505), (1185, 505), (1165, 400), (1140, 400)]) & dilate(coral(img), 1)
+    hearts = rect_mask(img.shape, (12, 990, 212, 1082)) & dilate(coral(img), 1)
+    body = inpaint(erase(img, paw), paw)
+    save(erase(erase(body, music), hearts), 'laptop-body')
+    save(take(img, paw), 'laptop-paw')
+    save(take(img, music), 'laptop-music')
+    save(take(img, hearts), 'laptop-hearts')
+    pivots['laptop'] = {'size': [W, H], 'paw': [935, 900], 'music': [1150, 420], 'hearts': [110, 1040]}
 
-# The AI Chat avatar: head, headphones and sound lines, cropped square and
-# mirrored so Novi faces the conversation. The paw holds still at this size;
-# the sound lines stay a layer so they can pulse while Novi is typing.
-LS_BOX, LS_SIZE = (380, 100, 1260, 980), 320
-
-
-def save_avatar(arr, name):
-    im = Image.fromarray(np.clip(arr, 0, 255).astype(np.uint8), 'RGBA')
-    im = im.crop(LS_BOX).transpose(Image.FLIP_LEFT_RIGHT).resize((LS_SIZE, LS_SIZE), Image.LANCZOS)
-    im.save(f'{OUT}/{name}.webp', 'WEBP', quality=90, method=6)
+    # The AI Chat avatar: head, headphones and sound lines, cropped square and
+    # mirrored so Novi faces the conversation. The paw holds still at this size;
+    # the sound lines stay a layer so they can pulse while Novi is typing.
+    LS_BOX, LS_SIZE = (380, 100, 1260, 980), 320
 
 
-save_avatar(erase(img, music), 'laptop-sm-body')
-save_avatar(take(img, music), 'laptop-sm-music')
-pivots['laptop-sm'] = {
-    'size': [LS_SIZE, LS_SIZE],
-    'music_pct': [(LS_BOX[2] - 1150) / (LS_BOX[2] - LS_BOX[0]) * 100,
-                  (420 - LS_BOX[1]) / (LS_BOX[3] - LS_BOX[1]) * 100],
-}
+    def save_avatar(arr, name):
+        im = Image.fromarray(np.clip(arr, 0, 255).astype(np.uint8), 'RGBA')
+        im = im.crop(LS_BOX).transpose(Image.FLIP_LEFT_RIGHT).resize((LS_SIZE, LS_SIZE), Image.LANCZOS)
+        im.save(f'{OUT}/{name}.webp', 'WEBP', quality=90, method=6)
+
+
+    save_avatar(erase(img, music), 'laptop-sm-body')
+    save_avatar(take(img, music), 'laptop-sm-music')
+    pivots['laptop-sm'] = {
+        'size': [LS_SIZE, LS_SIZE],
+        'music_pct': [(LS_BOX[2] - 1150) / (LS_BOX[2] - LS_BOX[0]) * 100,
+                      (420 - LS_BOX[1]) / (LS_BOX[3] - LS_BOX[1]) * 100],
+    }
+
 
 # ── Sleeping: the drawn Zs drift up one after another ────────────
-img = load('sleeping.webp')
-H, W = img.shape[:2]
-r, g, b, a = (img[..., i] for i in range(4))
-# Everything drawn in the Zs' corner of the canvas (shaped to stay clear of the
-# head, since the Zs' highlights share its colours); then split
-# by dividing lines rather than boxes so no edge pixels fall between them.
-zone = poly_mask(img.shape, [(1140, 125), (1480, 125), (1480, 440), (1190, 440),
-                             (1172, 410), (1150, 390), (1140, 390)])
-zs = zone & (a > 0)
-ys, xs = np.mgrid[0:H, 0:W]
-z3 = zs & (xs >= 1305)
-z2 = zs & (xs < 1305) & (ys < 345)
-z1 = zs & (xs < 1305) & (ys >= 345)
-save(erase(img, z1 | z2 | z3), 'sleeping-body')
-for i, z in enumerate((z1, z2, z3), 1):
-    save(take(img, z), f'sleeping-z{i}')
-pivots['sleeping'] = {'size': [W, H]}
+def build_sleeping():
+    """Sleeping pose."""
+    img = load('sleeping.webp')
+    H, W = img.shape[:2]
+    r, g, b, a = (img[..., i] for i in range(4))
+    # Everything drawn in the Zs' corner of the canvas (shaped to stay clear of the
+    # head, since the Zs' highlights share its colours); then split
+    # by dividing lines rather than boxes so no edge pixels fall between them.
+    zone = poly_mask(img.shape, [(1140, 125), (1480, 125), (1480, 440), (1190, 440),
+                                 (1172, 410), (1150, 390), (1140, 390)])
+    # An outfit's painting comes without Zs (anything in their corner is
+    # cleared); it reuses the default's three drawn Zs, which don't change.
+    zsource = img
+    if outfit:
+        zsource = np.array(Image.open(f'{ASSETS}/sleeping.webp').convert('RGBA')).astype(np.float64)
+        img = erase(img, zone & (a > 0))
+        a = zsource[..., 3]
+    zs = zone & (a > 0)
+    ys, xs = np.mgrid[0:H, 0:W]
+    z3 = zs & (xs >= 1305)
+    z2 = zs & (xs < 1305) & (ys < 345)
+    z1 = zs & (xs < 1305) & (ys >= 345)
+    save(erase(img, z1 | z2 | z3), 'sleeping-body')
+    for i, z in enumerate((z1, z2, z3), 1):
+        save(take(zsource, z), f'sleeping-z{i}')
+    pivots['sleeping'] = {'size': [W, H]}
+
+
+# ── Writing notes (Home's buddy card): a still picture, no moving parts ──
+# Where the writing paw and pen sit in each painting: the pen from cap to tip,
+# and an oval around the paw. Outfits were drawn separately, so each has its
+# own; the paintings share one canvas (1000x1250, feet on the bottom margin).
+WRITING_HANDS = {
+    None:           {'cap': (392, 528), 'tip': (556, 724), 'paw': (360, 600, 537, 762)},
+    'smart_casual': {'cap': (398, 550), 'tip': (557, 738), 'paw': (376, 616, 547, 784)},
+    'formal':       {'cap': (397, 560), 'tip': (562, 738), 'paw': (386, 640, 547, 795)},
+    'uniform':      {'cap': (400, 562), 'tip': (562, 742), 'paw': (376, 630, 542, 800)},
+}
+
+
+def pen_paw_mask(img, hand, pen_width=46):
+    """The paw and the whole pen. The pen's red cap is found by colour near
+    the cap point, since it sits at a slightly different spot in each
+    painting; the mask is then grown a little so the paw's dark outline and
+    soft shadow move with it instead of being left on the body as a seam."""
+    shape = img.shape
+    m = Image.new('L', (shape[1], shape[0]), 0)
+    d = ImageDraw.Draw(m)
+    r = pen_width // 2
+    d.line([hand['cap'], hand['tip']], fill=255, width=pen_width)
+    for x, y in (hand['cap'], hand['tip']):
+        d.ellipse((x - r, y - r, x + r, y + r), fill=255)
+    d.ellipse(hand['paw'], fill=255)
+    mask = np.array(m) > 127
+    cx, cy = hand['cap']
+    near_cap = np.zeros(shape[:2], bool)
+    near_cap[max(0, cy - 75):cy + 60, max(0, cx - 60):cx + 60] = True
+    red, g, b, a = (img[..., i] for i in range(4))
+    cap_red = near_cap & (a > 40) & (red > 170) & (g < 130) & (b < 130)
+    return dilate(mask | dilate(cap_red, 4), 8)
+
+
+def build_writing():
+    """Writing-notes pose: the paw and pen move as one layer, scribbling."""
+    img = load('writing_mascot.png')
+    hand = pen_paw_mask(img, WRITING_HANDS[outfit])
+    save(inpaint(erase(img, hand), hand), 'writing-body')
+    save(take(img, hand), 'writing-hand')
+    paw = WRITING_HANDS[outfit]['paw']
+    pivots['writing'] = {'size': [1000, 1250], 'hand_wrist': [paw[0] + 30, paw[3] - 20]}
+
+
+# Each pose is built from one painting. An outfit can arrive a pose at a
+# time: poses whose painting isn't there yet are skipped (the app shows the
+# default look for them until they are).
+SECTIONS = [
+    ('capybara_landingpage.webp', build_waving),
+    ('facingfront_mascot.webp', build_front),
+    ('laptop_mascot.webp', build_laptop),
+    ('sleeping.webp', build_sleeping),
+    ('writing_mascot.png', build_writing),
+]
+for source, build in SECTIONS:
+    if only_pose and build.__name__ != f'build_{only_pose}':
+        continue
+    stem = source.rsplit('.', 1)[0]
+    if outfit and not any(os.path.exists(f'{SRC}/{stem}.{ext}') for ext in ('webp', 'png')):
+        print(f'skipped {stem}: not in {SRC} yet', file=sys.stderr)
+        continue
+    build()
 
 # Pivots in canvas pixels; mascot-rig.css uses them as percentages of `size`.
 print(json.dumps(pivots, indent=1))
