@@ -350,7 +350,18 @@ def fur_paw_mask(img, seed, box):
         raise SystemExit(f'no fur found near {seed}; check the laptop painting')
     pick = labels[np.argmax(counts)]
     paw = ndimage.binary_fill_holes(ndimage.binary_closing(lab == pick, iterations=4))
-    return dilate(paw, 3) & region
+    # Grown a few pixels for the paw's soft edge, but never onto anything
+    # neutral grey or white: that rim was the keyboard and laptop surface,
+    # which then moved with the fingers.
+    # The fingers' dark contact shadow is warm (red well above blue) and
+    # belongs to the paw; the laptop, keys and shirt are cool or neutral.
+    # Leaving the shadow behind left a sliver of finger on the keys when the
+    # paw lifted; taking the keys moved a strip of laptop with it.
+    cool = (b >= r - 8) | ((np.abs(r - g) < 22) & (np.abs(g - b) < 22) & (r - b < 8))
+    warm_shadow = (a > 160) & (r > g) & (r - b > 12) & (r < 140)
+    paw = paw | (warm_shadow & dilate(paw, 8) & region)
+    paw = (paw | (dilate(paw, 3) & ~cool)) & region
+    return paw & ~cool
 
 
 def build_laptop():
