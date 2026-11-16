@@ -3,7 +3,13 @@
    Pivots are percentages of the original canvas, measured on the artwork
    (the wrist, the base of each paw), so they hold at any rendered size. */
 
-.rig { position: relative; display: block; }
+.rig {
+  position: relative;
+  display: block;
+  /* Sine in-out: motion starts and settles softly, like a real limb, with no
+     hard stop at each keyframe. Used by every pose's moving parts. */
+  --rig-ease: cubic-bezier(0.37, 0, 0.63, 1);
+}
 .rig > img { display: block; width: 100%; height: auto; user-select: none; }
 .rig > .rig-part {
   position: absolute;
@@ -20,7 +26,7 @@
 .rig-waving-sm .rig-lines { transform-origin: 89.93% 41.35%; }
 
 .rig-waving .rig-hand,
-.rig-waving-sm .rig-hand { animation: rig-wave 4.2s ease-in-out infinite; }
+.rig-waving-sm .rig-hand { animation: rig-wave 4.2s var(--rig-ease) infinite; }
 .rig-waving .rig-lines,
 .rig-waving-sm .rig-lines { animation: rig-flick 4.2s ease-out infinite; }
 
@@ -43,28 +49,29 @@
   86% { opacity: 1; transform: scale(1); }
 }
 
-/* ── Facing front: paws held up, pumped in turn ─────────────────── */
+/* ── Facing front: paws held up, pumped in turn ───────────────────
+   A small lift and tilt: a bigger lift opened a gap at the sleeve cuff. */
 .rig-front .rig-paw-l {
   transform-origin: 32.11% 68.86%;
-  animation: rig-pump-l 3.6s ease-in-out infinite;
+  animation: rig-pump-l 3.6s var(--rig-ease) infinite;
 }
 .rig-front .rig-paw-r {
   transform-origin: 69.92% 68.86%;
-  animation: rig-pump-r 3.6s ease-in-out infinite;
+  animation: rig-pump-r 3.6s var(--rig-ease) infinite;
 }
 @keyframes rig-pump-l {
   0%, 55%, 68%, 84%, 100% { transform: translateY(0) rotate(0deg); }
-  61%, 77% { transform: translateY(-2.4%) rotate(-5deg); }
+  61%, 77% { transform: translateY(-1.2%) rotate(-4deg); }
 }
 @keyframes rig-pump-r {
   0%, 60%, 73%, 89%, 100% { transform: translateY(0) rotate(0deg); }
-  66%, 82% { transform: translateY(-2.4%) rotate(5deg); }
+  66%, 82% { transform: translateY(-1.2%) rotate(4deg); }
 }
 
 /* ── Laptop: typing in bursts, nodding to the music, hearts drifting ── */
 .rig-laptop .rig-paw {
   transform-origin: 71.43% 74.9%;
-  animation: rig-type 2.6s ease-in-out infinite;
+  animation: rig-type 2.6s var(--rig-ease) infinite;
 }
 @keyframes rig-type {
   0%, 16%, 32%, 48%, 100% { transform: rotate(0deg); }
@@ -82,7 +89,7 @@
 }
 .rig-laptop .rig-hearts {
   transform-origin: 8.36% 87.03%;
-  animation: rig-drift 3.2s ease-in-out infinite;
+  animation: rig-drift 3.2s var(--rig-ease) infinite;
 }
 /* The chat avatar: sound lines pulse only while Novi is typing (see chat.css). */
 .rig-laptop-sm .rig-music { transform-origin: 12.5% 36.36%; }
@@ -100,7 +107,7 @@
 .rig-sleeping .rig-z1,
 .rig-sleeping .rig-z2,
 .rig-sleeping .rig-z3 {
-  animation: rig-z 4.5s ease-in-out infinite backwards;
+  animation: rig-z 4.5s var(--rig-ease) infinite backwards;
 }
 .rig-sleeping .rig-z1 { transform-origin: 77.86% 37.89%; }
 .rig-sleeping .rig-z2 { transform-origin: 81.25% 28.61%; animation-delay: 0.5s; }
@@ -119,7 +126,7 @@
    layer's own box (the full canvas), so they scale with the mascot. */
 .rig-writing .rig-hand {
   transform-origin: 40% 60%;
-  animation: rig-write 3.4s ease-in-out infinite;
+  animation: rig-write 3.4s var(--rig-ease) infinite;
 }
 @keyframes rig-write {
   0%        { translate: 0 0;          rotate: 0deg; }
