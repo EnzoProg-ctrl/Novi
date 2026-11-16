@@ -83,10 +83,14 @@ Deno.serve(async (req: Request) => {
     .eq("user_id", user.id)
     .eq("status", "pending")
     .not("batch_id", "is", null)
-    .order("rank", { ascending: true })
-    .limit(RERANK.limit);
+    .order("created_at", { ascending: false })
+    .limit(RERANK.limit * 4);
   if (pendingError) logError("recommend.load_cached", pendingError, { user: user.id });
-  const cached = (pendingRows ?? []) as Row[];
+  // Only the newest batch counts. Two requests at once could each save one,
+  // and showing both put every recommendation on screen twice.
+  const rows = (pendingRows ?? []) as Row[];
+  const newest = rows.reduce<Row | null>((best, r) => (!best || r.created_at > best.created_at ? r : best), null);
+  const cached = newest ? rows.filter((r) => r.batch_id === newest.batch_id).sort((a, b) => a.rank - b.rank) : [];
   const fallback = (reason: string) => json({ recommendations: cached.map(toClient), cached: true, degraded: reason });
 
   let loaded;
@@ -155,7 +159,19 @@ Deno.serve(async (req: Request) => {
     }
     saved = (data ?? []).sort((a: Row, b: Row) => a.rank - b.rank);
   }
-  if (cached.length > 0) {
+  // Retire every older pending batch, not just the one read above: another
+  // request may have saved one in the meantime. "Older" keeps it safe when
+  // two run at once: each retires only what came before it, so the newest
+  // batch is always the one left.
+  if (saved.length > 0) {
+    const { error } = await db.from("recommendations")
+      .update({ status: "expired" })
+      .eq("user_id", user.id)
+      .eq("status", "pending")
+      .neq("batch_id", batchId)
+      .lt("created_at", saved[0].created_at);
+    if (error) logError("recommend.expire", error, { user: user.id });
+  } else if (cached.length > 0) {
     const { error } = await db.from("recommendations")
       .update({ status: "expired" })
       .in("id", cached.map((r) => r.id))

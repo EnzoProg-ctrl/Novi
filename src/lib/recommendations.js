@@ -19,10 +19,24 @@ const timeZone = () => {
   }
 }
 
-export async function fetchRecommendations() {
-  const { data, error } = await supabase.functions.invoke('recommend', { body: { tz: timeZone() } })
-  if (error) throw new Error(friendlyError(error, 'Recommendations could not be loaded.'))
-  return data?.recommendations ?? []
+let pending = null
+
+/**
+ * The student's current recommendations. Calls made while one is already on
+ * its way share it: two at once (React's development double-run, or Home
+ * reloading quickly) each built a batch, and both showed.
+ */
+export function fetchRecommendations() {
+  if (!pending) {
+    pending = (async () => {
+      const { data, error } = await supabase.functions.invoke('recommend', { body: { tz: timeZone() } })
+      if (error) throw new Error(friendlyError(error, 'Recommendations could not be loaded.'))
+      return data?.recommendations ?? []
+    })().finally(() => {
+      pending = null
+    })
+  }
+  return pending
 }
 
 /** Where a recommendation's button goes, carrying its id so practice can report back. */
