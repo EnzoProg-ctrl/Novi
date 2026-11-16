@@ -1,17 +1,5 @@
 import capybara from '../../assets/capybara_landingpage.webp'
-import {
-  IconArrowRight,
-  IconAtom,
-  IconBook,
-  IconCalendar,
-  IconChart,
-  IconDots,
-  IconGrid,
-  IconHome,
-  IconPlus,
-  IconSettings,
-  IconTools,
-} from './icons'
+import { IconArrowRight, IconAtom, IconBook, IconCalendar, IconChart, IconDots, IconGrid, IconHome, IconPlus, IconSettings, IconSun, IconTools } from './icons'
 
 const SIDEBAR = [
   { label: 'Home', Icon: IconHome, active: true },
@@ -64,7 +52,7 @@ export function DashboardMockup() {
       <div className="nv-mock-main" aria-hidden="true">
         <header className="nv-mock-head">
           <div>
-            <p className="nv-mock-greet">Good morning! ☀️</p>
+            <p className="nv-mock-greet">Good morning! <IconSun className="nv-mock-sun" width={13} height={13} /></p>
             <p className="nv-mock-sub">Ready to make progress today?</p>
           </div>
           <div className="nv-mock-headicons">

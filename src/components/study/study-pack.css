@@ -50,7 +50,10 @@
   gap: 10px;
 }
 .sp-concept-term { margin: 0; font-size: 0.98rem; font-weight: 700; color: var(--ink); }
-.sp-importance { flex: none; font-size: 0.75rem; color: var(--coral); letter-spacing: 1px; }
+/* Importance 1-5 as a row of dots, filled up to the score. */
+.sp-importance { flex: none; display: inline-flex; gap: 3px; align-items: center; }
+.sp-pip { width: 6px; height: 6px; border-radius: 50%; background: var(--line-strong); }
+.sp-pip.is-on { background: var(--coral); }
 .sp-concept-def { margin: 0; font-size: 0.9rem; line-height: 1.55; color: var(--ink-soft); }
 .sp-concept-example { font-style: italic; }
 

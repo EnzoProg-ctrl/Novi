@@ -1,14 +1,7 @@
 import { Link } from 'react-router-dom'
 import { MascotRig } from '../MascotRig'
 import { DashboardMockup } from './DashboardMockup'
-import {
-  IconArrowRight,
-  IconChart,
-  IconDocument,
-  IconPerson,
-  IconSparkle,
-  IconUpload,
-} from './icons'
+import { IconArrowRight, IconChart, IconDocument, IconHeart, IconPerson, IconSparkle, IconUpload } from './icons'
 import './hero.css'
 
 const POINTS = [
@@ -67,7 +60,7 @@ export function HeroSection() {
 
         <div className="nv-hero-art">
           <p className="nv-scribble" aria-hidden="true">
-            Study brighter together! <span className="nv-heart">♥</span>
+            Study brighter together! <IconHeart className="nv-heart" width="0.9em" height="0.9em" />
           </p>
 
           <MascotRig

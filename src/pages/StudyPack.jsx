@@ -125,7 +125,9 @@ export function StudyPack() {
                     title={`Importance ${concept.importance} of 5`}
                     aria-label={`Importance ${concept.importance} of 5`}
                   >
-                    {'★'.repeat(concept.importance)}
+                    {[1, 2, 3, 4, 5].map((n) => (
+                      <span key={n} className={`sp-pip${n <= concept.importance ? ' is-on' : ''}`} />
+                    ))}
                   </span>
                 </div>
                 <p className="sp-concept-def">{concept.definition}</p>

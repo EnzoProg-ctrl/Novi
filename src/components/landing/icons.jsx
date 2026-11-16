@@ -116,3 +116,17 @@ export const IconBook = (props) => (
     <path d="M5 4.5A1.5 1.5 0 003.5 6v12A1.5 1.5 0 005 19.5" />
   </svg>
 )
+
+export const IconSun = (props) => (
+  <svg {...base} {...props}>
+    <circle cx="12" cy="12" r="4.2" />
+    <path d="M12 2.5v2.2M12 19.3v2.2M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.6 19.4l1.6-1.6M17.8 6.2l1.6-1.6" />
+  </svg>
+)
+
+/* Filled, for the hero's hand-written note. */
+export const IconHeart = (props) => (
+  <svg {...base} fill="currentColor" stroke="none" {...props}>
+    <path d="M12 20.5s-7.5-4.6-9.3-9.2C1.4 7.9 3.6 4.5 7 4.5c2 0 3.4 1.1 5 3 1.6-1.9 3-3 5-3 3.4 0 5.6 3.4 4.3 6.8-1.8 4.6-9.3 9.2-9.3 9.2z" />
+  </svg>
+)

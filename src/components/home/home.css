@@ -651,3 +651,6 @@ a.hm-pack:focus-visible { outline: 2px solid var(--coral); outline-offset: 2px; 
 
 /* Selection bar sits between the heading and the list. */
 .hm-section .hm-selectbar { margin-bottom: 2px; }
+
+/* The time-of-day icon after the Home greeting. */
+.hm-greet-icon { margin-left: 8px; color: var(--coral); vertical-align: -0.12em; }

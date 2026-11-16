@@ -844,7 +844,7 @@ export function Chat() {
             {!active ? (
               <div className="ch-welcome">
                 <MascotRig pose="waving" className="ch-welcome-art" />
-                <h2 className="ch-hello">Hi {firstName ?? 'there'}! <span aria-hidden="true">👋</span></h2>
+                <h2 className="ch-hello">Hi {firstName ?? 'there'}!</h2>
                 <p className="ch-intro">
                   I&apos;m {buddyName}, your AI study buddy. Ask me anything about your study materials, concepts, or learning journey!
                 </p>

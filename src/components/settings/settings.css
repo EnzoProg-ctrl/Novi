@@ -186,7 +186,16 @@
 .st-chip input { position: absolute; opacity: 0; pointer-events: none; }
 .st-chip:hover { border-color: var(--coral); }
 .st-chip.is-on { background: var(--coral-tint); border-color: color-mix(in srgb, var(--coral) 45%, transparent); color: var(--coral-active); }
-.st-chip.is-on::before { content: '✓'; margin-right: 6px; font-size: 0.78rem; }
+/* A drawn check (not a text glyph), so it looks the same on every device. */
+.st-chip.is-on::before {
+  content: '';
+  width: 11px;
+  height: 11px;
+  margin-right: 6px;
+  background: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") center / contain no-repeat;
+}
 .st-chip.is-locked { cursor: not-allowed; }
 .st-chip:has(input:focus-visible) { outline: 2px solid var(--coral); outline-offset: 2px; }
 
@@ -363,3 +372,5 @@
   .st-block-row, .st-action { flex-direction: column; align-items: stretch; }
   .st-action-btn { align-self: flex-start; }
 }
+
+.st-status-check { margin-right: 4px; vertical-align: -0.12em; }

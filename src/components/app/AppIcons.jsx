@@ -128,3 +128,22 @@ export const NoviMark = ({ size = 26 }) => (
     <rect x="17" y="4" width="11" height="26" rx="4" fill="#ffa294" />
   </svg>
 )
+
+export const IconCheck = (props) => (
+  <svg {...base} strokeWidth={2.4} {...props}>
+    <path d="M5 12.5l4.5 4.5L19 7.5" />
+  </svg>
+)
+
+export const IconSun = (props) => (
+  <svg {...base} {...props}>
+    <circle cx="12" cy="12" r="4.2" />
+    <path d="M12 2.5v2.2M12 19.3v2.2M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.6 19.4l1.6-1.6M17.8 6.2l1.6-1.6" />
+  </svg>
+)
+
+export const IconMoon = (props) => (
+  <svg {...base} {...props}>
+    <path d="M20 14.5A8 8 0 019.5 4a8 8 0 1010.5 10.5z" />
+  </svg>
+)

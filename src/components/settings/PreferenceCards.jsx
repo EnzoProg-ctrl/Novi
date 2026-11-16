@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { IconCheck } from '../app/AppIcons'
 import { ACCENTS } from '../../lib/accents'
 import { LoadingRegion, Sk } from '../Skeleton'
 import { Select } from '../Select'
@@ -67,7 +68,7 @@ function SaveStatus({ state }) {
   const text = { saving: 'Saving…', saved: 'Saved', error: "Couldn't save" }[state]
   return (
     <span className={`st-status is-${state}`} role="status">
-      {state === 'saved' && <span aria-hidden="true">✓ </span>}
+      {state === 'saved' && <IconCheck className="st-status-check" width={13} height={13} />}
       {text}
     </span>
   )
@@ -429,7 +430,7 @@ export function AppearanceSettings({ prefs, prefsStatus, onRetry, update, onErro
                   <span /><span /><span />
                 </span>
                 <span className="st-tile-label">
-                  {selected && <span className="st-check" aria-hidden="true">✓</span>}
+                  {selected && <IconCheck className="st-check" width={13} height={13} />}
                   {opt.label}
                 </span>
               </>
@@ -447,7 +448,7 @@ export function AppearanceSettings({ prefs, prefsStatus, onRetry, update, onErro
             render={(opt, selected) => (
               <>
                 <span className="st-swatch" style={{ background: opt.color }} aria-hidden="true">
-                  {selected && '✓'}
+                  {selected && <IconCheck width={15} height={15} />}
                 </span>
                 <span className="st-tile-label">{opt.label}</span>
               </>
@@ -465,7 +466,7 @@ export function AppearanceSettings({ prefs, prefsStatus, onRetry, update, onErro
               <>
                 <span className={`st-font-sample is-${opt.value}`} aria-hidden="true">{opt.sample}</span>
                 <span className="st-tile-label">
-                  {selected && <span className="st-check" aria-hidden="true">✓</span>}
+                  {selected && <IconCheck className="st-check" width={13} height={13} />}
                   {opt.label}
                 </span>
               </>

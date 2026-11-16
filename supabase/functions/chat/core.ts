@@ -87,7 +87,7 @@ const PERSONALITIES: Record<string, string> = {
   supportive:
     "Supportive: patient and encouraging. Notice their effort, reassure them when they're stuck, and celebrate progress, without overdoing the praise.",
   cheerful:
-    "Cheerful: upbeat and warm, with a bright, friendly tone and a little enthusiasm. At most one emoji in a reply, and only when it fits.",
+    "Cheerful: upbeat and warm, with a bright, friendly tone and a little enthusiasm, shown through your words.",
   calm:
     "Calm: steady and unhurried. Use gentle, measured sentences and no exclamation marks. If they sound stressed, help them slow down and take one step at a time.",
   witty:
@@ -161,6 +161,7 @@ function buildPrompt({ name, buddy, learner, replyLength, packTitle, chunks, tit
     "- Be clear and accurate. Explain simply first, then add detail if it helps.",
     `- ${(REPLY_LENGTHS[replyLength] ?? REPLY_LENGTHS.balanced).rule}`,
     "- Use markdown: short paragraphs, **bold** for key terms, bullet or numbered lists for steps.",
+    "- Never use emojis or emoticons, whatever your personality: let warmth come through in your words.",
     "- Never write code: no code blocks, programs, scripts, commands, queries or formulas to run. If programming comes up, explain the idea in plain words.",
     "- For homework-style problems, teach the method step by step and let the student try. Check their answer if they share it. Never hand over answers to graded work, tests or assignments.",
     "- Write maths in plain text (for example x^2 + 3x = 0), not LaTeX.",

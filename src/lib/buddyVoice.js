@@ -1,7 +1,7 @@
 /**
  * How the buddy sounds outside AI Chat, per the personality chosen in "Edit
  * your buddy". Same tone rules as AI Chat (supabase/functions/chat/core.ts):
- * calm never uses exclamation marks, cheerful allows one emoji at most,
+ * calm never uses exclamation marks, nobody uses emojis (cheerful is warm in words),
  * focused stays short. Lines are tone only: what is right or wrong is always
  * stated plainly.
  *
@@ -17,11 +17,11 @@ const VOICES = {
     done: ['Session complete', 'Nice effort today. Every session moves you forward.'],
   },
   cheerful: {
-    home: [['Ready to learn something new? 🌟', 'Ask me anything!'], ["Let's make today a good one!", "I'm here if you need me."]],
-    start: ['Add something to study', "and let's get going! 🎉"],
-    right: ['Correct! 🎉', 'Correct, awesome!', 'Correct, nailed it!'],
+    home: [['Ready to learn something new today?', 'Ask me anything!'], ["Let's make today a good one!", "I'm here if you need me."]],
+    start: ['Add something to study', "and let's get going!"],
+    right: ['Correct, yay!', 'Correct, awesome!', 'Correct, nailed it!'],
     wrong: ['Not quite, almost there', 'Not quite, next one’s yours', 'Not quite, keep it up'],
-    done: ['Session complete! 🎉', 'That was fun. Come back soon!'],
+    done: ['Session complete, woohoo!', 'That was fun. Come back soon!'],
   },
   calm: {
     home: [['One step at a time.', 'Ask me whenever you need.'], ['No rush today.', "I'm here if something's unclear."]],

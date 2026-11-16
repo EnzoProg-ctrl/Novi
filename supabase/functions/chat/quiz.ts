@@ -91,7 +91,7 @@ const promptKey = (prompt: string) => prompt.toLowerCase().replace(/[^\p{L}\p{N}
  */
 const OPENERS: Record<string, string> = {
   supportive: "Done, nice!",
-  cheerful: "All set! 🎉",
+  cheerful: "All set, have fun!",
   calm: "Your questions are ready.",
   witty: "Fresh questions, hot off the press!",
   focused: "Done.",

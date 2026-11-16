@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { IconCheck } from '../components/app/AppIcons'
 import { useNavigate } from 'react-router-dom'
 import { Logo } from '../components/Mascot'
 import { MascotRig } from '../components/MascotRig'
@@ -155,7 +156,7 @@ export function CreateBuddy() {
                   className="sr-only"
                 />
                 <span className="buddy-swatch" style={{ background: option.color }} aria-hidden="true">
-                  {colour === option.value && '\u2713'}
+                  {colour === option.value && <IconCheck width={16} height={16} />}
                 </span>
                 <span className="buddy-colour-label">{option.label}</span>
               </label>

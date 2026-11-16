@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react'
+import { IconMoon, IconSun } from '../components/app/AppIcons'
 import { MascotRig } from '../components/MascotRig'
 import { BuddyCard } from '../components/home/BuddyCard'
 import { GoalRing } from '../components/home/GoalRing'
@@ -247,7 +248,11 @@ export function Dashboard() {
       <div className="hm-main">
         <header className="hm-greeting">
           <h1>
-            {greetingFor()}{firstName ? `, ${firstName}` : ''}! <span aria-hidden="true">☀️</span>
+            {greetingFor()}{firstName ? `, ${firstName}` : ''}!
+            {/* Sun by day, moon from 6pm, matching the greeting. */}
+            {new Date().getHours() < 18
+              ? <IconSun className="hm-greet-icon" width={26} height={26} />
+              : <IconMoon className="hm-greet-icon" width={24} height={24} />}
           </h1>
           <p className="hm-sub">Ready to make progress today?</p>
         </header>
