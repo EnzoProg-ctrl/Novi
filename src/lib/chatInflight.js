@@ -76,4 +76,15 @@ export const inflight = {
     listeners.add(fn)
     return () => listeners.delete(fn)
   },
+
+  /**
+   * Forgets everything. Called whenever the signed-in account changes, so a
+   * message still sending when one student signs out can never show up for
+   * the next student who signs in on the same browser tab.
+   */
+  reset() {
+    if (entries.size === 0) return
+    entries.clear()
+    emit()
+  },
 }

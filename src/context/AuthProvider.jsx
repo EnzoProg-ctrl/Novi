@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { clearRecoveryPending, isRecoveryPending, RECOVERY_STORAGE_KEY, setRecoveryPending } from '../lib/auth-redirect'
+import { inflight } from '../lib/chatInflight'
 import { commitDelete } from '../lib/pendingDelete'
 import { supabase } from '../lib/supabase'
 import { ACTIVITY_KEY, AuthContext, SIGNED_OUT_NOTICE_KEY } from './auth-context'
@@ -106,6 +107,15 @@ export function AuthProvider({ children }) {
       active = false
     }
   }, [token])
+
+  // A different account (or none): forget chat messages still sending for the
+  // previous one, so nothing of theirs shows for whoever signs in next on this
+  // tab. Covers signing out, the idle sign-out and an expired session.
+  const lastUser = useRef(userId)
+  useEffect(() => {
+    if (lastUser.current !== userId) inflight.reset()
+    lastUser.current = userId
+  }, [userId])
 
   // Load the student's buddy whenever the signed-in user (or their level) changes.
   useEffect(() => {

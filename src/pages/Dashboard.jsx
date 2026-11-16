@@ -117,7 +117,7 @@ export function Dashboard() {
     if (!user) return
     setRecs((r) => ({ ...r, loading: r.items.length === 0, error: false }))
     try {
-      setRecs({ items: await fetchRecommendations(), loading: false, error: false })
+      setRecs({ items: await fetchRecommendations(user.id), loading: false, error: false })
     } catch {
       setRecs((r) => ({ items: r.items, loading: false, error: r.items.length === 0 }))
     }

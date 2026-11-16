@@ -19,24 +19,28 @@ const timeZone = () => {
   }
 }
 
-let pending = null
+let pending = null // { userId, promise }
 
 /**
  * The student's current recommendations. Calls made while one is already on
  * its way share it: two at once (React's development double-run, or Home
- * reloading quickly) each built a batch, and both showed.
+ * reloading quickly) each built a batch, and both showed. Only the same
+ * student's calls share one, so a request still running at sign-out never
+ * answers the next student on the same browser.
  */
-export function fetchRecommendations() {
-  if (!pending) {
-    pending = (async () => {
+export function fetchRecommendations(userId) {
+  if (pending?.userId !== userId) {
+    const entry = { userId, promise: null }
+    entry.promise = (async () => {
       const { data, error } = await supabase.functions.invoke('recommend', { body: { tz: timeZone() } })
       if (error) throw new Error(friendlyError(error, 'Recommendations could not be loaded.'))
       return data?.recommendations ?? []
     })().finally(() => {
-      pending = null
+      if (pending === entry) pending = null
     })
+    pending = entry
   }
-  return pending
+  return pending.promise
 }
 
 /** Where a recommendation's button goes, carrying its id so practice can report back. */
