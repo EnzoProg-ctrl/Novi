@@ -41,7 +41,6 @@ const MATCH_COUNT = 6;
  */
 const PACK_THRESHOLD = 0.5;
 const GLOBAL_THRESHOLD = 0.6;
-const OUTPUT_TOKENS = 1_800;
 
 const CONVERSATION_COLUMNS = "id, title, study_set_id, last_message_at, created_at";
 const MESSAGE_COLUMNS = "id, role, content, created_at, metadata, cited_chunk_ids, study_set_id";
@@ -97,10 +96,26 @@ const PERSONALITIES: Record<string, string> = {
     "Focused: direct and efficient. Keep replies short and to the point, skip small talk and filler, and end with a clear next step.",
 };
 
-/** Settings -> Study Preferences -> Buddy reply length. "balanced" adds nothing. */
-const REPLY_LENGTHS: Record<string, string> = {
-  short: "Keep replies short: two to four sentences or a few bullet points, unless they ask for more detail.",
-  detailed: "Give thorough explanations: walk through the reasoning step by step, include an example, and use headings or lists when it helps.",
+/**
+ * Settings -> Study Preferences -> Buddy reply length. Each has a concrete
+ * word target (without one, "balanced" ran to ~400 words, as long as
+ * "detailed"), and its own output budget: enough room for the reply, its
+ * follow-up suggestions and the model's brief thinking, so a reply is never
+ * cut off, but not so much that a short reply can sprawl.
+ */
+const REPLY_LENGTHS: Record<string, { rule: string; tokens: number }> = {
+  short: {
+    rule: "Reply length: SHORT. Aim for 40-80 words: two to four sentences, or up to four brief bullet points. No headings. Only go longer if the student explicitly asks for more detail.",
+    tokens: 1_000,
+  },
+  balanced: {
+    rule: "Reply length: BALANCED. Aim for 120-200 words: one or two short paragraphs, or a short list with a sentence of context. Use a heading only if the answer has clearly separate parts.",
+    tokens: 1_500,
+  },
+  detailed: {
+    rule: "Reply length: DETAILED. Aim for 300-500 words: walk through the reasoning step by step, include a worked example, and use headings or lists to organise it.",
+    tokens: 2_600,
+  },
 };
 
 /** Settings -> Profile -> Education level, as the model should read it. "other" adds nothing. */
@@ -144,7 +159,7 @@ function buildPrompt({ name, buddy, learner, replyLength, packTitle, chunks, tit
     "",
     "How to answer:",
     "- Be clear and accurate. Explain simply first, then add detail if it helps.",
-    REPLY_LENGTHS[replyLength] ? `- ${REPLY_LENGTHS[replyLength]}` : "",
+    `- ${(REPLY_LENGTHS[replyLength] ?? REPLY_LENGTHS.balanced).rule}`,
     "- Use markdown: short paragraphs, **bold** for key terms, bullet or numbered lists for steps.",
     "- Never write code: no code blocks, programs, scripts, commands, queries or formulas to run. If programming comes up, explain the idea in plain words.",
     "- For homework-style problems, teach the method step by step and let the student try. Check their answer if they share it. Never hand over answers to graded work, tests or assignments.",
@@ -483,7 +498,8 @@ export async function runChat(
   let reply: Reply;
   let model: string;
   try {
-    const result = await generateJson<Reply>(prompt, REPLY_SCHEMA, { outputTokens: OUTPUT_TOKENS, signal });
+    const outputTokens = (REPLY_LENGTHS[replyLength] ?? REPLY_LENGTHS.balanced).tokens;
+    const result = await generateJson<Reply>(prompt, REPLY_SCHEMA, { outputTokens, signal });
     reply = result.data;
     model = result.model;
     if (typeof reply?.reply !== "string" || !reply.reply.trim()) throw new Error("Empty reply");
