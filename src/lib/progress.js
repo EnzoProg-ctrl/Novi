@@ -51,3 +51,25 @@ export async function fetchSittings(userId, start, end) {
   if (error) throw error
   return data ?? []
 }
+
+/**
+ * Per pack: how many different questions the student has answered at all
+ * (right or wrong). Study Pack Progress shows it beside the correct count.
+ * Reads only question ids, so it stays light; RLS keeps it to the student.
+ */
+export async function fetchPackAttempted(userId) {
+  const { data, error } = await supabase
+    .from('question_attempts')
+    .select('question_id, questions!inner ( study_set_id )')
+    .eq('user_id', userId)
+    .limit(20000)
+  if (error) throw error
+  const byPack = new Map()
+  for (const row of data ?? []) {
+    const pack = row.questions?.study_set_id
+    if (!pack) continue
+    if (!byPack.has(pack)) byPack.set(pack, new Set())
+    byPack.get(pack).add(row.question_id)
+  }
+  return new Map([...byPack].map(([pack, ids]) => [pack, ids.size]))
+}

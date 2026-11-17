@@ -93,3 +93,16 @@ export const IconUpload = (props) => (
     <path d="M4 15v3a2 2 0 002 2h12a2 2 0 002-2v-3" />
   </svg>
 )
+
+export const IconPlay = (props) => (
+  <svg {...base} {...props}>
+    <path d="M8 5.5v13l10.5-6.5L8 5.5z" fill="currentColor" stroke="none" />
+  </svg>
+)
+
+export const IconCalendarDay = (props) => (
+  <svg {...base} {...props}>
+    <rect x="3.5" y="5" width="17" height="15.5" rx="2.5" />
+    <path d="M3.5 10h17M8 3v4M16 3v4" />
+  </svg>
+)

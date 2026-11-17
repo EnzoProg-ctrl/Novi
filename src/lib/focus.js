@@ -1,7 +1,7 @@
 import { supabase } from './supabase'
 
 /**
- * The one pack the sidebar's "Today's Focus" card points at, chosen in order:
+ * The one pack Home's "Next up" card points at, chosen in order:
  *
  *   1. today's next planned session that is linked to a pack and not over yet
  *   2. an unfinished practice session, so the student picks up where they left off

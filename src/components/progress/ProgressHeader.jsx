@@ -1,37 +1,22 @@
 import { useState } from 'react'
 import { addDays, dateKey, parseLocal } from '../../lib/calendar-dates'
-import { MAX_CUSTOM_DAYS, PRESETS, formatRange } from '../../lib/progress-metrics'
-import { IconCalendar, IconClose } from '../app/AppIcons'
+import { MAX_CUSTOM_DAYS, PRESETS } from '../../lib/progress-metrics'
+import { IconClose } from '../app/AppIcons'
 import { DatePicker } from '../DatePicker'
-import { Select } from '../Select'
 
-export function ProgressHeader({ preset, range, onPresetChange, onOpenRange }) {
+export function ProgressHeader() {
   return (
     <header className="pk-head pg-head">
       <div>
         <h1 className="pk-title">Progress</h1>
-        <p className="hm-sub">Track your study habits, see your growth, and stay motivated.</p>
-      </div>
-
-      <div className="pg-filters">
-        <button type="button" className="pg-range-btn" onClick={onOpenRange} aria-label={`Reporting period ${formatRange(range.start, range.end)}. Choose a custom range`}>
-          <IconCalendar width={17} height={17} />
-          <span>{formatRange(range.start, range.end)}</span>
-        </button>
-        <Select
-          className="pk-select"
-          ariaLabel="Period"
-          value={preset}
-          onChange={onPresetChange}
-          options={PRESETS.map((p) => ({ value: p.value, label: p.value === 'custom' ? 'Custom range…' : p.label }))}
-        />
+        <p className="hm-sub">See how your studying is going.</p>
       </div>
     </header>
   )
 }
 
-/** Custom reporting period: two inclusive dates. */
-export function RangeForm({ range, onCancel, onApply }) {
+/** The reporting period: a quick preset, or two inclusive dates. */
+export function RangeForm({ range, preset, onPreset, onCancel, onApply }) {
   const [from, setFrom] = useState(dateKey(range.start))
   const [to, setTo] = useState(dateKey(addDays(range.end, -1)))
   const [error, setError] = useState(null)
@@ -51,13 +36,28 @@ export function RangeForm({ range, onCancel, onApply }) {
     <form className="nv-modal-panel" onSubmit={submit} noValidate>
       <header className="nv-modal-head">
         <div>
-          <h2 id="pg-modal-title" className="nv-modal-title">Custom range</h2>
-          <p className="hint">Every card on the page will use these dates.</p>
+          <h2 id="pg-modal-title" className="nv-modal-title">Period</h2>
+          <p className="hint">Every card on the page follows it, except the streak and weekly goal.</p>
         </div>
         <button type="button" className="nv-modal-close" onClick={onCancel} aria-label="Close">
           <IconClose />
         </button>
       </header>
+
+      <div className="pg-presets" role="group" aria-label="Quick periods">
+        {PRESETS.filter((p) => p.value !== 'custom').map((p) => (
+          <button
+            key={p.value}
+            type="button"
+            className={`pg-preset${preset === p.value ? ' is-active' : ''}`}
+            aria-pressed={preset === p.value}
+            onClick={() => onPreset(p.value)}
+          >
+            {p.label}
+          </button>
+        ))}
+      </div>
+      <p className="label pg-custom-label">Custom range</p>
 
       <div className="pg-range-grid">
         <div className="field">

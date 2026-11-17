@@ -1,12 +1,14 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { axisFor, formatStudyTime } from '../../lib/progress-metrics'
+import { axisFor, formatRange, formatStudyTime } from '../../lib/progress-metrics'
+import { IconCalendar } from '../app/AppIcons'
 import { CardError, ChartSkeleton } from './CardStatus'
+import { IconBars } from './ProgressIcons'
 
 const UNIT_WORD = { day: 'day', week: 'week', month: 'month' }
 
 function axisLabel(seconds) {
-  if (seconds === 0) return '0'
+  if (seconds === 0) return '0m'
   if (seconds < 3600) return `${Math.round(seconds / 60)}m`
   const h = seconds / 3600
   return `${Number.isInteger(h) ? h : h.toFixed(1)}h`
@@ -17,10 +19,11 @@ function axisLabel(seconds) {
  * only: the app records practice time, not a breakdown by activity, so the
  * chart does not invent categories.
  */
-export function StudyTimeChart({ series, unit, totalSeconds, state }) {
+export function StudyTimeChart({ series, unit, totalSeconds, state, range, onOpenRange }) {
   const [active, setActive] = useState(null)
   const max = Math.max(0, ...series.map((b) => b.seconds))
-  const axis = axisFor(Math.max(max, 60))
+  // An empty chart still shows a useful scale: 0m, 30m, 1h.
+  const axis = max === 0 ? { max: 3600, step: 1800, ticks: 2 } : axisFor(Math.max(max, 60))
   const ticks = Array.from({ length: axis.ticks + 1 }, (_, i) => i * axis.step)
   const best = series.reduce((top, b) => (b.seconds > (top?.seconds ?? 0) ? b : top), null)
   const tip = active != null ? series[active] : null
@@ -30,15 +33,19 @@ export function StudyTimeChart({ series, unit, totalSeconds, state }) {
     <section className="hm-card pg-card pg-chart-card" aria-labelledby="pg-chart-title">
       <div className="pg-card-head">
         <div>
-          <h2 id="pg-chart-title" className="hm-card-title">Study Time</h2>
-          <p className="hm-sub pg-card-sub">Your study time over the selected period.</p>
+          <h2 id="pg-chart-title" className="pg-card-title">Practice Activity</h2>
+          <p className="hm-sub pg-card-sub">Your practice activity for {formatRange(range.start, range.end)}.</p>
         </div>
-        <div className="pg-chart-meta">
-          <span className="pg-legend-item"><span className="pg-swatch tone-coral" /> Practice questions</span>
-          {!state.loading && !state.error && (
-            <span className="pg-chart-total">Total <strong>{formatStudyTime(totalSeconds)}</strong></span>
-          )}
-        </div>
+        {/* Picks the period every card on the page follows. */}
+        <button
+          type="button"
+          className="pg-range-btn"
+          onClick={onOpenRange}
+          aria-label={`Period: ${formatRange(range.start, range.end)}. Change the period`}
+        >
+          <IconCalendar width={17} height={17} />
+          <span>{formatRange(range.start, range.end)}</span>
+        </button>
       </div>
 
       {state.error ? (
@@ -94,9 +101,10 @@ export function StudyTimeChart({ series, unit, totalSeconds, state }) {
 
             {totalSeconds === 0 && (
               <div className="pg-chart-empty">
-                <p>No practice in this period yet.</p>
-                <p className="hm-sub">Your study time appears here as you answer practice questions.</p>
-                <Link to="/packs" className="hm-buddy-cta">Practise a study pack</Link>
+                <span className="pg-empty-icon"><IconBars width={22} height={22} /></span>
+                <p>No practice activity yet.</p>
+                <p className="hm-sub">Start practicing to see your study activity here.</p>
+                <Link to="/packs" className="pg-cta">Practice a study pack</Link>
               </div>
             )}
           </div>

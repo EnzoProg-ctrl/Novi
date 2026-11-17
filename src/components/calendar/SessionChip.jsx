@@ -2,7 +2,7 @@ import { formatTime } from '../../lib/calendar-dates'
 import { IconCheck } from './SessionTypeIcons'
 import { describeSession, typeOf } from './sessionTypes'
 
-/** The compact event chip used in month cells. */
+/** The compact event chip used in month cells: what kind, and when. */
 export function SessionChip({ session, onOpen }) {
   const type = typeOf(session)
   const { Icon } = type
@@ -15,11 +15,13 @@ export function SessionChip({ session, onOpen }) {
         onOpen(session)
       }}
       aria-label={describeSession(session)}
-      title={`${formatTime(session.start)} ${session.title}`}
+      title={`${session.title} · ${formatTime(session.start)}`}
     >
-      {session.completedAt ? <IconCheck /> : <Icon />}
+      <span className="cal-chip-head">
+        <span className="cal-chip-mark">{session.completedAt ? <IconCheck /> : <Icon />}</span>
+        <span className="cal-chip-title">{type.short}</span>
+      </span>
       <span className="cal-chip-time">{formatTime(session.start)}</span>
-      <span className="cal-chip-title">{session.title}</span>
     </button>
   )
 }

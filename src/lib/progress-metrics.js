@@ -123,14 +123,6 @@ export function formatStudyTime(seconds) {
   return `${hours < 10 ? hours.toFixed(1).replace(/\.0$/, '') : Math.round(hours)} hrs`
 }
 
-/** "+12 min" / "−5 min" / "same", or null when there is nothing to compare with. */
-export function compareStudyTime(current, previous) {
-  if (!(previous > 0)) return null
-  const diff = current - previous
-  if (Math.abs(diff) < 60) return { direction: 'same', text: 'About the same' }
-  return { direction: diff > 0 ? 'up' : 'down', text: `${diff > 0 ? '+' : '−'}${formatStudyTime(Math.abs(diff))}` }
-}
-
 const MONTHS = new Intl.DateTimeFormat(undefined, { month: 'short' })
 const WEEKDAY = new Intl.DateTimeFormat(undefined, { weekday: 'short' })
 
@@ -224,66 +216,9 @@ export function streaks(days, now) {
 export const completedIn = (planned, range) =>
   planned.filter((s) => s.completedAt && s.start >= range.start && s.start < range.end)
 
-/** The weekly goal scaled to the period's length (at least 1). */
-export function goalFor(weeklyGoal, range) {
-  const weekly = Number(weeklyGoal) > 0 ? Number(weeklyGoal) : 0
-  if (!weekly) return 0
-  return Math.max(1, Math.round((weekly * range.days) / 7))
-}
-
 export function percentOf(done, target) {
   if (!(target > 0)) return 0
   return Math.round((done / target) * 100)
-}
-
-export function packsStudied(activityRows, completedPlanned) {
-  const ids = new Set()
-  for (const r of activityRows) if (r.study_set_id) ids.add(r.study_set_id)
-  for (const s of completedPlanned) if (s.packId) ids.add(s.packId)
-  return ids
-}
-
-/** Whole-number percentages that add up to exactly 100 (largest remainder). */
-export function roundPercents(values) {
-  const total = values.reduce((a, b) => a + b, 0)
-  if (!total) return values.map(() => 0)
-  const raw = values.map((v) => (v / total) * 100)
-  const floors = raw.map(Math.floor)
-  let left = 100 - floors.reduce((a, b) => a + b, 0)
-  const order = raw.map((v, i) => [v - floors[i], i]).sort((a, b) => b[0] - a[0])
-  for (const [, i] of order) {
-    if (left <= 0) break
-    floors[i] += 1
-    left -= 1
-  }
-  return floors
-}
-
-/**
- * Study time by subject. Packs without a subject are grouped under their own
- * title, so the chart still says where the time went. Beyond `maxSlices` the
- * smallest groups are folded into "Other".
- */
-export function subjectBreakdown(activityRows, packs, maxSlices = 5) {
-  const meta = new Map(packs.map((p) => [p.id, p]))
-  const groups = new Map()
-  for (const row of activityRows) {
-    const pack = meta.get(row.study_set_id)
-    const name = pack?.subject || pack?.title || 'Other'
-    groups.set(name, (groups.get(name) ?? 0) + Number(row.seconds || 0))
-  }
-  let list = [...groups.entries()]
-    .map(([name, seconds]) => ({ name, seconds }))
-    .filter((g) => g.seconds > 0)
-    .sort((a, b) => b.seconds - a.seconds)
-
-  if (list.length > maxSlices) {
-    const kept = list.slice(0, maxSlices - 1)
-    const rest = list.slice(maxSlices - 1).reduce((sum, g) => sum + g.seconds, 0)
-    list = [...kept, { name: 'Other', seconds: rest, isOther: true }]
-  }
-  const percents = roundPercents(list.map((g) => g.seconds))
-  return list.map((g, i) => ({ ...g, percent: percents[i] }))
 }
 
 /**
@@ -296,6 +231,7 @@ export function packProgress(rows) {
     .map((r) => ({
       id: r.study_set_id,
       title: r.title,
+      subject: r.subject ?? null,
       total: r.total_questions,
       correct: Math.min(r.correct_questions, r.total_questions),
       percent: Math.min(100, percentOf(r.correct_questions, r.total_questions)),

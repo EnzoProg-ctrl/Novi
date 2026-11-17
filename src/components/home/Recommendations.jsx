@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { IconBrain, IconCards, IconClock, IconPackBook, IconPencil, IconSparkle, IconUpload } from './HomeIcons'
+import { IconArrowRight, IconBrain, IconCards, IconClock, IconPackBook, IconPencil, IconSparkle, IconUpload } from './HomeIcons'
 import { LoadingRegion, Sk, SkText } from '../Skeleton'
 import { useUpload } from '../../context/upload-context'
 import { recommendationHref, recordRecommendationEvent } from '../../lib/recommendations'
@@ -15,10 +15,10 @@ const KINDS = {
   new_material: { Icon: IconUpload, tone: 'blue', action: 'Add material' },
 }
 const FALLBACK = { Icon: IconCards, tone: 'violet', action: 'Open' }
-const FIRST = 3
+const FIRST = 2
 
 /**
- * "Recommended for You!": what to study next, from the recommend function.
+ * "Recommended for You": what to study next, from the recommend function.
  * Each card says why, from the student's own record, and opens the place to
  * do it. Shown, opened and dismissed are recorded once each, to learn what
  * actually helps.
@@ -44,24 +44,25 @@ export function Recommendations({ items = [], loading, error, onRetry, onDismiss
         <div className="hm-rec-heading">
           <span className="hm-rec-spark"><IconSparkle width={17} height={17} /></span>
           <div>
-            <h2 className="hm-section-title">Recommended for You!</h2>
-            <p className="hm-sub">Based on your answers, packs and plans</p>
+            <h2 className="hm-section-title">Recommended for You</h2>
+            <p className="hm-sub">Based on your answers, packs and plans.</p>
           </div>
         </div>
         {items.length > FIRST && (
           <button type="button" className="hm-muted-link hm-rec-more" onClick={() => setExpanded((v) => !v)} aria-expanded={expanded}>
-            {expanded ? 'Show less' : `See all (${items.length})`}
+            {expanded ? 'Show less' : 'See All'}
+            {!expanded && <IconArrowRight width={16} height={16} />}
           </button>
         )}
       </header>
 
       {loading ? (
         <LoadingRegion label="Loading recommendations…" className="hm-recs">
-          {[0, 1, 2].map((i) => (
+          {[0, 1].map((i) => (
             <div key={i} className="hm-card hm-rec">
-              <Sk w={38} h={38} r={10} />
-              <SkText lines={3} widths={['80%', '95%', '60%']} />
-              <Sk w={70} h={12} style={{ marginTop: 'auto' }} />
+              <Sk w={44} h={44} r={12} />
+              <span className="hm-rec-text"><SkText lines={2} widths={['75%', '55%']} /></span>
+              <Sk w={92} h={36} r={999} />
             </div>
           ))}
         </LoadingRegion>
@@ -84,11 +85,21 @@ export function Recommendations({ items = [], loading, error, onRetry, onDismiss
             const { Icon } = kind
             const href = recommendationHref(item)
             const opened = () => recordRecommendationEvent(item.id, 'opened')
+            // "Start a pack" reads best as just the pack's name; the button says Start.
+            const title = item.kind === 'start_pack' && item.pack?.title ? item.pack.title : item.title
+            const cta = (
+              <>
+                {kind.action}
+                <IconArrowRight width={15} height={15} />
+              </>
+            )
             return (
               <article key={item.id} className="hm-card hm-rec">
                 <span className={`hm-rec-icon is-${kind.tone}`}><Icon /></span>
-                <p className="hm-rec-title">{item.title}</p>
-                {item.reason && <p className="hm-rec-body">{item.reason}</p>}
+                <span className="hm-rec-text">
+                  <p className="hm-rec-title">{title}</p>
+                  {item.reason && <p className="hm-rec-body" title={item.reason}>{item.reason}</p>}
+                </span>
                 {item.action?.type === 'upload' ? (
                   <button
                     type="button"
@@ -98,10 +109,10 @@ export function Recommendations({ items = [], loading, error, onRetry, onDismiss
                       openUpload()
                     }}
                   >
-                    {kind.action}
+                    {cta}
                   </button>
                 ) : href ? (
-                  <Link to={href} className="hm-rec-cta" onClick={opened}>{kind.action}</Link>
+                  <Link to={href} className="hm-rec-cta" onClick={opened} aria-label={`${kind.action}: ${title}`}>{cta}</Link>
                 ) : (
                   <span className="hm-rec-cta is-inert">{kind.action}</span>
                 )}

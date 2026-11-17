@@ -1,8 +1,7 @@
-import { formatStudyTime, percentOf } from '../../lib/progress-metrics'
 import { IconClock, IconFlame } from '../home/HomeIcons'
 import { LoadingRegion, Sk } from '../Skeleton'
 import { CardError } from './CardStatus'
-import { IconBars, IconCheckCircle, IconDown, IconUp } from './ProgressIcons'
+import { IconCrosshair, IconLayers } from './ProgressIcons'
 
 function Stat({ tone, Icon, label, state, onRetry, children }) {
   return (
@@ -15,10 +14,9 @@ function Stat({ tone, Icon, label, state, onRetry, children }) {
         ) : state?.loading ? (
           <LoadingRegion label={`Loading ${label.toLowerCase()}…`} className="pg-skel">
             <Sk w="55%" h={26} r={6} />
-            <Sk w="75%" h={11} />
           </LoadingRegion>
         ) : (
-          children
+          <p className="pg-stat-value">{children}</p>
         )}
       </div>
     </section>
@@ -31,92 +29,37 @@ function Stat({ tone, Icon, label, state, onRetry, children }) {
 const loadingOnce = (s) => ({ loading: s.loading && s.data == null, error: s.data == null ? s.error : null })
 const periodState = (s) => ({ loading: s.loading, error: s.error })
 
-export function StatCards({
-  range,
-  streak,
-  streakState,
-  totalSeconds,
-  comparison,
-  activityState,
-  completed,
-  target,
-  plannedState,
-  goalState,
-  packsStudied,
-}) {
-  const sessionsState = {
-    loading: (plannedState.loading && !plannedState.data) || (goalState.loading && goalState.data == null),
-    error: (!plannedState.data && plannedState.error) || (goalState.data == null && goalState.error),
-  }
-  const pct = percentOf(completed, target)
+/** "0 min", "45 min", "1 h 20 min": the number large, its unit small. */
+function PracticeTime({ seconds }) {
+  if (seconds > 0 && seconds < 30) return <>&lt; 1 <span>min</span></>
+  const minutes = Math.round(Math.max(0, seconds) / 60)
+  if (minutes < 60) return <>{minutes} <span>min</span></>
+  const h = Math.floor(minutes / 60)
+  const m = minutes % 60
+  return m ? <>{h} <span>h</span> {m} <span>min</span></> : <>{h} <span>h</span></>
+}
 
+/**
+ * The period at a glance: streak, practice time, questions answered and how
+ * many were right. All but the streak follow the period chosen on the chart.
+ */
+export function StatCards({ streak, streakState, totalSeconds, answered, accuracy, activityState, sittingsState }) {
   return (
     <div className="pg-stats">
       <Stat tone="coral" Icon={IconFlame} label="Study Streak" state={loadingOnce(streakState)} onRetry={streakState.reload}>
-        <p className="pg-stat-value">
-          {streak.current} <span>{streak.current === 1 ? 'day' : 'days'}</span>
-        </p>
-        <p className="pg-stat-sub">
-          {streak.current === 0
-            ? 'Study today to start a streak'
-            : streak.longest > streak.current
-              ? `Longest: ${streak.longest} days`
-              : 'Your longest streak yet'}
-        </p>
+        {streak.current} <span>{streak.current === 1 ? 'day' : 'days'}</span>
       </Stat>
 
-      <Stat tone="violet" Icon={IconClock} label="Total Study Time" state={periodState(activityState)} onRetry={activityState.reload}>
-        <p className="pg-stat-value">{formatStudyTime(totalSeconds)}</p>
-        <p className="pg-stat-sub">
-          {comparison ? (
-            <span className={`pg-trend is-${comparison.direction}`}>
-              {comparison.direction === 'up' && <IconUp />}
-              {comparison.direction === 'down' && <IconDown />}
-              {comparison.text} vs {range.compareLabel}
-            </span>
-          ) : (
-            'Time spent answering practice questions'
-          )}
-        </p>
+      <Stat tone="violet" Icon={IconClock} label="Practice Time" state={periodState(activityState)} onRetry={activityState.reload}>
+        <PracticeTime seconds={totalSeconds} />
       </Stat>
 
-      <Stat
-        tone="green"
-        Icon={IconCheckCircle}
-        label="Sessions Completed"
-        state={sessionsState}
-        onRetry={() => {
-          if (plannedState.error) plannedState.reload()
-          if (goalState.error) goalState.reload()
-        }}
-      >
-        <p className="pg-stat-value">
-          {completed} <span>of {target || '—'}</span>
-        </p>
-        <div className="pg-stat-progress">
-          <div
-            className="pg-bar-track"
-            role="progressbar"
-            aria-label="Sessions completed against goal"
-            aria-valuemin={0}
-            aria-valuemax={target || 0}
-            aria-valuenow={Math.min(completed, target || 0)}
-          >
-            <span style={{ width: `${Math.min(pct, 100)}%` }} />
-          </div>
-          <span className="pg-stat-pct">{target ? `${pct}%` : '—'}</span>
-        </div>
+      <Stat tone="green" Icon={IconLayers} label="Questions Practiced" state={periodState(activityState)} onRetry={activityState.reload}>
+        {answered} <span>{answered === 1 ? 'question' : 'questions'}</span>
       </Stat>
 
-      <Stat tone="blue" Icon={IconBars} label="Study Packs Studied" state={{ loading: activityState.loading || sessionsState.loading, error: activityState.error || sessionsState.error }}
-        onRetry={() => {
-          if (activityState.error) activityState.reload()
-          if (plannedState.error) plannedState.reload()
-        }}>
-        <p className="pg-stat-value">
-          {packsStudied} <span>{packsStudied === 1 ? 'pack' : 'packs'}</span>
-        </p>
-        <p className="pg-stat-sub">With practice or a completed session</p>
+      <Stat tone="blue" Icon={IconCrosshair} label="Accuracy" state={periodState(sittingsState)} onRetry={sittingsState.reload}>
+        {accuracy == null ? <span title="No answers in this period yet">—</span> : `${accuracy}%`}
       </Stat>
     </div>
   )

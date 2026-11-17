@@ -2,8 +2,6 @@ import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from '
 import { IconMoon, IconSun } from '../components/app/AppIcons'
 import { BuddyCard } from '../components/home/BuddyCard'
 import { NextUp } from '../components/home/NextUp'
-import { ProgressCard } from '../components/home/ProgressCard'
-import { StreakCard } from '../components/home/StreakCard'
 import { Recommendations } from '../components/home/Recommendations'
 import { StudyPacks } from '../components/home/StudyPacks'
 import { UploadStatus } from '../components/home/UploadStatus'
@@ -13,8 +11,6 @@ import { useUpload } from '../context/upload-context'
 import {
   fetchInProgress,
   fetchStudySets,
-  fetchStudyStats,
-  fetchSubjectProgress,
 } from '../lib/home'
 import { fetchTodaysFocus } from '../lib/focus'
 import { listMaterials, processMaterial } from '../lib/materials'
@@ -33,7 +29,7 @@ function greetingFor(date = new Date()) {
 }
 
 /**
- * Home: what to study next first, then the buddy, recommendations and packs.
+ * Home: what to study next first, then recommendations, the buddy and packs.
  * Kept to what helps a student study; managing uploads lives on Study Packs,
  * and only uploads still processing (or failed) show here.
  */
@@ -41,8 +37,6 @@ export function Dashboard() {
   const { user, buddy } = useAuth()
 
   const [allMaterials, setMaterials] = useState([])
-  const [subjects, setSubjects] = useState([])
-  const [stats, setStats] = useState(null)
   const [allPacks, setPacks] = useState([])
   const [focus, setFocus] = useState(null)
   // Loaded on their own: a recommendation failure must not take Home down.
@@ -66,18 +60,14 @@ export function Dashboard() {
     if (!user) return
     if (!silent) setLoading(true)
     try {
-      const [mats, progress, studyStats, studySets, resumable, next] =
+      const [mats, studySets, resumable, next] =
         await Promise.all([
         listMaterials(user.id),
-        fetchSubjectProgress(user.id),
-        fetchStudyStats(user.id),
         fetchStudySets(user.id),
         fetchInProgress(user.id),
         fetchTodaysFocus(user.id),
       ])
       setMaterials(mats)
-      setSubjects(progress)
-      setStats(studyStats)
       setPacks(studySets)
       setInProgress(resumable)
       setFocus(next)
@@ -200,12 +190,6 @@ export function Dashboard() {
 
       <NextUp focus={visibleFocus} session={focusSession} loading={loading} />
 
-      <div className="hm-row">
-        <BuddyCard buddyName={buddy?.name} personality={buddy?.personality} hasMaterial={materials.length > 0} loading={loading} />
-        <StreakCard streakDays={stats?.streakDays ?? 0} loading={loading} />
-        <ProgressCard subjects={subjects} loading={loading} />
-      </div>
-
       <Recommendations
         items={visibleRecs}
         loading={recs.loading}
@@ -213,6 +197,8 @@ export function Dashboard() {
         onRetry={loadRecs}
         onDismiss={dismissRec}
       />
+
+      <BuddyCard buddyName={buddy?.name} hasMaterial={materials.length > 0} loading={loading} />
 
       <UploadStatus materials={materials} retryingId={retryingId} onRetry={retry} onRemove={remove} />
 

@@ -6,38 +6,33 @@ import '../components/home/home.css'
 import { Modal } from '../components/Modal'
 import { PackProgress } from '../components/progress/PackProgress'
 import { ProgressHeader, RangeForm } from '../components/progress/ProgressHeader'
-import { GoalForm, WeeklyGoalCard } from '../components/progress/WeeklyGoalCard'
+import { WeeklyGoalCard } from '../components/progress/WeeklyGoalCard'
 import { RecentSessions, RecentTable } from '../components/progress/RecentSessions'
 import { StatCards } from '../components/progress/StatCards'
 import { StudyTimeChart } from '../components/progress/StudyTimeChart'
-import { SubjectBreakdown } from '../components/progress/SubjectBreakdown'
 import '../components/progress/progress.css'
 import '../components/study/packs-page.css'
 import { IconClose } from '../components/app/AppIcons'
 import { useAuth } from '../context/auth-context'
 import { usePreferences } from '../context/preferences-context'
 import { addDays, startOfDay } from '../lib/calendar-dates'
-import { fetchActiveDays, fetchActivity, fetchPackCompletion, fetchSittings } from '../lib/progress'
+import { fetchActiveDays, fetchActivity, fetchPackAttempted, fetchPackCompletion, fetchSittings } from '../lib/progress'
 import {
   bucketActivity,
   chartBuckets,
-  compareStudyTime,
   completedIn,
-  goalFor,
   goalJustReached,
   inRange,
   packProgress,
-  packsStudied,
+  percentOf,
   resolveRange,
   streaks,
-  subjectBreakdown,
   sumSeconds,
 } from '../lib/progress-metrics'
 import {
   deleteScheduledSession,
   fetchScheduledSessions,
   fetchWeeklyGoal,
-  saveWeeklyGoal,
   setSessionCompleted,
   updateScheduledSession,
 } from '../lib/schedule'
@@ -111,13 +106,13 @@ export function Progress() {
     () => resolveRange('this-week', new Date(todayKey)),
     [todayKey, prefs.weekStartsOn], // eslint-disable-line react-hooks/exhaustive-deps
   )
-  const rangeKey = `${range.previous.start.getTime()}-${range.end.getTime()}`
+  const rangeKey = `${range.start.getTime()}-${range.end.getTime()}`
 
-  // One request covers the period and the one before it, for comparisons.
-  const activity = useResource(() => fetchActivity(range.previous.start, range.end), rangeKey)
+  const activity = useResource(() => fetchActivity(range.start, range.end), rangeKey)
   const sittings = useResource(() => fetchSittings(user.id, range.start, range.end), rangeKey)
   const activeDays = useResource(() => fetchActiveDays(addDays(new Date(todayKey), -400)), todayKey)
   const packs = useResource(fetchPackCompletion, user?.id)
+  const attempted = useResource(() => fetchPackAttempted(user.id), user?.id)
   const planned = useResource(() => fetchScheduledSessions(user.id), user?.id)
   const goal = useResource(() => fetchWeeklyGoal(user.id), user?.id)
 
@@ -130,23 +125,23 @@ export function Progress() {
   // ── Derived metrics ───────────────────────────────────────────
   const rows = activity.data ?? []
   const current = rows.filter((r) => inRange(r.day, range))
-  const previous = rows.filter((r) => inRange(r.day, range.previous))
   const totalSeconds = sumSeconds(current)
-  const comparison = activity.data ? compareStudyTime(totalSeconds, sumSeconds(previous)) : null
+  const answered = current.reduce((n, r) => n + Number(r.answers || 0), 0)
+  // Accuracy from the period's practice sittings, which record right answers.
+  const sittingTotals = (sittings.data ?? []).reduce(
+    (t, s) => ({ answered: t.answered + (s.questions_answered ?? 0), correct: t.correct + (s.questions_correct ?? 0) }),
+    { answered: 0, correct: 0 },
+  )
+  const accuracy = sittingTotals.answered > 0 ? Math.min(100, percentOf(sittingTotals.correct, sittingTotals.answered)) : null
 
   const plannedList = planned.data ?? []
-  const completedInRange = completedIn(plannedList, range)
-  const target = goalFor(goal.data, range)
   const streak = streaks(activeDays.data ?? [], now)
-  const studied = packsStudied(current, completedInRange)
 
   const { unit, buckets } = chartBuckets(range)
   const series = bucketActivity(current, buckets)
 
   const packMeta = (packs.data ?? []).map((p) => ({ id: p.study_set_id, title: p.title, subject: p.subject }))
-  const breakdown = subjectBreakdown(current, packMeta)
-  const hasSubjects = packMeta.some((p) => p.subject)
-  const packRows = packProgress(packs.data ?? [])
+  const packRows = packProgress(packs.data ?? []).map((p) => ({ ...p, attempted: attempted.data?.get(p.id) ?? 0 }))
   const weekCompleted = completedIn(plannedList, week).length
 
   // Recent sessions: practice sittings and planned sessions in the period.
@@ -242,52 +237,33 @@ export function Progress() {
     }
   }
 
-  async function handleGoalSave(next) {
-    setSaving(true)
-    try {
-      const saved = await saveWeeklyGoal(user.id, next)
-      goal.setData(saved)
-      closeModal()
-      notify('Weekly goal updated')
-    } catch (err) {
-      notify('Could not save your goal', 'error')
-      throw err
-    } finally {
-      setSaving(false)
-    }
-  }
-
   function applyRange(from, to) {
     setCustom({ from, to })
     setPreset('custom')
     closeModal()
   }
 
+  function applyPreset(value) {
+    setPreset(value)
+    closeModal()
+  }
+
+  const openRange = () => setModal({ open: true, kind: 'range' })
+
   const packOptions = packMeta.map((p) => ({ id: p.id, title: p.title }))
 
   return (
     <div className="pk pg">
-      <ProgressHeader
-        preset={preset}
-        range={range}
-        onPresetChange={(value) =>
-          value === 'custom' ? setModal({ open: true, kind: 'range' }) : setPreset(value)
-        }
-        onOpenRange={() => setModal({ open: true, kind: 'range' })}
-      />
+      <ProgressHeader />
 
       <StatCards
-        range={range}
         streak={streak}
         streakState={activeDays}
         totalSeconds={totalSeconds}
-        comparison={comparison}
+        answered={answered}
+        accuracy={accuracy}
         activityState={activity}
-        completed={completedInRange.length}
-        target={target}
-        plannedState={planned}
-        goalState={goal}
-        packsStudied={studied.size}
+        sittingsState={sittings}
       />
 
       <div className="pg-layout">
@@ -297,6 +273,8 @@ export function Progress() {
             unit={unit}
             totalSeconds={totalSeconds}
             state={activity}
+            range={range}
+            onOpenRange={openRange}
           />
           <RecentSessions
             rows={recent}
@@ -321,17 +299,6 @@ export function Progress() {
               if (goal.error) goal.reload()
               if (planned.error) planned.reload()
             }}
-            onEdit={() => setModal({ open: true, kind: 'goal' })}
-          />
-          <SubjectBreakdown
-            slices={breakdown}
-            totalSeconds={totalSeconds}
-            groupedByPack={!hasSubjects}
-            state={activity.loading || packs.loading ? { loading: true } : { error: activity.error || packs.error }}
-            onRetry={() => {
-              if (activity.error) activity.reload()
-              if (packs.error) packs.reload()
-            }}
           />
           <PackProgress rows={packRows} state={packs} />
         </aside>
@@ -346,10 +313,7 @@ export function Progress() {
         className={modal?.kind === 'all' ? 'pg-modal-wide' : ''}
       >
         {modal?.kind === 'range' && (
-          <RangeForm range={range} onCancel={closeModal} onApply={applyRange} />
-        )}
-        {modal?.kind === 'goal' && (
-          <GoalForm goal={goal.data} saving={saving} onCancel={closeModal} onSave={handleGoalSave} />
+          <RangeForm range={range} preset={preset} onPreset={applyPreset} onCancel={closeModal} onApply={applyRange} />
         )}
         {modal?.kind === 'details' && currentSession && (
           <SessionDetails

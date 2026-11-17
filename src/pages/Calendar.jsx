@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { CalendarToolbar } from '../components/calendar/CalendarToolbar'
+import { CalendarNav, CalendarToolbar } from '../components/calendar/CalendarToolbar'
 import { DayView } from '../components/calendar/DayView'
 import { MonthView } from '../components/calendar/MonthView'
 import { SessionDetails } from '../components/calendar/SessionDetails'
 import { SessionForm } from '../components/calendar/SessionForm'
-import { StudyGoals } from '../components/calendar/StudyGoals'
+import { SelectedDay } from '../components/calendar/SelectedDay'
 import { UpcomingList, UpcomingSessions } from '../components/calendar/UpcomingSessions'
 import { WeekView } from '../components/calendar/WeekView'
 import '../components/calendar/calendar.css'
@@ -15,7 +15,7 @@ import { IconClose } from '../components/app/AppIcons'
 import '../components/study/packs-page.css'
 import { useAuth } from '../context/auth-context'
 import { usePreferences } from '../context/preferences-context'
-import { addDays, shiftDate, startOfDay, startOfWeek } from '../lib/calendar-dates'
+import { addDays, overlaps, sameDay, shiftDate, startOfDay } from '../lib/calendar-dates'
 import { goalJustReached } from '../lib/progress-metrics'
 import {
   createScheduledSession,
@@ -23,7 +23,6 @@ import {
   fetchPackOptions,
   fetchScheduledSessions,
   fetchWeeklyGoal,
-  saveWeeklyGoal,
   setSessionCompleted,
   updateScheduledSession,
 } from '../lib/schedule'
@@ -113,12 +112,10 @@ export function Calendar() {
     [visible, now],
   )
 
-  // The goal counts every pack: filtering the view should not change progress.
-  const weekStart = startOfWeek(now)
-  const weekEnd = addDays(weekStart, 7)
-  const completedThisWeek = sessions.filter(
-    (s) => s.completedAt && s.start >= weekStart && s.start < weekEnd,
-  ).length
+  const selectedSessions = useMemo(
+    () => visible.filter((s) => overlaps(s, selected, addDays(selected, 1))).sort(byStart),
+    [visible, selected],
+  )
 
   // ── Pop-ups ───────────────────────────────────────────────────
   const openNew = (prefill = {}) =>
@@ -196,12 +193,6 @@ export function Calendar() {
     }
   }
 
-  async function handleGoalSave(next) {
-    const saved = await saveWeeklyGoal(user.id, next)
-    setGoal(saved)
-    notify('Weekly goal updated')
-  }
-
   // ── Calendar navigation ───────────────────────────────────────
   const selectDate = (date) => setSelected(startOfDay(date))
   const showDay = (date) => {
@@ -235,14 +226,9 @@ export function Calendar() {
 
       <CalendarToolbar
         view={view}
-        date={selected}
-        now={now}
         packs={packs}
         filter={activeFilter}
         onViewChange={setView}
-        onPrev={() => setSelected((d) => shiftDate(view, d, -1))}
-        onNext={() => setSelected((d) => shiftDate(view, d, 1))}
-        onToday={() => setSelected(startOfDay(new Date()))}
         onFilterChange={setFilter}
       />
 
@@ -255,12 +241,29 @@ export function Calendar() {
 
       <div className="cal-layout">
         <section className="hm-card cal-board" aria-label="Calendar">
+          <CalendarNav
+            view={view}
+            date={selected}
+            now={now}
+            onPrev={() => setSelected((d) => shiftDate(view, d, -1))}
+            onNext={() => setSelected((d) => shiftDate(view, d, 1))}
+            onToday={() => setSelected(startOfDay(new Date()))}
+          />
           {view === 'month' && <MonthView {...viewProps} onShowDay={showDay} />}
           {view === 'week' && <WeekView {...viewProps} />}
           {view === 'day' && <DayView {...viewProps} />}
         </section>
 
-        <aside className="cal-side" aria-label="Upcoming sessions and goals">
+        <aside className="cal-side" aria-label="Selected day and upcoming sessions">
+          <SelectedDay
+            date={selected}
+            isToday={sameDay(selected, now)}
+            sessions={selectedSessions}
+            loading={loading}
+            onOpen={openDetails}
+            onAdd={() => openNew({ date: selected })}
+            onShowDay={() => showDay(selected)}
+          />
           <UpcomingSessions
             sessions={upcoming}
             now={now}
@@ -268,12 +271,6 @@ export function Calendar() {
             onOpen={openDetails}
             onViewAll={() => setModal({ open: true, kind: 'all' })}
             onSchedule={() => openNew()}
-          />
-          <StudyGoals
-            completed={completedThisWeek}
-            goal={goal}
-            loading={loading}
-            onSave={handleGoalSave}
           />
         </aside>
       </div>

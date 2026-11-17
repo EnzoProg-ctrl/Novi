@@ -365,7 +365,7 @@ a:hover { text-decoration: underline; }
     scale: 0.96;
   }
   /* Big targets (cards, rows, full-width buttons) squeeze less. */
-  :where(a.hm-pack, .hm-pack-add, .pk-card, .pg-pack, .ch-starter, .nv-focus-pack, .cal-item, .cal-up-item,
+  :where(a.hm-pack, .hm-pack-add, .pk-card, .pg-pack, .ch-starter, .cal-item, .cal-up-item,
     .pd-row, .pr-choice, .pr-pick-btn, .st-tile, .dropzone, .hm-material, .ch-recent-item, .ch-task,
     .nv-side-item, .personality-option, .count-option, .cal-type-option, .btn-block):where(:not(:disabled, [aria-disabled="true"])):active {
     scale: 0.985;

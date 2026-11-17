@@ -9,7 +9,6 @@ import {
   IconSettings,
   NoviMark,
 } from './AppIcons'
-import { SidebarFocus } from './SidebarFocus'
 
 /**
  * `to` marks a screen that exists. Items without it are part of the design but
@@ -24,11 +23,34 @@ const NAV = [
   { label: 'Calendar', Icon: IconCalendar, to: '/calendar' },
   { label: 'Progress', Icon: IconProgress, to: '/progress' },
   { label: 'AI Chat', Icon: IconChat, to: '/chat' },
-  { label: 'Settings', Icon: IconSettings, to: '/settings' },
 ]
+
+/** Anchored at the bottom of the sidebar, apart from the main navigation. */
+const NAV_BOTTOM = [{ label: 'Settings', Icon: IconSettings, to: '/settings' }]
 
 export function AppSidebar({ open, onClose }) {
   const { pathname } = useLocation()
+
+  const renderItem = ({ label, Icon, to, also = [] }) =>
+    to ? (
+      <NavLink
+        key={label}
+        to={to}
+        className={({ isActive }) =>
+          `nv-side-item${isActive || also.some((p) => pathname.startsWith(p)) ? ' is-active' : ''}`}
+        onClick={onClose}
+      >
+        <Icon />
+        <span>{label}</span>
+      </NavLink>
+    ) : (
+      <span key={label} className="nv-side-item is-soon" aria-disabled="true">
+        <Icon />
+        <span>{label}</span>
+        <span className="nv-soon">Soon</span>
+      </span>
+    )
+
   return (
     <>
       <div
@@ -48,30 +70,13 @@ export function AppSidebar({ open, onClose }) {
           </button>
         </div>
 
-        <nav className="nv-side-nav">
-          {NAV.map(({ label, Icon, to, also = [] }) =>
-            to ? (
-              <NavLink
-                key={label}
-                to={to}
-                className={({ isActive }) =>
-                  `nv-side-item${isActive || also.some((p) => pathname.startsWith(p)) ? ' is-active' : ''}`}
-                onClick={onClose}
-              >
-                <Icon />
-                <span>{label}</span>
-              </NavLink>
-            ) : (
-              <span key={label} className="nv-side-item is-soon" aria-disabled="true">
-                <Icon />
-                <span>{label}</span>
-                <span className="nv-soon">Soon</span>
-              </span>
-            ),
-          )}
+        <nav className="nv-side-nav" aria-label="Sections">
+          {NAV.map(renderItem)}
         </nav>
 
-        <SidebarFocus onNavigate={onClose} />
+        <nav className="nv-side-nav nv-side-bottom" aria-label="Account">
+          {NAV_BOTTOM.map(renderItem)}
+        </nav>
       </aside>
     </>
   )

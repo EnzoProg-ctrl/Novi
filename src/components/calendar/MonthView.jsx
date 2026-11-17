@@ -1,10 +1,9 @@
 import { addDays, dateKey, formatFullDay, formatWeekday, monthGrid, overlaps, sameDay } from '../../lib/calendar-dates'
 import { Sk } from '../Skeleton'
-import { AgendaList } from './AgendaList'
 import { SessionChip } from './SessionChip'
 import { typeOf } from './sessionTypes'
 
-const MAX_CHIPS = 3
+const MAX_CHIPS = 2
 
 export function MonthView({ date, selected, now, sessions, loading, onSelectDate, onOpenSession, onShowDay, onCreateAt }) {
   const weeks = monthGrid(date)
@@ -16,7 +15,6 @@ export function MonthView({ date, selected, now, sessions, loading, onSelectDate
       byDay.set(dateKey(day), sessions.filter((s) => overlaps(s, day, next)))
     }
   }
-  const selectedSessions = byDay.get(dateKey(selected)) ?? []
 
   return (
     <div className="cal-month-wrap">
@@ -111,20 +109,6 @@ export function MonthView({ date, selected, now, sessions, loading, onSelectDate
         ))}
       </div>
 
-      {/* Phones: the selected day's sessions under the grid. */}
-      <div className="cal-month-agenda">
-        <div className="cal-month-agenda-head">
-          <p className="hm-card-title">{formatFullDay(selected)}</p>
-          <button type="button" className="hm-muted-link cal-link-btn" onClick={() => onCreateAt(selected)}>
-            + Add
-          </button>
-        </div>
-        {selectedSessions.length === 0 ? (
-          <p className="hm-empty-line">Nothing planned for this day.</p>
-        ) : (
-          <AgendaList sessions={selectedSessions} now={now} onOpen={onOpenSession} />
-        )}
-      </div>
     </div>
   )
 }

@@ -1,6 +1,6 @@
 import { formatMonthShort, formatTime, formatWeekday, sameDay } from '../../lib/calendar-dates'
 import { LoadingRegion, Sk, SkText } from '../Skeleton'
-import { IconChevronRight } from './CalendarIcons'
+import { IconArrowRight } from '../home/HomeIcons'
 import { describeSession, typeOf } from './sessionTypes'
 
 const PREVIEW = 3
@@ -22,6 +22,7 @@ export function UpcomingList({ sessions, now, onOpen }) {
     <ul className="cal-up-list">
       {sessions.map((session) => {
         const type = typeOf(session)
+        const { Icon } = type
         const inProgress = session.start <= now
         return (
           <li key={session.id}>
@@ -36,13 +37,15 @@ export function UpcomingList({ sessions, now, onOpen }) {
                 <span className="cal-badge-day">{session.start.getDate()}</span>
               </span>
               <span className="cal-up-text">
-                <span className="cal-up-title">{session.title}</span>
-                <span className="cal-up-meta">
-                  {inProgress ? 'Now' : dayLabel(session, now)} · {formatTime(session.start)} – {formatTime(session.end)}
+                <span className="cal-up-title">
+                  <span className="cal-up-mark"><Icon width={14} height={14} /></span>
+                  <span className="cal-up-name">{session.title}</span>
                 </span>
                 <span className="cal-up-pack">{session.packTitle ?? type.label}</span>
               </span>
-              <IconChevronRight width={16} height={16} className="cal-up-chevron" />
+              <span className="cal-up-time" title={inProgress ? 'Happening now' : dayLabel(session, now)}>
+                {inProgress ? 'Now' : formatTime(session.start)}
+              </span>
             </button>
           </li>
         )
@@ -54,11 +57,12 @@ export function UpcomingList({ sessions, now, onOpen }) {
 export function UpcomingSessions({ sessions, now, loading, onOpen, onViewAll, onSchedule }) {
   return (
     <section className="hm-card cal-card" aria-labelledby="cal-upcoming-title">
-      <div className="hm-card-head">
-        <h2 id="cal-upcoming-title" className="hm-card-title">Upcoming Sessions</h2>
+      <div className="cal-card-head">
+        <h2 id="cal-upcoming-title" className="cal-card-title">Upcoming Sessions</h2>
         {sessions.length > 0 && (
-          <button type="button" className="hm-muted-link" onClick={onViewAll}>
-            View all{sessions.length > PREVIEW ? ` (${sessions.length})` : ''}
+          <button type="button" className="hm-muted-link cal-view-all" onClick={onViewAll}>
+            View All{sessions.length > PREVIEW ? ` (${sessions.length})` : ''}
+            <IconArrowRight width={16} height={16} />
           </button>
         )}
       </div>

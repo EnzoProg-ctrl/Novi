@@ -1,6 +1,6 @@
 import { IconPackAtom, IconPackBook, IconPackGrid } from './HomeIcons'
 
-export const PACK_TONES = [
+const PACK_TONES = [
   { tone: 'green', Icon: IconPackGrid },
   { tone: 'blue', Icon: IconPackAtom },
   { tone: 'pink', Icon: IconPackBook },

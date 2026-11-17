@@ -3,6 +3,7 @@ import { formatDuration } from '../../lib/calendar-dates'
 import { formatStudyTime } from '../../lib/progress-metrics'
 import { IconChevronRight } from '../calendar/CalendarIcons'
 import { IconCheck } from '../calendar/SessionTypeIcons'
+import { IconCalendar } from '../app/AppIcons'
 import { CardError } from './CardStatus'
 import { LoadingRegion, Sk, SkText } from '../Skeleton'
 import { IconPlay } from './ProgressIcons'
@@ -103,8 +104,12 @@ export function RecentSessions({ rows, loading, error, onRetry, onOpenSession, o
     <section className="hm-card pg-card" aria-labelledby="pg-recent-title">
       <div className="pg-card-head">
         <div>
-          <h2 id="pg-recent-title" className="hm-card-title">Recent Sessions</h2>
-          <p className="hm-sub pg-card-sub">Practice quizzes and planned sessions in this period.</p>
+          <h2 id="pg-recent-title" className="pg-card-title">Recent Sessions</h2>
+          <p className="hm-sub pg-card-sub">
+            {rows.length === 0 && !loading && !error
+              ? 'Your latest practice sessions will appear here.'
+              : 'Practice quizzes and planned sessions in this period.'}
+          </p>
         </div>
         {rows.length > SHOWN && (
           <button type="button" className="hm-muted-link pg-link-btn" onClick={onViewAll}>
@@ -129,12 +134,11 @@ export function RecentSessions({ rows, loading, error, onRetry, onOpenSession, o
           ))}
         </LoadingRegion>
       ) : rows.length === 0 ? (
-        <div className="pg-empty">
-          <p className="hm-empty-line">No sessions in this period. Plan one, or start a practice quiz.</p>
-          <div className="pg-empty-actions">
-            <Link to="/calendar" className="hm-buddy-cta">Plan a session</Link>
-            <Link to="/packs" className="pd-secondary">Practise a pack</Link>
-          </div>
+        <div className="pg-empty-state">
+          <IconCalendar className="pg-empty-glyph" width={40} height={40} />
+          <p className="pg-empty-title">No sessions yet.</p>
+          <p className="hm-sub">Practice a study pack to get started.</p>
+          <Link to="/packs" className="pg-cta">Practice a pack</Link>
         </div>
       ) : (
         <RecentTable rows={rows.slice(0, SHOWN)} onOpenSession={onOpenSession} />

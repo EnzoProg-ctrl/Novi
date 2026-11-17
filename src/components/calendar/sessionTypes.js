@@ -7,10 +7,10 @@ import { IconBreak, IconFocus, IconPractice, IconRevision } from './SessionTypeI
  * the calendar never relies on colour alone to tell them apart.
  */
 export const SESSION_TYPES = [
-  { value: 'focus', label: 'Focus study', tone: 'blue', Icon: IconFocus },
-  { value: 'practice', label: 'Practice questions', tone: 'violet', Icon: IconPractice },
-  { value: 'revision', label: 'Revision', tone: 'green', Icon: IconRevision },
-  { value: 'break', label: 'Break', tone: 'coral', Icon: IconBreak },
+  { value: 'focus', label: 'Focus study', short: 'Focus', tone: 'blue', Icon: IconFocus },
+  { value: 'practice', label: 'Practice questions', short: 'Practice', tone: 'violet', Icon: IconPractice },
+  { value: 'revision', label: 'Revision', short: 'Revision', tone: 'green', Icon: IconRevision },
+  { value: 'break', label: 'Break', short: 'Break', tone: 'coral', Icon: IconBreak },
 ]
 
 const BY_VALUE = Object.fromEntries(SESSION_TYPES.map((t) => [t.value, t]))
