@@ -129,7 +129,6 @@ export function LandingSkeleton() {
       </div>
       <div className="sk-landing-hero">
         <span className="sk-stack" style={{ gap: 16 }}>
-          <Sk w={160} h={30} r={999} />
           <Sk w="90%" h={54} r={10} />
           <Sk w="70%" h={54} r={10} />
           <SkText lines={3} h={14} gap={10} />

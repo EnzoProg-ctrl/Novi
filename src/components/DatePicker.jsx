@@ -83,6 +83,11 @@ export function DatePicker({
     setOpen(true)
   }
 
+  // A press anywhere inside (the button, the month arrows) must not count as
+  // leaving: Safari doesn't focus buttons on click, so focus falls to the page
+  // and the panel's blur would close it, or the button's click would reopen it.
+  const pressingInside = useRef(false)
+
   function close(refocus = true) {
     setOpen(false)
     if (refocus) buttonRef.current?.focus()
@@ -175,7 +180,17 @@ export function DatePicker({
   const weeks = monthGrid(view)
 
   return (
-    <span ref={wrapRef} className={`nv-select nv-date is-block${open ? ' is-open' : ''}`}>
+    <span
+      ref={wrapRef}
+      className={`nv-select nv-date is-block${open ? ' is-open' : ''}`}
+      onPointerDownCapture={() => {
+        pressingInside.current = true
+        // Cleared after this press's click (and its focus changes) are done.
+        setTimeout(() => {
+          pressingInside.current = false
+        }, 0)
+      }}
+    >
       <button
         ref={buttonRef}
         id={baseId}
@@ -207,6 +222,7 @@ export function DatePicker({
         style={place ?? undefined}
         onKeyDown={onPanelKey}
         onBlur={(event) => {
+          if (pressingInside.current) return
           if (open && !wrapRef.current?.contains(event.relatedTarget)) close(false)
         }}
       >

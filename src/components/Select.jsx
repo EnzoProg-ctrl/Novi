@@ -66,6 +66,12 @@ export function Select({
     setOpen(true)
   }
 
+  // Pressing the button while the list is open must close it. Safari doesn't
+  // focus a button when it's clicked, so the list's blur would close it first
+  // (relatedTarget null) and the click would then reopen it. The press is
+  // noted here and the blur ignores it.
+  const pressingButton = useRef(false)
+
   function close(refocus = true) {
     setOpen(false)
     if (refocus) buttonRef.current?.focus()
@@ -181,6 +187,13 @@ export function Select({
         aria-describedby={describedBy}
         aria-invalid={invalid || undefined}
         disabled={disabled}
+        onPointerDown={() => {
+          pressingButton.current = true
+          // Cleared once this press's focus changes are done.
+          setTimeout(() => {
+            pressingButton.current = false
+          }, 0)
+        }}
         onClick={() => (open ? close() : openList())}
         onKeyDown={onButtonKey}
       >
@@ -201,6 +214,7 @@ export function Select({
         style={place ?? undefined}
         onKeyDown={onListKey}
         onBlur={(event) => {
+          if (pressingButton.current) return
           if (!wrapRef.current?.contains(event.relatedTarget)) close(false)
         }}
       >

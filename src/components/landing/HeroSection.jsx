@@ -1,26 +1,14 @@
 import { Link } from 'react-router-dom'
 import { MascotRig } from '../MascotRig'
 import { DashboardMockup } from './DashboardMockup'
-import { IconArrowRight, IconChart, IconDocument, IconHeart, IconPerson, IconSparkle, IconUpload } from './icons'
+import { IconArrowRight } from './icons'
 import './hero.css'
-
-const POINTS = [
-  { title: 'Upload anything', body: 'Notes, PDFs, slides, or images', Icon: IconUpload },
-  { title: 'AI-powered study content', body: 'Summaries, practice questions, and more', Icon: IconDocument },
-  { title: 'Personalized for you', body: 'Adapts to how you learn', Icon: IconPerson },
-  { title: 'Track progress', body: 'See real improvements', Icon: IconChart },
-]
 
 export function HeroSection() {
   return (
     <section className="nv-hero">
       <div className="nv-hero-inner">
         <div className="nv-hero-copy">
-          <span className="nv-badge">
-            <IconSparkle width={15} height={15} />
-            Your AI study buddy
-          </span>
-
           <h1 className="nv-hero-title">
             Study smarter,
             <br />
@@ -28,9 +16,8 @@ export function HeroSection() {
           </h1>
 
           <p className="nv-hero-sub">
-            Upload your notes, get personalized study materials, practice with AI-generated
-            questions, and track your progress — all with a study buddy that learns how you
-            learn.
+            Turn your notes into personalized study materials, practice with AI-generated
+            questions, and track your progress—all in one place.
           </p>
 
           <div className="nv-hero-actions">
@@ -43,33 +30,18 @@ export function HeroSection() {
             </a>
           </div>
 
-          <p className="nv-hero-note">Free to start. Your progress stays with you.</p>
-
-          <ul className="nv-points">
-            {POINTS.map(({ title, body, Icon }) => (
-              <li key={title} className="nv-point">
-                <span className="nv-point-icon">
-                  <Icon width={20} height={20} />
-                </span>
-                <p className="nv-point-title">{title}</p>
-                <p className="nv-point-body">{body}</p>
-              </li>
-            ))}
-          </ul>
+          <p className="nv-hero-note">Free to start. No credit card required.</p>
         </div>
 
         <div className="nv-hero-art">
-          <p className="nv-scribble" aria-hidden="true">
-            Study brighter together! <IconHeart className="nv-heart" width="0.9em" height="0.9em" />
-          </p>
-
+          <span className="nv-hero-blob" aria-hidden="true" />
+          <DashboardMockup />
           <MascotRig
             pose="waving"
+            outfit="default"
             className="nv-mascot"
             alt="Novi, a friendly capybara study buddy in an astronaut suit, waving"
           />
-
-          <DashboardMockup />
         </div>
       </div>
     </section>

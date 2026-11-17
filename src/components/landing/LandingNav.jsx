@@ -1,29 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { NoviMark } from './NoviMark'
 
 const NAV_LINKS = [
   { label: 'Features', href: '#features' },
-  { label: 'How it works', href: '#how-it-works' },
-  { label: 'Testimonials', href: '#testimonials' },
+  { label: 'How It Works', href: '#how-it-works' },
   { label: 'FAQ', href: '#faq' },
 ]
-
-/** The coral double-bar wordmark from the reference. */
-function NoviMark({ size = 34 }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 34 34"
-      fill="none"
-      aria-hidden="true"
-      focusable="false"
-    >
-      <rect x="3" y="4" width="11" height="26" rx="4" fill="var(--nv-coral)" />
-      <rect x="17" y="4" width="11" height="26" rx="4" fill="var(--nv-coral-soft)" />
-    </svg>
-  )
-}
 
 export function LandingNav() {
   const [menuOpen, setMenuOpen] = useState(false)

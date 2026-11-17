@@ -6,54 +6,30 @@
 .nv-hero-inner {
   max-width: var(--nv-shell);
   margin: 0 auto;
-  padding: clamp(20px, 2vw, 32px) clamp(20px, 4vw, 48px) clamp(56px, 6vw, 96px);
+  padding: clamp(24px, 3vw, 56px) clamp(20px, 4vw, 48px) clamp(64px, 7vw, 112px);
   display: grid;
-  grid-template-columns: minmax(0, 0.84fr) minmax(0, 1.16fr);
-  /* Height is content-driven. align-items keeps the copy and the art centred
-     against each other; align-content pins the row to the top so the space
-     under the nav stays exactly the padding above, never padding + slack. */
+  grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);
   align-items: center;
-  align-content: start;
-  gap: 28px;
+  gap: clamp(24px, 3vw, 56px);
 }
 
 /* ── Copy column ─────────────────────────────────────────────── */
 .nv-hero-copy { min-width: 0; }
 
-/* Small nudge right, off the shell edge. Uses a transform rather than padding
-   so the column keeps its full width - padding narrowed it enough to wrap
-   "Upload anything" onto a second line. Desktop only; the stacked layout
-   below 980px keeps its own alignment. */
-@media (min-width: 981px) {
-  .nv-hero-copy { transform: translateX(clamp(16px, 1.6vw, 30px)); }
-}
-
-.nv-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 9px 18px;
-  border-radius: 999px;
-  background: var(--nv-coral-tint);
-  color: var(--nv-coral-hover);
-  font-size: 0.94rem;
-  font-weight: 600;
-}
-
 .nv-hero-title {
-  margin: 26px 0 0;
-  font-size: clamp(2.5rem, 3.1vw + 1rem, 4.6rem);
+  margin: 0;
+  font-size: clamp(2.6rem, 3.4vw + 1rem, 5rem);
   font-weight: 800;
-  line-height: 1.06;
+  line-height: 1.04;
   letter-spacing: -0.04em;
   color: var(--nv-ink);
 }
 .nv-accent { color: var(--nv-coral); }
 
 .nv-hero-sub {
-  margin: 22px 0 0;
-  max-width: 40ch;
-  font-size: clamp(1.05rem, 0.6vw + 0.85rem, 1.25rem);
+  margin: 24px 0 0;
+  max-width: 34ch;
+  font-size: clamp(1.05rem, 0.6vw + 0.85rem, 1.3rem);
   line-height: 1.6;
   color: var(--nv-muted);
 }
@@ -62,11 +38,11 @@
   display: flex;
   flex-wrap: wrap;
   gap: 14px;
-  margin-top: 32px;
+  margin-top: 36px;
 }
 .nv-cta-lg {
   gap: 10px;
-  padding: 17px 32px;
+  padding: 17px 30px;
   font-size: 1.05rem;
   border-radius: 14px;
 }
@@ -75,7 +51,7 @@
   align-items: center;
   justify-content: center;
   padding: 17px 30px;
-  border: 1px solid var(--nv-line);
+  border: 1px solid rgba(19, 26, 46, 0.14);
   border-radius: 14px;
   background: #fff;
   color: var(--nv-ink);
@@ -95,327 +71,339 @@
 }
 
 .nv-hero-note {
-  margin: 18px 0 0;
-  font-size: 0.93rem;
+  margin: 20px 0 0;
+  font-size: 0.95rem;
   color: var(--nv-faint);
 }
 
-/* ── Four supporting points ──────────────────────────────────── */
-.nv-points {
-  list-style: none;
-  margin: clamp(40px, 4vw, 64px) 0 0;
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: clamp(16px, 1.6vw, 28px);
-}
-.nv-point-icon {
-  display: grid;
-  place-items: center;
-  width: 50px;
-  height: 50px;
-  border-radius: 14px;
-  background: var(--nv-coral-tint);
-  color: var(--nv-coral);
-}
-.nv-point-title {
-  margin: 14px 0 3px;
-  font-size: 0.95rem;
-  font-weight: 700;
-  line-height: 1.3;
-  color: var(--nv-ink);
-}
-.nv-point-body {
-  margin: 0;
-  font-size: 0.87rem;
-  line-height: 1.45;
-  color: var(--nv-muted);
-}
-
 /* ── Art column ──────────────────────────────────────────────── */
-/* The left gutter is what the mascot and handwritten note sit in; the
-   mockup starts after it and the mascot overlaps only its left edge. */
+/* The mockup scales with this column (cqi units), so it is the same picture
+   at every width rather than a layout that reflows. The left and bottom
+   padding is where the mascot stands, overlapping the device's corner. */
 .nv-hero-art {
   position: relative;
   min-width: 0;
-  padding-left: 26%;
+  container-type: inline-size;
+  padding: 2% 0 9% 11%;
 }
 
-.nv-scribble {
+.nv-hero-blob {
   position: absolute;
-  top: 0;
-  right: 76.5%;
-  z-index: 3;
-  margin: 0;
-  max-width: 138px;
-  font-family: Caveat, "Segoe Script", cursive;
-  font-size: 1.6rem;
-  font-weight: 700;
-  line-height: 1.12;
-  color: var(--nv-ink);
-  transform: rotate(-7deg);
+  z-index: 0;
+  inset: -4% -8% 0 4%;
+  border-radius: 46% 54% 48% 52% / 52% 44% 56% 48%;
+  background: radial-gradient(closest-side, rgba(255, 150, 134, 0.62), rgba(255, 162, 148, 0.3) 64%, transparent);
+  filter: blur(18px);
   pointer-events: none;
-}
-.nv-heart {
-  display: inline-block;
-  vertical-align: -0.08em;
-  color: var(--nv-coral);
-  animation: nv-beat 2.6s ease-in-out infinite;
-}
-@keyframes nv-beat {
-  0%, 40%, 100% { transform: scale(1); }
-  10% { transform: scale(1.25); }
-  20% { transform: scale(1); }
-  30% { transform: scale(1.15); }
 }
 
 .nv-mascot {
   position: absolute;
-  left: -2%;
-  bottom: -7%;
+  left: -3%;
+  bottom: -2%;
   z-index: 2;
-  width: 30%;
-  max-width: 300px;
+  width: 31%;
   height: auto;
   pointer-events: none;
-  filter: drop-shadow(0 18px 30px rgba(19, 26, 46, 0.12));
+  filter: drop-shadow(0 18px 30px rgba(19, 26, 46, 0.16));
   transform-origin: 50% 80%;
+  /* Its own layer, so its float and wave never repaint the device below. */
+  will-change: transform;
   animation:
     nv-rise 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) 0.15s both,
     nv-float 7s ease-in-out 1.05s infinite;
 }
 
-/* ── Dashboard mockup ────────────────────────────────────────── */
-.nv-mock {
+/* ── Device frame ────────────────────────────────────────────── */
+.nv-device {
   position: relative;
-  font-size: clamp(12px, 0.92vw, 17.5px);
   z-index: 1;
-  display: flex;
-  border: 1px solid rgba(19, 26, 46, 0.06);
-  border-radius: 1.2em;
-  background: #fff;
-  box-shadow: 0 26px 64px rgba(19, 26, 46, 0.12), 0 4px 14px rgba(19, 26, 46, 0.05);
-  overflow: hidden;
+  font-size: 1.32cqi;
+  padding: 0.75em;
+  border-radius: 1.9em;
+  background: linear-gradient(150deg, #313852 0%, #1a1f31 45%, #10131f 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 3em 6em -1em rgba(19, 26, 46, 0.38),
+    0 1em 2.4em rgba(19, 26, 46, 0.18);
+  transform: perspective(2600px) rotateY(-13deg) rotateX(6deg) rotateZ(1deg);
+  transform-origin: 40% 50%;
+  /* The tilted screen is drawn once onto its own layer and then held still.
+     Without this, the waving mascot overlapping its corner made the browser
+     redraw it every frame, and re-rasterising 3D-tilted text shimmers. */
+  will-change: transform;
+  backface-visibility: hidden;
 }
+
+/* ── Dashboard mockup (dark) ─────────────────────────────────── */
+.nv-mock {
+  --mk-bg: #0f1322;
+  --mk-panel: #181d30;
+  --mk-panel-2: #1f2539;
+  --mk-line: rgba(255, 255, 255, 0.07);
+  --mk-ink: #f1f3f9;
+  --mk-muted: #98a1b5;
+
+  display: flex;
+  overflow: hidden;
+  border-radius: 1.25em;
+  background: var(--mk-bg);
+  color: var(--mk-ink);
+  line-height: 1.3;
+}
+:where(.nv-mock p) { margin: 0; }
 
 .nv-mock-side {
   flex: none;
-  width: 8.4em;
-  padding: 0.95em 0.7em;
-  border-right: 1px solid var(--nv-line);
+  width: 12.5em;
+  padding: 1.5em 1em;
+  border-right: 1px solid var(--mk-line);
+  background: #121627;
 }
 .nv-mock-brand {
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin-bottom: 16px;
-  font-size: 0.92em;
+  gap: 0.5em;
+  padding: 0 0.6em 1.4em;
+  font-size: 1.3em;
   font-weight: 750;
   letter-spacing: -0.03em;
 }
-.nv-mock-nav { display: flex; flex-direction: column; gap: 2px; }
-.nv-mock-navitem {
+.nv-mock-mark { display: inline-flex; gap: 0.12em; }
+.nv-mock-mark i {
+  width: 0.36em;
+  height: 0.85em;
+  border-radius: 0.14em;
+  background: var(--nv-coral);
+}
+.nv-mock-mark i + i { background: var(--nv-coral-soft); }
+
+.nv-mock-nav {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.25em;
+}
+.nv-mock-nav li {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 10px;
-  border-radius: 8px;
-  font-size: 0.72em;
+  gap: 0.75em;
+  padding: 0.7em 0.8em;
+  border-radius: 0.7em;
+  font-size: 0.95em;
   font-weight: 550;
-  color: var(--nv-muted);
-  white-space: nowrap;
+  color: var(--mk-muted);
 }
-.nv-mock-navitem.is-active {
-  background: var(--nv-coral-tint);
-  color: var(--nv-coral-hover);
-  font-weight: 650;
+.nv-mock-nav li.is-active {
+  background: rgba(255, 107, 90, 0.15);
+  color: #ff8a7c;
 }
 
 .nv-mock-main {
   flex: 1;
   min-width: 0;
-  padding: 0.95em 1.08em 1.08em;
-  background: #fdfcfc;
+  padding: 1.3em 1.8em 1.8em;
 }
-.nv-mock-head {
+
+.nv-mock-top {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 14px;
+  align-items: center;
+  gap: 0.9em;
+  margin-bottom: 1.4em;
 }
-.nv-mock-greet { margin: 0; font-size: 0.92em; font-weight: 700; }
-.nv-mock-sub { margin: 2px 0 0; font-size: 0.68em; line-height: 1.35; color: var(--nv-muted); }
-.nv-mock-headicons { display: flex; gap: 10px; color: var(--nv-faint); flex: none; }
+.nv-mock-search {
+  display: flex;
+  align-items: center;
+  gap: 0.6em;
+  width: 46%;
+  margin-right: auto;
+  padding: 0.65em 0.9em;
+  border: 1px solid var(--mk-line);
+  border-radius: 0.7em;
+  background: var(--mk-panel);
+  font-size: 0.88em;
+  color: var(--mk-muted);
+}
+.nv-mock-icon {
+  display: grid;
+  place-items: center;
+  width: 2.3em;
+  height: 2.3em;
+  border-radius: 0.7em;
+  background: var(--mk-panel);
+  color: var(--mk-muted);
+}
+.nv-mock-avatar {
+  display: grid;
+  place-items: center;
+  width: 2.3em;
+  height: 2.3em;
+  border-radius: 50%;
+  background: var(--nv-coral);
+  font-size: 0.85em;
+  font-weight: 700;
+  color: #fff;
+}
+
+.nv-mock-h {
+  font-size: 1.7em;
+  font-weight: 750;
+  letter-spacing: -0.03em;
+}
+.nv-mock-sub {
+  margin-top: 0.3em;
+  font-size: 0.95em;
+  color: var(--mk-muted);
+}
 
 .nv-mock-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.04fr);
-  gap: 10px;
-  margin-bottom: 14px;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  gap: 1em;
+  margin-top: 1.3em;
 }
 .nv-mock-card {
-  padding: 0.68em;
-  border: 1px solid var(--nv-line);
-  border-radius: 0.72em;
-  background: #fff;
+  border: 1px solid var(--mk-line);
+  border-radius: 1em;
+  background: var(--mk-panel);
 }
-.nv-mock-buddy {
+.nv-mock-next,
+.nv-mock-progress {
   display: flex;
-  gap: 9px;
-  background: #fff8f6;
-  border-color: rgba(255, 107, 90, 0.18);
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 1.3em;
 }
-.nv-mock-avatar {
-  flex: none;
-  display: grid;
-  place-items: center;
-  width: 2.5em;
-  height: 2.5em;
-  border-radius: 50%;
-  border: 1px solid var(--nv-line);
-  background: #fff;
-  overflow: hidden;
+.nv-mock-next {
+  background:
+    radial-gradient(120% 140% at 100% 0%, rgba(255, 107, 90, 0.2), transparent 55%),
+    var(--mk-panel);
 }
-.nv-mock-avatar img { width: 125%; height: auto; margin-top: 5px; }
-.nv-mock-buddytext { min-width: 0; }
-.nv-mock-buddyname { margin: 0; font-size: 0.74em; font-weight: 700; }
+.nv-mock-label {
+  font-size: 0.95em;
+  font-weight: 650;
+}
+.nv-mock-pack {
+  margin-top: 0.8em;
+  font-size: 1.25em;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.nv-mock-meta {
+  margin-top: 0.3em;
+  font-size: 0.85em;
+  color: var(--mk-muted);
+}
 .nv-mock-btn {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  margin-top: 8px;
-  padding: 6px 10px;
-  border-radius: 8px;
+  gap: 0.5em;
+  margin-top: auto;
+  padding: 0.75em 1.1em;
+  border-radius: 0.7em;
   background: var(--nv-coral);
+  font-size: 0.88em;
+  font-weight: 650;
   color: #fff;
-  font-size: 0.68em;
-  font-weight: 620;
-  white-space: nowrap;
+}
+.nv-mock-next .nv-mock-btn { margin-top: 1.3em; }
+
+.nv-mock-ring-row {
+  display: flex;
+  align-items: center;
+  gap: 1em;
+  margin: 0.9em 0 1em;
+}
+.nv-mock-ring { width: 5.4em; height: 5.4em; transform: rotate(-90deg); }
+.nv-mock-ring circle { fill: none; stroke-width: 3.4; }
+.nv-mock-ring-track { stroke: rgba(255, 255, 255, 0.08); }
+.nv-mock-ring-fill { stroke: var(--nv-coral); stroke-linecap: round; }
+.nv-mock-ring text {
+  transform: rotate(90deg);
+  transform-origin: 18px 18px;
+  fill: var(--mk-ink);
+  font-size: 7px;
+  font-weight: 700;
+}
+.nv-mock-big {
+  margin-top: 0.15em;
+  font-size: 1.5em;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+}
+.nv-mock-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  font-size: 0.85em;
+  font-weight: 600;
+  color: #ff8a7c;
 }
 
-.nv-mock-cardhead {
+.nv-mock-section {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 9px;
+  margin: 1.5em 0 0.8em;
 }
-.nv-mock-cardtitle { margin: 0; font-size: 0.76em; font-weight: 700; }
-.nv-mock-link { font-size: 0.63em; font-weight: 620; color: var(--nv-coral); white-space: nowrap; }
-
-.nv-mock-progress {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
-}
-.nv-mock-progress li {
+.nv-mock-packs {
   display: grid;
-  grid-template-columns: minmax(0, 62px) minmax(0, 1fr) 26px;
-  align-items: center;
-  gap: 8px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.8em;
 }
-.nv-mock-psubject {
-  font-size: 0.66em;
-  color: var(--nv-muted);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.nv-mock-track { height: 5px; border-radius: 3px; background: #efecec; overflow: hidden; }
-.nv-mock-fill { display: block; height: 100%; border-radius: 3px; background: var(--nv-coral); }
-.nv-mock-pvalue { font-size: 0.64em; font-weight: 680; text-align: right; }
-
-.nv-mock-packhead { margin-bottom: 8px; }
-.nv-mock-packs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
-.nv-mock-pack {
-  padding: 0.56em;
-  border: 1px solid var(--nv-line);
-  border-radius: 0.62em;
-  background: #fff;
-}
-.nv-mock-packicon {
+.nv-mock-tile { padding: 1em; }
+.nv-mock-tile-icon {
   display: grid;
   place-items: center;
-  width: 1.35em;
-  height: 1.35em;
-  margin-bottom: 0.42em;
-  border-radius: 0.38em;
+  width: 2.4em;
+  height: 2.4em;
+  border-radius: 0.7em;
 }
-.nv-mock-packicon.is-green { background: #e7f6ed; color: #1f9d63; }
-.nv-mock-packicon.is-blue { background: #e9f0fe; color: #3b6fd4; }
-.nv-mock-packicon.is-pink { background: #fdeaea; color: #d64545; }
-.nv-mock-packsubject { margin: 0; font-size: 0.66em; font-weight: 700; }
-.nv-mock-packtopic {
-  margin: 1px 0 0;
-  font-size: 0.6em;
-  color: var(--nv-muted);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.nv-mock-tile-icon.is-blue { background: rgba(91, 141, 239, 0.18); color: #8fb1f7; }
+.nv-mock-tile-icon.is-green { background: rgba(52, 199, 140, 0.16); color: #6ed9ad; }
+.nv-mock-tile-icon.is-violet { background: rgba(155, 124, 240, 0.18); color: #b9a2f7; }
+.nv-mock-tile-title {
+  margin-top: 0.8em;
+  font-size: 0.9em;
+  font-weight: 650;
+  line-height: 1.25;
+  min-height: 2.5em;
 }
-.nv-mock-packmeta { margin: 5px 0 0; font-size: 0.55em; color: var(--nv-faint); }
-.nv-mock-packadd {
+.nv-mock-add {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 0.5em;
+  border: 1.5px dashed rgba(255, 255, 255, 0.16);
+  border-radius: 1em;
+  font-size: 0.85em;
+  font-weight: 600;
   text-align: center;
-  border-style: dashed;
-  border-color: rgba(255, 107, 90, 0.35);
-  background: #fff9f8;
-  color: var(--nv-coral);
+  color: var(--mk-muted);
 }
-.nv-mock-packadd .nv-mock-packsubject,
-.nv-mock-packadd .nv-mock-packtopic { color: var(--nv-coral-hover); }
 
 /* ── Responsive ──────────────────────────────────────────────── */
-@media (max-width: 1180px) {
-  .nv-hero-inner { grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: 24px; }
-  .nv-hero-art { padding-left: 25%; }
-  .nv-points { gap: 16px; }
-}
-
-@media (max-width: 980px) {
+/* Side by side, the mockup gets too small to read below ~1100px: stack. */
+@media (max-width: 1100px) {
   .nv-hero-inner {
     grid-template-columns: minmax(0, 1fr);
-    padding: 32px 28px 64px;
-    gap: 64px;
+    padding: 32px 28px 72px;
+    gap: 48px;
   }
-  .nv-hero-sub { max-width: 52ch; }
-  .nv-hero-art { padding-left: 0; padding-top: 40px; }
-  .nv-mascot {
-    position: static;
-    display: block;
-    width: 210px;
-    margin: 0 auto -34px;
-  }
-  /* Stacked layout has no side gutter, so the note flows above the mascot
-     instead of being absolutely placed beside the card. */
-  .nv-scribble {
-    position: static;
-    max-width: none;
-    margin: 0 0 14px;
-    text-align: center;
-    transform: rotate(-4deg);
-  }
-}
-
-@media (max-width: 720px) {
-  .nv-points { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 16px; }
-  .nv-hero-actions .nv-cta-lg,
-  .nv-hero-actions .nv-btn-outline { flex: 1; }
+  .nv-hero-sub { max-width: 46ch; }
+  .nv-hero-art { width: 100%; max-width: 880px; justify-self: center; padding: 0 0 12% 8%; }
+  .nv-device { transform: perspective(2000px) rotateY(-8deg) rotateX(4deg); }
 }
 
 @media (max-width: 620px) {
-  .nv-hero-inner { padding: 24px 20px 56px; }
+  .nv-hero-inner { padding: 24px 20px 64px; }
+  .nv-hero-actions .nv-cta-lg,
+  .nv-hero-actions .nv-btn-outline { flex: 1 1 auto; white-space: nowrap; }
+  /* Phones: the sidebar would leave the dashboard too small to read. */
   .nv-mock-side { display: none; }
-  .nv-mock-row { grid-template-columns: minmax(0, 1fr); }
-  .nv-mock-packs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .nv-scribble { font-size: 1.5rem; }
+  .nv-device { font-size: 2.3cqi; }
+  .nv-hero-art { padding: 0 0 22% 0; }
+  .nv-mascot { left: -2%; bottom: -4%; width: 36%; }
 }
-
-.nv-mock-sun { color: var(--nv-coral); vertical-align: -0.12em; }

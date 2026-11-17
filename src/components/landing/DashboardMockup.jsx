@@ -1,120 +1,123 @@
-import capybara from '../../assets/capybara_landingpage.webp'
-import { IconArrowRight, IconAtom, IconBook, IconCalendar, IconChart, IconDots, IconGrid, IconHome, IconPlus, IconSettings, IconSun, IconTools } from './icons'
+import {
+  IconArrowRight,
+  IconAtom,
+  IconBell,
+  IconBook,
+  IconCalendar,
+  IconChart,
+  IconChat,
+  IconDatabase,
+  IconHome,
+  IconNetwork,
+  IconPlus,
+  IconSearch,
+  IconSettings,
+} from './icons'
 
-const SIDEBAR = [
+const NAV = [
   { label: 'Home', Icon: IconHome, active: true },
-  { label: 'Study Tools', Icon: IconTools },
+  { label: 'Study Packs', Icon: IconBook },
   { label: 'Calendar', Icon: IconCalendar },
   { label: 'Progress', Icon: IconChart },
+  { label: 'AI Chat', Icon: IconChat },
   { label: 'Settings', Icon: IconSettings },
 ]
 
-const PROGRESS = [
-  { subject: 'Biology', value: 82 },
-  { subject: 'Mathematics', value: 71 },
-  { subject: 'Physics', value: 64 },
-  { subject: 'History', value: 48 },
+const PACKS = [
+  { title: 'General Physics', concepts: 12, tone: 'blue', Icon: IconAtom },
+  { title: 'Database Management & SQL', concepts: 20, tone: 'green', Icon: IconDatabase },
+  { title: 'Computer Networking', concepts: 18, tone: 'violet', Icon: IconNetwork },
 ]
 
-const PACKS = [
-  { subject: 'Biology', topic: 'Cell Division', updated: 'Updated 2 days ago', Icon: IconGrid, tone: 'green' },
-  { subject: 'Physics', topic: 'Kinematics', updated: 'Updated 5 days ago', Icon: IconAtom, tone: 'blue' },
-  { subject: 'History', topic: 'Philippine Rev.', updated: 'Updated 1 week ago', Icon: IconBook, tone: 'pink' },
-]
+const PROGRESS = 72
+// Circumference of the ring (r = 15.9 makes it 100 user units round).
+const RING = 100
 
 /**
- * A static preview of the signed-in app, built in markup rather than shipped as
- * an image so it stays crisp and can be restyled with the design tokens.
- * Decorative: hidden from assistive tech, since it is a picture of the product.
+ * A still picture of Novi's Home in dark mode, for the hero. Decorative: it
+ * is hidden from assistive tech and nothing in it is interactive.
  */
 export function DashboardMockup() {
   return (
-    <div className="nv-mock" role="img" aria-label="Preview of the Novi study dashboard">
-      <aside className="nv-mock-side" aria-hidden="true">
-        <div className="nv-mock-brand">
-          <svg width="18" height="18" viewBox="0 0 34 34" fill="none">
-            <rect x="3" y="4" width="11" height="26" rx="4" fill="var(--nv-coral)" />
-            <rect x="17" y="4" width="11" height="26" rx="4" fill="var(--nv-coral-soft)" />
-          </svg>
-          <span>Novi</span>
-        </div>
+    <div className="nv-device" aria-hidden="true">
+      <div className="nv-mock">
+        <aside className="nv-mock-side">
+          <p className="nv-mock-brand">
+            <span className="nv-mock-mark"><i /><i /></span>
+            Novi
+          </p>
+          <ul className="nv-mock-nav">
+            {NAV.map(({ label, Icon, active }) => (
+              <li key={label} className={active ? 'is-active' : undefined}>
+                <Icon width="1.15em" height="1.15em" />
+                {label}
+              </li>
+            ))}
+          </ul>
+        </aside>
 
-        <nav className="nv-mock-nav">
-          {SIDEBAR.map(({ label, Icon, active }) => (
-            <span key={label} className={`nv-mock-navitem${active ? ' is-active' : ''}`}>
-              <Icon width={15} height={15} />
-              {label}
+        <div className="nv-mock-main">
+          <div className="nv-mock-top">
+            <span className="nv-mock-search">
+              <IconSearch width="1em" height="1em" />
+              Search…
             </span>
-          ))}
-        </nav>
-      </aside>
-
-      <div className="nv-mock-main" aria-hidden="true">
-        <header className="nv-mock-head">
-          <div>
-            <p className="nv-mock-greet">Good morning! <IconSun className="nv-mock-sun" width={13} height={13} /></p>
-            <p className="nv-mock-sub">Ready to make progress today?</p>
+            <span className="nv-mock-icon"><IconBell width="1.1em" height="1.1em" /></span>
+            <span className="nv-mock-avatar">EN</span>
           </div>
-          <div className="nv-mock-headicons">
-            <IconDots width={15} height={15} />
-            <IconArrowRight width={15} height={15} />
-          </div>
-        </header>
 
-        <div className="nv-mock-row">
-          <div className="nv-mock-card nv-mock-buddy">
-            <span className="nv-mock-avatar">
-              <img className="nv-anim-levitate" src={capybara} alt="" />
-            </span>
-            <div className="nv-mock-buddytext">
-              <p className="nv-mock-buddyname">Novi</p>
-              <p className="nv-mock-sub">You&apos;ve got this!<br />Let&apos;s keep going.</p>
+          <p className="nv-mock-h">Home</p>
+          <p className="nv-mock-sub">Welcome back, Enzo! Ready to study?</p>
+
+          <div className="nv-mock-row">
+            <div className="nv-mock-card nv-mock-next">
+              <p className="nv-mock-label">Pick up where you left off</p>
+              <p className="nv-mock-pack">Computer Networking Fundamentals</p>
+              <p className="nv-mock-meta">12 concepts · 30 questions</p>
               <span className="nv-mock-btn">
-                Start Studying <IconArrowRight width={12} height={12} />
+                Continue Studying <IconArrowRight width="1em" height="1em" />
               </span>
+            </div>
+
+            <div className="nv-mock-card nv-mock-progress">
+              <p className="nv-mock-label">Your Progress</p>
+              <div className="nv-mock-ring-row">
+                <svg className="nv-mock-ring" viewBox="0 0 36 36">
+                  <circle cx="18" cy="18" r="15.9" className="nv-mock-ring-track" />
+                  <circle
+                    cx="18"
+                    cy="18"
+                    r="15.9"
+                    className="nv-mock-ring-fill"
+                    strokeDasharray={`${PROGRESS} ${RING - PROGRESS}`}
+                  />
+                  <text x="18" y="20.4" textAnchor="middle">{PROGRESS}%</text>
+                </svg>
+                <div>
+                  <p className="nv-mock-meta">Overall Progress</p>
+                  <p className="nv-mock-big">{PROGRESS}%</p>
+                </div>
+              </div>
+              <span className="nv-mock-link">View All <IconArrowRight width="1em" height="1em" /></span>
             </div>
           </div>
 
-          <div className="nv-mock-card">
-            <div className="nv-mock-cardhead">
-              <p className="nv-mock-cardtitle">Your Progress</p>
-              <span className="nv-mock-link">View All →</span>
-            </div>
-            <ul className="nv-mock-progress">
-              {PROGRESS.map(({ subject, value }) => (
-                <li key={subject}>
-                  <span className="nv-mock-psubject">{subject}</span>
-                  <span className="nv-mock-track">
-                    <span className="nv-mock-fill" style={{ width: `${value}%` }} />
-                  </span>
-                  <span className="nv-mock-pvalue">{value}%</span>
-                </li>
-              ))}
-            </ul>
+          <div className="nv-mock-section">
+            <p className="nv-mock-label">Recent Study Packs</p>
+            <span className="nv-mock-link">See All <IconArrowRight width="1em" height="1em" /></span>
           </div>
-        </div>
-
-        <div className="nv-mock-cardhead nv-mock-packhead">
-          <p className="nv-mock-cardtitle">Recent Study Packs</p>
-          <span className="nv-mock-link">See All →</span>
-        </div>
-
-        <div className="nv-mock-packs">
-          {PACKS.map(({ subject, topic, updated, Icon, tone }) => (
-            <div key={subject} className="nv-mock-pack">
-              <span className={`nv-mock-packicon is-${tone}`}>
-                <Icon width={13} height={13} />
-              </span>
-              <p className="nv-mock-packsubject">{subject}</p>
-              <p className="nv-mock-packtopic">{topic}</p>
-              <p className="nv-mock-packmeta">{updated}</p>
+          <div className="nv-mock-packs">
+            {PACKS.map(({ title, concepts, tone, Icon }) => (
+              <div key={title} className="nv-mock-card nv-mock-tile">
+                <span className={`nv-mock-tile-icon is-${tone}`}><Icon width="1.25em" height="1.25em" /></span>
+                <p className="nv-mock-tile-title">{title}</p>
+                <p className="nv-mock-meta">{concepts} concepts</p>
+              </div>
+            ))}
+            <div className="nv-mock-tile nv-mock-add">
+              <IconPlus width="1.4em" height="1.4em" />
+              Add New Study Pack
             </div>
-          ))}
-
-          <div className="nv-mock-pack nv-mock-packadd">
-            <IconPlus width={16} height={16} />
-            <p className="nv-mock-packsubject">Add New</p>
-            <p className="nv-mock-packtopic">Study Pack</p>
           </div>
         </div>
       </div>

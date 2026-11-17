@@ -130,3 +130,47 @@ export const IconHeart = (props) => (
     <path d="M12 20.5s-7.5-4.6-9.3-9.2C1.4 7.9 3.6 4.5 7 4.5c2 0 3.4 1.1 5 3 1.6-1.9 3-3 5-3 3.4 0 5.6 3.4 4.3 6.8-1.8 4.6-9.3 9.2-9.3 9.2z" />
   </svg>
 )
+
+export const IconChat = (props) => (
+  <svg {...base} {...props}>
+    <path d="M20 12a7.5 7.5 0 01-10.9 6.7L4 20l1.4-4.6A7.5 7.5 0 1120 12z" />
+    <path d="M9 11h.01M12.5 11h.01M16 11h.01" strokeWidth="2.4" />
+  </svg>
+)
+
+export const IconSearch = (props) => (
+  <svg {...base} {...props}>
+    <circle cx="11" cy="11" r="6.5" />
+    <path d="M16 16l4 4" />
+  </svg>
+)
+
+export const IconBell = (props) => (
+  <svg {...base} {...props}>
+    <path d="M6 16V11a6 6 0 1112 0v5l1.5 2h-15L6 16z" />
+    <path d="M10 20.5a2.2 2.2 0 004 0" />
+  </svg>
+)
+
+export const IconChevronDown = (props) => (
+  <svg {...base} {...props}>
+    <path d="M6 9l6 6 6-6" />
+  </svg>
+)
+
+export const IconDatabase = (props) => (
+  <svg {...base} {...props}>
+    <ellipse cx="12" cy="6" rx="7" ry="2.8" />
+    <path d="M5 6v6c0 1.5 3.1 2.8 7 2.8s7-1.3 7-2.8V6" />
+    <path d="M5 12v6c0 1.5 3.1 2.8 7 2.8s7-1.3 7-2.8v-6" />
+  </svg>
+)
+
+export const IconNetwork = (props) => (
+  <svg {...base} {...props}>
+    <rect x="9" y="3" width="6" height="5" rx="1.2" />
+    <rect x="3" y="16" width="6" height="5" rx="1.2" />
+    <rect x="15" y="16" width="6" height="5" rx="1.2" />
+    <path d="M12 8v4M6 16v-2h12v2" />
+  </svg>
+)
