@@ -54,6 +54,7 @@ export function EmailForm({ currentEmail, onCancel, onSubmit }) {
           <strong>{currentEmail}</strong>. Click the link in <strong>both</strong> emails. Your email
           stays {currentEmail} until the second one is confirmed. Each link works once.
         </p>
+        <p className="hint">Can&apos;t find them? Check your spam or junk folder.</p>
         <div className="nv-modal-actions">
           <button type="button" className="btn btn-primary" onClick={onCancel}>Done</button>
         </div>

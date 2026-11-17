@@ -38,8 +38,8 @@ export function EmailChangeNotice({ notice, user, onResend, onDismiss }) {
   } else if (notice.kind === 'halfway') {
     title = 'One link confirmed, one to go'
     body = pending
-      ? `Now open the email we sent to the other address (${current} or ${next}) and click its link. Your email changes once both are confirmed.`
-      : 'Now open the email we sent to your other address and click its link. Your email changes once both are confirmed.'
+      ? `Now open the email we sent to the other address (${current} or ${next}) and click its link. Your email changes once both are confirmed. Can't find it? Check your spam folder.`
+      : "Now open the email we sent to your other address and click its link. Your email changes once both are confirmed. Can't find it? Check your spam folder."
   } else {
     tone = 'error'
     title = 'That link has expired or was already used'

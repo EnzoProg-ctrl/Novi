@@ -50,7 +50,9 @@ export function SignIn() {
           ? 'That email and password do not match.'
           : /rate limit|too many/i.test(msg)
             ? 'Too many sign-in attempts. Wait a few minutes, then try again.'
-            : msg,
+            : /email not confirmed/i.test(msg)
+              ? 'Confirm your email first: open the link we sent when you signed up. Can’t find it? Check your spam or junk folder.'
+              : msg,
       )
       setBusy(false)
     }

@@ -63,6 +63,7 @@ export function SignUp() {
             We sent a confirmation link to <strong>{form.email}</strong>. Open it, then come
             back and sign in.
           </p>
+          <p className="hint">Not there after a minute? Check your spam or junk folder.</p>
           <Link to="/signin" className="btn btn-secondary btn-block auth-gap">
             Back to sign in
           </Link>
