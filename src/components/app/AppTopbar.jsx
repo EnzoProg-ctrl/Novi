@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/auth-context'
 import { initialsFrom } from '../../lib/initials'
@@ -10,6 +10,29 @@ export function AppTopbar({ onMenuClick }) {
   const navigate = useNavigate()
   const [menuOpen, setMenuOpen] = useState(false)
   const closeTimer = useRef(null)
+  const wrapRef = useRef(null)
+  const buttonRef = useRef(null)
+
+  // Close on a click or tap anywhere else, and on Escape. Losing focus isn't
+  // enough on its own: Safari (Mac, iPhone, iPad) doesn't focus a button when
+  // it's clicked, so the menu would stay open until the button was pressed again.
+  useEffect(() => {
+    if (!menuOpen) return
+    const onDown = (event) => {
+      if (!wrapRef.current?.contains(event.target)) setMenuOpen(false)
+    }
+    const onKey = (event) => {
+      if (event.key !== 'Escape') return
+      setMenuOpen(false)
+      buttonRef.current?.focus()
+    }
+    document.addEventListener('pointerdown', onDown)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('pointerdown', onDown)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [menuOpen])
 
   const displayName = user?.user_metadata?.display_name ?? null
   const initials = initialsFrom(displayName, user?.email)
@@ -46,8 +69,9 @@ export function AppTopbar({ onMenuClick }) {
       <TopbarSearch />
 
       <div className="nv-top-end">
-        <div className="nv-user" onBlur={handleBlur}>
+        <div className="nv-user" ref={wrapRef} onBlur={handleBlur}>
           <button
+            ref={buttonRef}
             type="button"
             className="nv-user-btn"
             onClick={() => setMenuOpen((open) => !open)}

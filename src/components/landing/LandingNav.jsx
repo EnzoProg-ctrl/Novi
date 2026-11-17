@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 
 const NAV_LINKS = [
@@ -28,6 +28,7 @@ function NoviMark({ size = 34 }) {
 export function LandingNav() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
+  const headerRef = useRef(null)
 
   // Hairline border only once the page has moved, so the bar sits flush at rest.
   useEffect(() => {
@@ -37,18 +38,25 @@ export function LandingNav() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  // Escape closes the mobile menu, matching what a dialog-ish surface should do.
+  // Escape, or a tap anywhere outside the bar, closes the mobile menu.
   useEffect(() => {
     if (!menuOpen) return
     const onKeyDown = (event) => {
       if (event.key === 'Escape') setMenuOpen(false)
     }
+    const onDown = (event) => {
+      if (!headerRef.current?.contains(event.target)) setMenuOpen(false)
+    }
     window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
+    document.addEventListener('pointerdown', onDown)
+    return () => {
+      window.removeEventListener('keydown', onKeyDown)
+      document.removeEventListener('pointerdown', onDown)
+    }
   }, [menuOpen])
 
   return (
-    <header className={`nv-nav${scrolled ? ' is-scrolled' : ''}`}>
+    <header ref={headerRef} className={`nv-nav${scrolled ? ' is-scrolled' : ''}`}>
       <div className="nv-nav-inner">
         <Link to="/" className="nv-brand" aria-label="Novi home">
           <NoviMark />
