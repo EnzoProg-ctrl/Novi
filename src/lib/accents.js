@@ -1,8 +1,7 @@
 /**
- * The named accent colours, shared by Settings (the app's accent) and
- * "Edit your buddy" (the buddy's own colour). Values match the check
- * constraints on profiles.accent_color and buddies.accent_color, and the
- * [data-accent] / [data-buddy-accent] presets in index.css.
+ * The named accent colours for Settings (the app's accent). Values match the
+ * check constraint on profiles.accent_color and the [data-accent] presets in
+ * index.css.
  */
 export const ACCENTS = [
   { value: 'coral', label: 'Coral', color: '#ff6b5a' },

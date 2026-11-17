@@ -66,13 +66,6 @@ export const IconSearch = (props) => (
   </svg>
 )
 
-export const IconBell = (props) => (
-  <svg {...base} {...props}>
-    <path d="M18 15.5V11a6 6 0 10-12 0v4.5L4.5 18h15L18 15.5z" />
-    <path d="M10 20.5a2.2 2.2 0 004 0" />
-  </svg>
-)
-
 export const IconChevronDown = (props) => (
   <svg {...base} {...props}>
     <path d="M6 9.5l6 6 6-6" />

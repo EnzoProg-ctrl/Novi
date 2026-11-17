@@ -1,10 +1,8 @@
 import { useState } from 'react'
-import { IconCheck } from '../components/app/AppIcons'
 import { useNavigate } from 'react-router-dom'
 import { Logo } from '../components/Mascot'
 import { MascotRig } from '../components/MascotRig'
 import { useAuth } from '../context/auth-context'
-import { ACCENTS } from '../lib/accents'
 import { friendlyError } from '../lib/errors'
 import { AVAILABLE_OUTFITS, OUTFITS, usableOutfit } from '../lib/outfits'
 
@@ -24,8 +22,6 @@ export function CreateBuddy() {
   const [name, setName] = useState(buddy?.name ?? '')
   const [personality, setPersonality] = useState(buddy?.personality ?? 'supportive')
   const [outfit, setOutfit] = useState(() => usableOutfit(buddy?.mascot_variant))
-  const [colour, setColour] = useState(buddy?.accent_color ?? 'coral')
-  const colourValue = ACCENTS.find((a) => a.value === colour)?.color ?? ACCENTS[0].color
   const moreOutfits = AVAILABLE_OUTFITS.length < OUTFITS.length
   const [error, setError] = useState(null)
   const [busy, setBusy] = useState(false)
@@ -47,7 +43,7 @@ export function CreateBuddy() {
 
     setBusy(true)
     try {
-      await createBuddy({ name: trimmedName, personality, outfit, colour })
+      await createBuddy({ name: trimmedName, personality, outfit })
       navigate('/dashboard', { replace: true })
     } catch (err) {
       setError(friendlyError(err, 'Could not save your buddy.'))
@@ -61,8 +57,8 @@ export function CreateBuddy() {
         <Logo />
 
         <div className="buddy-preview">
-          {/* Previews the colour and outfit being chosen, before they're saved. */}
-          <div className="buddy-orb" style={{ '--buddy': colourValue }}>
+          {/* Previews the outfit being chosen, before it's saved. */}
+          <div className="buddy-orb">
             <MascotRig key={`${personality}-${outfit}`} pose="waving-sm" size={92} outfit={outfit} className="nv-anim-hop-float" />
           </div>
           <h2 className="auth-title">
@@ -136,33 +132,6 @@ export function CreateBuddy() {
             ))}
           </div>
           {moreOutfits && <span className="hint">More outfits coming soon.</span>}
-        </fieldset>
-
-        <fieldset className="personality">
-          <legend className="label">Colour</legend>
-          <div className="buddy-colours">
-            {ACCENTS.map((option) => (
-              <label
-                key={option.value}
-                className={`buddy-colour${colour === option.value ? ' is-selected' : ''}`}
-                title={option.label}
-              >
-                <input
-                  type="radio"
-                  name="colour"
-                  value={option.value}
-                  checked={colour === option.value}
-                  onChange={() => setColour(option.value)}
-                  className="sr-only"
-                />
-                <span className="buddy-swatch" style={{ background: option.color }} aria-hidden="true">
-                  {colour === option.value && <IconCheck width={16} height={16} />}
-                </span>
-                <span className="buddy-colour-label">{option.label}</span>
-              </label>
-            ))}
-          </div>
-          <span className="hint">Colours your buddy&apos;s corner of the app. Buttons keep the accent from Settings.</span>
         </fieldset>
 
         <button className="btn btn-primary btn-block auth-gap" disabled={busy}>

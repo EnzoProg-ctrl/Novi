@@ -27,6 +27,7 @@ const Practice = page(() => import('./pages/Practice'), 'Practice')
 const Progress = page(() => import('./pages/Progress'), 'Progress')
 const ResetPassword = page(() => import('./pages/ResetPassword'), 'ResetPassword')
 const Settings = page(() => import('./pages/Settings'), 'Settings')
+const SharePack = page(() => import('./pages/SharePack'), 'SharePack')
 const SignIn = page(() => import('./pages/SignIn'), 'SignIn')
 const SignUp = page(() => import('./pages/SignUp'), 'SignUp')
 const StudyPack = page(() => import('./pages/StudyPack'), 'StudyPack')
@@ -79,6 +80,7 @@ function AppRoutes() {
         <Route path="/settings" element={<Settings />} />
         <Route path="/pack/:packId" element={<StudyPack />} />
         <Route path="/pack/:packId/practice" element={<Practice />} />
+        <Route path="/share/:code" element={<SharePack />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />

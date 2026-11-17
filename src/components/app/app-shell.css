@@ -287,7 +287,7 @@ a.nv-focus-pack:focus-visible { outline: 2px solid var(--coral); outline-offset:
   font-size: 0.93rem;
   color: var(--ink);
 }
-.nv-search-input::placeholder { color: var(--faint); }
+.nv-search-input::placeholder { color: var(--muted); }
 .nv-search-input:focus { outline: none; }
 .nv-search-input::-webkit-search-cancel-button { -webkit-appearance: none; }
 
@@ -344,21 +344,6 @@ a.nv-focus-pack:focus-visible { outline: 2px solid var(--coral); outline-offset:
 }
 
 .nv-top-end { display: flex; align-items: center; gap: 10px; flex: none; }
-
-.nv-icon-btn {
-  display: grid;
-  place-items: center;
-  width: 42px;
-  height: 42px;
-  border: 1px solid var(--line);
-  border-radius: 50%;
-  background: var(--bg);
-  color: var(--ink-soft);
-  cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease, scale 0.16s var(--ease-press), translate 0.2s var(--ease-press);
-}
-.nv-icon-btn:hover { background: var(--bg-sunken); color: var(--ink); }
-.nv-icon-btn:focus-visible { outline: 2px solid var(--coral); outline-offset: 2px; }
 
 /* ── User menu ───────────────────────────────────────────────── */
 .nv-user { position: relative; }

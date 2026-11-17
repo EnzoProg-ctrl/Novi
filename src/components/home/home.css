@@ -2,17 +2,15 @@
    Tokens from index.css; sits inside the app shell.            */
 
 .hm {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) clamp(300px, 26vw, 380px);
-  gap: 20px;
-  align-items: start;
-  /* Centred, and wider before it caps - left-aligning at 1500px left a large
-     unused band on the right once the window got wide. */
-  max-width: 1760px;
+  /* One column, in the order a student needs it: what's next, the buddy,
+     recommendations, packs. Capped so cards and text don't stretch thin. */
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 1180px;
   margin-inline: auto;
 }
-.hm-main { min-width: 0; display: flex; flex-direction: column; gap: 20px; }
-.hm-rail { min-width: 0; display: flex; flex-direction: column; gap: 16px; }
+.hm > * { min-width: 0; }
 
 .hm-greeting h1 {
   margin: 0;
@@ -95,7 +93,7 @@
   font-size: 0.86rem;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
-.hm-buddy-input::placeholder { color: var(--faint); }
+.hm-buddy-input::placeholder { color: var(--muted); }
 .hm-buddy-input:focus { outline: none; border-color: var(--coral); box-shadow: 0 0 0 3px color-mix(in srgb, var(--coral) 18%, transparent); }
 .hm-buddy-send {
   position: absolute;
@@ -139,31 +137,6 @@
 .hm-buddy-cta:hover { background: var(--coral-hover); text-decoration: none; }
 .hm-buddy-cta:focus-visible { outline: 2px solid var(--coral); outline-offset: 2px; }
 
-/* ── Goal ring ───────────────────────────────────────────────── */
-.hm-goal { display: flex; flex-direction: column; align-items: center; }
-.hm-goal .hm-card-title { align-self: flex-start; }
-.hm-ring { position: relative; width: 132px; margin: 6px auto 0; }
-.hm-ring svg { display: block; width: 100%; height: auto; transform: rotate(-90deg); }
-.hm-ring-track { fill: none; stroke: var(--bg-sunken); stroke-width: 9; }
-.hm-ring-fill {
-  fill: none;
-  stroke: var(--coral);
-  stroke-width: 9;
-  stroke-linecap: round;
-  transition: stroke-dashoffset 0.5s ease;
-}
-.hm-ring-label {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 1px;
-}
-.hm-ring-count { font-size: 1.4rem; font-weight: 750; color: var(--ink); }
-.hm-ring-unit { font-size: 0.74rem; color: var(--muted); }
-
 /* ── Progress ────────────────────────────────────────────────── */
 .hm-progress-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 11px; }
 .hm-progress-list li {
@@ -183,84 +156,14 @@
 .hm-progress-fill { display: block; height: 100%; border-radius: 4px; background: var(--coral); }
 .hm-progress-value { font-size: 0.82rem; font-weight: 700; text-align: right; color: var(--ink); }
 
-/* ── Material list (interim) ─────────────────────────────────── */
+/* ── Sections ────────────────────────────────────────────────── */
 .hm-section { display: flex; flex-direction: column; gap: 12px; }
 .hm-section .hm-card-head { margin-bottom: 0; }
 .hm-empty { display: flex; flex-direction: column; align-items: flex-start; gap: 14px; }
-
-.hm-materials { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
-.hm-material { display: flex; align-items: center; gap: 14px; padding: 14px 16px; }
-.hm-material-type {
-  flex: none;
-  min-width: 56px;
-  padding: 5px 10px;
-  text-align: center;
-  border-radius: var(--r-sm);
-  background: var(--coral-tint);
-  color: var(--coral-active);
-  font-size: 0.7rem;
-  font-weight: 650;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-}
-.hm-material-meta { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1; }
 .hm-retry { flex: none; padding: 6px 12px; font-size: 0.8rem; }
-.hm-material-title {
-  font-weight: 600;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
 
-/* ── Rail art ────────────────────────────────────────────────── */
-.hm-hero-art {
-  display: block;
-  width: 100%;
-  height: auto;
-  margin-top: -12px;
-  filter: drop-shadow(0 14px 26px rgba(19, 26, 46, 0.1));
-}
 
-/* ── Upcoming schedule ───────────────────────────────────────── */
-.hm-schedule-date {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  margin: -6px 0 12px;
-}
-.hm-pill {
-  flex: none;
-  padding: 3px 10px;
-  border-radius: var(--r-pill);
-  background: var(--bg-sunken);
-  font-size: 0.72rem;
-  font-weight: 620;
-  color: var(--ink-soft);
-}
-.hm-schedule-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
-.hm-schedule-list li {
-  display: flex;
-  align-items: center;
-  gap: 11px;
-  padding: 11px 0;
-  border-top: 1px solid var(--line);
-}
-.hm-schedule-bar { flex: none; width: 4px; align-self: stretch; border-radius: 3px; }
-.hm-schedule-meta { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1; }
-.hm-schedule-name { font-size: 0.88rem; font-weight: 650; color: var(--ink); }
-.hm-schedule-start {
-  flex: none;
-  padding: 6px 14px;
-  border-radius: var(--r-sm);
-  background: var(--coral-tint);
-  color: var(--coral-active);
-  font-size: 0.78rem;
-  font-weight: 620;
-}
-
-/* ── Stat pair ───────────────────────────────────────────────── */
-.hm-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+/* ── Streak ──────────────────────────────────────────────────── */
 .hm-stat { display: flex; flex-direction: column; gap: 2px; }
 .hm-stat-icon {
   display: grid;
@@ -271,60 +174,123 @@
   border-radius: var(--r-md);
 }
 .hm-stat-icon.is-flame { background: #fff0e8; color: #f2762b; }
-.hm-stat-icon.is-clock { background: #eef0ff; color: #5a63d8; }
 .hm-stat-label { margin: 0; font-size: 0.8rem; font-weight: 600; color: var(--ink-soft); }
 .hm-stat-value { margin: 1px 0 0; font-size: 1.45rem; font-weight: 750; color: var(--ink); }
 .hm-stat-value span { font-size: 0.95rem; font-weight: 650; }
 
-/* ── Quote ───────────────────────────────────────────────────── */
-.hm-quote {
+/* ── Next up ─────────────────────────────────────────────────────
+   The one primary action on Home: what to study next and why. */
+.hm-next {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 18px;
+  padding: 20px 22px;
+  border-color: color-mix(in srgb, var(--coral) 28%, var(--line));
+  background: color-mix(in srgb, var(--coral) 5%, var(--bg));
+}
+.hm-next-icon { width: 48px; height: 48px; margin: 0; border-radius: 12px; }
+.hm-next-icon svg { width: 24px; height: 24px; }
+.hm-next-body { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.hm-next-title {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 740;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+  text-wrap: balance;
+}
+.hm-next-pack {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.hm-next-progress { display: flex; align-items: center; gap: 12px; margin-top: 6px; }
+.hm-next-track {
+  flex: 1;
+  max-width: 320px;
+  height: 8px;
+  border-radius: 5px;
+  background: var(--bg-sunken);
+  overflow: hidden;
+}
+.hm-next-fill { display: block; height: 100%; min-width: 4px; border-radius: 5px; background: var(--coral); }
+.hm-next-count { font-size: 0.85rem; font-weight: 620; color: var(--ink-soft); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.hm-next-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 13px 24px;
+  border-radius: var(--r-md);
+  background: var(--coral);
+  color: var(--on-accent);
+  font-size: 1rem;
+  font-weight: 650;
+  text-decoration: none;
+  white-space: nowrap;
+  box-shadow: var(--shadow-sm);
+  transition: background-color 0.15s ease, scale 0.16s var(--ease-press, ease), translate 0.2s var(--ease-press, ease);
+}
+.hm-next-cta:hover { background: var(--coral-hover); text-decoration: none; }
+.hm-next-cta:active { background: var(--coral-active); }
+.hm-next-cta:focus-visible { outline: 2px solid var(--coral); outline-offset: 3px; }
+
+@container (max-width: 640px) {
+  .hm-next { grid-template-columns: auto minmax(0, 1fr); padding: 18px; }
+  .hm-next-cta { grid-column: 1 / -1; }
+}
+
+/* ── Uploads still processing (or failed) ────────────────────── */
+.hm-uploads-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.hm-upload {
   display: flex;
   align-items: center;
   gap: 12px;
-  background: var(--coral-tint);
-  border-color: color-mix(in srgb, var(--coral) 20%, transparent);
+  padding: 12px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--bg-soft);
 }
-.hm-quote-art {
+.hm-upload.is-failed {
+  border-color: color-mix(in srgb, var(--danger) 35%, var(--line));
+  background: color-mix(in srgb, var(--danger) 6%, var(--bg));
+}
+.hm-upload-meta { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1; }
+.hm-upload-title { font-size: 0.9rem; font-weight: 640; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hm-upload-state { font-size: 0.82rem; color: var(--muted); }
+.hm-upload.is-failed .hm-upload-state { color: var(--danger-ink, var(--danger)); }
+.hm-upload-spinner {
   flex: none;
-  width: 116px;
-  height: auto;
-  margin: -6px 0 -6px -4px;
+  width: 16px;
+  height: 16px;
+  border: 2px solid color-mix(in srgb, var(--coral) 25%, transparent);
+  border-top-color: var(--coral);
+  border-radius: 50%;
+  animation: hm-spin 0.9s linear infinite;
 }
-.hm-quote-text { margin: 0; min-width: 0; }
-.hm-quote-text p {
-  margin: 0;
-  font-size: 0.95rem;
-  font-style: italic;
-  line-height: 1.4;
-  color: var(--ink);
-}
-.hm-quote-text footer {
-  margin-top: 6px;
-  font-size: 0.82rem;
-  font-weight: 620;
-  color: var(--coral-active);
-}
+@keyframes hm-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .hm-upload-spinner { animation-duration: 2.4s; } }
+@container (max-width: 480px) { .hm-upload { flex-wrap: wrap; } }
 
 /* ── Responsive ──────────────────────────────────────────────────
-   Breakpoints are window widths, but above 1024px the sidebar and page
-   padding take 308px of it, so they are set for the space Home actually
-   gets. Three top cards need a main column of about 880px (the buddy card's
-   button must not wrap); the rail stays only while the main column keeps
-   at least about 610px for two cards beside it. */
-@media (max-width: 1599px) {
-  .hm-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+   Set on the space Home actually gets (the sidebar comes and goes), so
+   the top row answers to its container, not the window. Three cards need
+   about 860px (the buddy card's button must not wrap). */
+.hm { container-type: inline-size; }
+
+@container (max-width: 860px) {
+  .hm-row { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); }
   .hm-progress { grid-column: 1 / -1; }
 }
 
-@media (max-width: 1264px) {
-  .hm { grid-template-columns: minmax(0, 1fr); }
-  .hm-hero-art { max-width: 380px; margin: 0 auto; }
-}
-
-@media (max-width: 720px) {
+@container (max-width: 560px) {
   .hm-row { grid-template-columns: minmax(0, 1fr); }
   .hm-progress { grid-column: auto; }
-  .hm-material { flex-wrap: wrap; }
 }
 
 /* ── Recent study packs ──────────────────────────────────────── */
@@ -365,7 +331,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.hm-pack-meta { margin: 10px 0 0; font-size: 0.78rem; color: var(--faint); }
+.hm-pack-meta { margin: 10px 0 0; font-size: 0.78rem; color: var(--muted); }
 
 /* Add-new tile */
 .hm-pack-add {
@@ -484,53 +450,6 @@ button.hm-rec-cta { padding-left: 0; padding-right: 0; padding-bottom: 0; border
 .hm-rec-dismiss:hover { color: var(--ink); background: var(--bg-sunken); }
 .hm-rec-dismiss:focus-visible { outline: 2px solid var(--coral); outline-offset: 1px; color: var(--ink); }
 
-/* ── Continue where you left off ─────────────────────────────── */
-.hm-rec-spark.is-plain { background: var(--bg-sunken); color: var(--ink-soft); }
-.hm-rec-heading h2 { align-self: center; }
-
-.hm-continue { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
-.hm-continue-row {
-  display: grid;
-  grid-template-columns: 40px minmax(0, 1.4fr) minmax(0, 1fr) 52px auto;
-  align-items: center;
-  gap: 16px;
-  padding: 14px 16px;
-}
-.hm-continue-meta { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
-.hm-continue-title {
-  font-size: 0.92rem;
-  font-weight: 650;
-  color: var(--ink);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.hm-continue-track { height: 8px; border-radius: 5px; background: var(--bg-sunken); overflow: hidden; }
-.hm-continue-fill { display: block; height: 100%; border-radius: 5px; background: var(--coral); }
-.hm-continue-count { font-size: 0.85rem; font-weight: 650; color: var(--ink-soft); text-align: right; }
-.hm-continue-cta {
-  padding: 8px 18px;
-  border-radius: var(--r-md);
-  background: var(--coral-tint);
-  color: var(--coral-active);
-  font-size: 0.85rem;
-  font-weight: 620;
-  white-space: nowrap;
-}
-a.hm-continue-cta { text-decoration: none; transition: background-color 0.15s ease, scale 0.16s var(--ease-press, ease); }
-a.hm-continue-cta:hover { background: color-mix(in srgb, var(--coral) 18%, var(--coral-tint)); text-decoration: none; }
-a.hm-continue-cta:focus-visible { outline: 2px solid var(--coral); outline-offset: 2px; }
-
-@media (max-width: 900px) {
-  .hm-continue-row {
-    grid-template-columns: 40px minmax(0, 1fr) auto;
-    row-gap: 10px;
-  }
-  .hm-continue-track { grid-column: 2 / -1; }
-  .hm-continue-count { grid-column: 2; text-align: left; }
-  .hm-continue-cta { grid-column: 3; justify-self: end; }
-}
-
 /* Pack cards are links now; keep the text colour from turning into link blue. */
 a.hm-pack { color: inherit; transition: border-color 0.15s ease, box-shadow 0.15s ease, scale 0.16s var(--ease-press), translate 0.2s var(--ease-press); }
 a.hm-pack:hover {
@@ -539,118 +458,6 @@ a.hm-pack:hover {
   text-decoration: none;
 }
 a.hm-pack:focus-visible { outline: 2px solid var(--coral); outline-offset: 2px; }
-
-/* ── Material selection ──────────────────────────────────────── */
-.hm-check {
-  position: relative;
-  flex: none;
-  display: grid;
-  place-items: center;
-  width: 22px;
-  height: 22px;
-  cursor: pointer;
-}
-/* The real control stays in the DOM for keyboard and screen readers; the
-   circle is drawn beside it. */
-.hm-check input {
-  position: absolute;
-  inset: 0;
-  margin: 0;
-  opacity: 0;
-  cursor: pointer;
-}
-.hm-check-dot {
-  width: 20px;
-  height: 20px;
-  border: 1.8px solid var(--line-strong);
-  border-radius: 50%;
-  background: var(--bg);
-  transition: border-color 0.15s ease, background-color 0.15s ease;
-}
-.hm-check:hover .hm-check-dot { border-color: var(--coral); }
-.hm-check input:checked + .hm-check-dot {
-  border-color: var(--coral);
-  background: var(--coral)
-    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'><path d='M5 12.5l4.5 4.5L19 7.5'/></svg>")
-    center / 12px 12px no-repeat;
-}
-.hm-check input:focus-visible + .hm-check-dot {
-  outline: 2px solid var(--coral);
-  outline-offset: 2px;
-}
-
-.hm-material.is-selected {
-  border-color: color-mix(in srgb, var(--coral) 45%, transparent);
-  background: var(--coral-tint);
-}
-
-/* ── Selection bar ───────────────────────────────────────────── */
-.hm-selectbar {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-  padding: 11px 14px;
-  border: 1px solid color-mix(in srgb, var(--coral) 25%, transparent);
-  border-radius: var(--r-md);
-  background: var(--coral-tint);
-}
-.hm-selectbar-count { font-size: 0.88rem; font-weight: 680; color: var(--coral-active); }
-.hm-selectbar-warn {
-  flex: 1;
-  min-width: 220px;
-  font-size: 0.85rem;
-  line-height: 1.45;
-  color: var(--ink-soft);
-}
-.hm-selectbar-danger,
-.hm-selectbar-ghost {
-  padding: 7px 15px;
-  border-radius: var(--r-sm);
-  font: inherit;
-  font-size: 0.85rem;
-  font-weight: 620;
-  cursor: pointer;
-  border: 1px solid transparent;
-}
-.hm-selectbar-danger { background: var(--danger); color: var(--on-accent); }
-.hm-selectbar-danger:hover:not(:disabled) { background: color-mix(in srgb, var(--danger) 86%, #000); }
-.hm-selectbar-danger:disabled { opacity: 0.6; cursor: not-allowed; }
-.hm-selectbar-ghost { background: transparent; border-color: var(--line-strong); color: var(--ink-soft); }
-.hm-selectbar-ghost:hover:not(:disabled) { background: var(--bg); }
-.hm-selectbar-danger:focus-visible,
-.hm-selectbar-ghost:focus-visible { outline: 2px solid var(--coral); outline-offset: 2px; }
-
-/* "Select" and "Add another" in the section heading. */
-.hm-head-actions { display: inline-flex; align-items: center; gap: 16px; }
-.hm-select-btn,
-.hm-head-actions .hm-muted-link { padding: 0; border: 0; background: none; font-family: inherit; cursor: pointer; }
-.hm-select-btn { color: var(--ink-soft); }
-.hm-select-btn:hover { color: var(--ink); }
-.hm-head-actions .hm-muted-link:focus-visible { outline: 2px solid var(--coral); outline-offset: 3px; border-radius: 4px; }
-
-/* Select mode: the whole row is the target, and it says so. */
-.hm-materials.is-selecting .hm-material { cursor: pointer; transition: border-color 0.15s ease, background-color 0.15s ease, scale 0.16s var(--ease-press), translate 0.2s var(--ease-press); }
-.hm-materials.is-selecting .hm-material:hover:not(.is-selected) { border-color: color-mix(in srgb, var(--coral) 30%, var(--line)); }
-.hm-materials.is-selecting .hm-check { animation: hm-check-in 0.18s ease-out; }
-@keyframes hm-check-in { from { opacity: 0; transform: scale(0.6); } to { opacity: 1; transform: none; } }
-
-.hm-selectbar-link {
-  margin-right: auto;
-  padding: 0;
-  border: 0;
-  background: none;
-  font: inherit;
-  font-size: 0.84rem;
-  font-weight: 650;
-  color: var(--coral-active);
-  cursor: pointer;
-}
-.hm-selectbar-link:hover { text-decoration: underline; }
-.hm-selectbar-link:focus-visible { outline: 2px solid var(--coral); outline-offset: 2px; border-radius: 4px; }
-
-/* Selection bar sits between the heading and the list. */
-.hm-section .hm-selectbar { margin-bottom: 2px; }
 
 /* The time-of-day icon after the Home greeting. */
 .hm-greet-icon { margin-left: 8px; color: var(--coral); vertical-align: -0.12em; }

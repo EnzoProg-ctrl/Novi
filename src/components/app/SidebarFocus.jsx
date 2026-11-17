@@ -5,23 +5,10 @@ import { useUpload } from '../../context/upload-context'
 import { formatTime } from '../../lib/calendar-dates'
 import { fetchTodaysFocus } from '../../lib/focus'
 import { getDeleteSnapshot, hiddenMaterialIds, subscribeDeletes } from '../../lib/pendingDelete'
-import { IconArrowRight, IconCards, IconPackAtom, IconPackBook, IconPackGrid } from '../home/HomeIcons'
+import { IconArrowRight, IconCards } from '../home/HomeIcons'
+import { PACK_TONES, toneFor } from '../home/packTone'
 import { LoadingRegion, Sk, SkText } from '../Skeleton'
 import { IconChevronRight, IconDoc, IconQuestion, IconTarget } from './AppIcons'
-
-const TONES = [
-  { tone: 'green', Icon: IconPackGrid },
-  { tone: 'blue', Icon: IconPackAtom },
-  { tone: 'pink', Icon: IconPackBook },
-  { tone: 'violet', Icon: IconPackGrid },
-]
-
-/** Same pack, same colour, wherever the card is shown. */
-function toneFor(id) {
-  let hash = 0
-  for (const ch of id) hash = (hash * 31 + ch.charCodeAt(0)) >>> 0
-  return TONES[hash % TONES.length]
-}
 
 // Kept short: the sidebar leaves little room beside the icon.
 function subtitleFor(focus) {
@@ -79,7 +66,7 @@ export function SidebarFocus({ onNavigate }) {
   const pendingRemoval = Boolean(focus?.pack?.materialId && hiddenMaterialIds(deletes).has(focus.pack.materialId))
 
   const pack = focus?.pack
-  const { tone, Icon } = pack ? toneFor(pack.id) : TONES[0]
+  const { tone, Icon } = pack ? toneFor(pack.id) : PACK_TONES[0]
   const canPractise = pack && pack.questions > 0
 
   return (

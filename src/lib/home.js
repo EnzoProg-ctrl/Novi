@@ -7,24 +7,6 @@ function todayISO() {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
 }
 
-const EMPTY_ACTIVITY = { sessions_count: 0, minutes_studied: 0, questions_answered: 0 }
-
-/**
- * Today's row from daily_activity. Absent until the student actually studies,
- * so a missing row means zero rather than an error.
- */
-export async function fetchTodayActivity(userId) {
-  const { data, error } = await supabase
-    .from('daily_activity')
-    .select('sessions_count, minutes_studied, questions_answered')
-    .eq('user_id', userId)
-    .eq('activity_date', todayISO())
-    .maybeSingle()
-
-  if (error) throw error
-  return data ?? EMPTY_ACTIVITY
-}
-
 /**
  * Mastery per subject: the mean of every tracked topic inside it.
  * Returns [] until questions have been answered.

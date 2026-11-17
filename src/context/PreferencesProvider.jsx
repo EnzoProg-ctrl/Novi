@@ -84,16 +84,8 @@ function applyAppearance(prefs) {
 }
 
 export function PreferencesProvider({ children }) {
-  const { user, buddy } = useAuth()
+  const { user } = useAuth()
   const userId = user?.id ?? null
-
-  // The buddy's own colour, for the buddy's spots only (see --buddy in index.css).
-  const buddyAccent = userId ? (buddy?.accent_color ?? 'coral') : null
-  useEffect(() => {
-    const root = document.documentElement
-    if (buddyAccent && buddyAccent !== 'coral') root.setAttribute('data-buddy-accent', buddyAccent)
-    else root.removeAttribute('data-buddy-accent')
-  }, [buddyAccent])
 
   const [prefs, setPrefs] = useState(() => readCache() ?? DEFAULT_PREFERENCES)
   const [status, setStatus] = useState(userId ? 'loading' : 'idle')

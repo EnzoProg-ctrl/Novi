@@ -34,6 +34,9 @@ export const LIMITS = {
   deleteAccount: { kind: "account.delete_attempt", perShort: 5, shortSeconds: 900, perLong: 10, longSeconds: 86_400 },
   // Only recomputing counts; returning a cached batch is free.
   recommend: { kind: "recommend.compute", perShort: 20, shortSeconds: 600, perLong: 200, longSeconds: 86_400 },
+  // Share links: making them, and adding someone else's (each copies packs).
+  shareCreate: { kind: "share.create", perShort: 10, shortSeconds: 600, perLong: 60, longSeconds: 86_400 },
+  shareAccept: { kind: "share.accept", perShort: 15, shortSeconds: 600, perLong: 100, longSeconds: 86_400 },
 } satisfies Record<string, Limit>;
 
 /**

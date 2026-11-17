@@ -2,7 +2,7 @@ import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/auth-context'
 import { initialsFrom } from '../../lib/initials'
-import { IconBell, IconChevronDown, IconMenu } from './AppIcons'
+import { IconChevronDown, IconMenu } from './AppIcons'
 import { TopbarSearch } from './TopbarSearch'
 
 export function AppTopbar({ onMenuClick }) {
@@ -46,11 +46,6 @@ export function AppTopbar({ onMenuClick }) {
       <TopbarSearch />
 
       <div className="nv-top-end">
-        {/* No notifications feature yet, so the bell carries no unread dot. */}
-        <button type="button" className="nv-icon-btn" aria-label="Notifications">
-          <IconBell />
-        </button>
-
         <div className="nv-user" onBlur={handleBlur}>
           <button
             type="button"

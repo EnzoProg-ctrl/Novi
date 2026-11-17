@@ -413,3 +413,127 @@ a.pd-row:focus-visible { outline: 2px solid var(--coral); outline-offset: -2px; 
 /* Continue Studying is a link now that practice exists. */
 a.pd-primary:hover { background: var(--coral-hover); text-decoration: none; }
 a.pd-primary:focus-visible { outline: 2px solid var(--coral); outline-offset: 2px; }
+
+/* ── Sharing and offline download ────────────────────────────── */
+.pk-head-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.pk-head-actions .btn { padding-block: 11px; }
+
+button.pk-tab {
+  border-top: 0;
+  border-inline: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+button.pk-tab:hover:not(.is-active) { color: var(--ink-soft); }
+button.pk-tab:focus-visible { outline: 2px solid var(--coral); outline-offset: 2px; border-radius: 4px; }
+
+.pk-select-toggle { padding: 8px 16px; font-size: 0.88rem; }
+
+.pk-selectbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 10px 12px 10px 16px;
+  border: 1px solid color-mix(in srgb, var(--coral) 35%, transparent);
+  border-radius: var(--r-lg);
+  background: var(--coral-tint);
+}
+.pk-selectbar-count { font-size: 0.92rem; font-weight: 640; color: var(--ink); }
+.pk-selectbar .btn { padding: 8px 14px; font-size: 0.88rem; }
+.pk-selectbar-actions { display: flex; gap: 8px; margin-left: auto; flex-wrap: wrap; }
+
+.pk-card { position: relative; }
+.pk-card.is-picking { padding-right: 44px; }
+.pk-list.is-grid .pk-card.is-picking { padding-right: 44px; }
+.pk-card:disabled { opacity: 0.5; cursor: not-allowed; }
+.pk-card-check {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border: 2px solid var(--line-strong);
+  border-radius: 7px;
+  background: var(--bg);
+  color: var(--on-accent);
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+.pk-card-check.is-on { background: var(--coral); border-color: var(--coral); }
+.pk-list.is-list .pk-card-check { top: 50%; translate: 0 -50%; }
+
+.pk-modal { width: min(540px, calc(100% - 32px)); }
+
+.pk-share-packs {
+  margin: 0;
+  padding: 12px 14px 12px 32px;
+  border-radius: var(--r-md);
+  background: var(--bg-soft);
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+  max-height: 180px;
+  overflow: auto;
+}
+.pk-share-packs li + li { margin-top: 4px; }
+
+.pk-share-expiry { margin: 0; padding: 0; border: 0; }
+.pk-share-expiry legend { margin-bottom: 8px; font-size: 0.88rem; font-weight: 620; color: var(--ink); }
+.pk-share-options { display: flex; gap: 8px; flex-wrap: wrap; }
+.pk-share-option {
+  position: relative;
+  padding: 9px 16px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-md);
+  font-size: 0.9rem;
+  font-weight: 560;
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+.pk-share-option input { position: absolute; opacity: 0; pointer-events: none; }
+.pk-share-option.is-active { border-color: var(--coral); background: var(--coral-tint); color: var(--coral-active); }
+.pk-share-option:has(input:focus-visible) { outline: 2px solid var(--coral); outline-offset: 2px; }
+
+.pk-share-link { display: flex; gap: 8px; }
+.pk-share-link .input { flex: 1; min-width: 0; font-size: 0.86rem; }
+.pk-share-link .btn { padding: 9px 14px; font-size: 0.88rem; }
+
+.pk-links { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.pk-links-row {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+}
+.pk-links-row.is-expired { background: var(--bg-soft); }
+.pk-links-top { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.pk-links-title { min-width: 0; font-size: 0.93rem; color: var(--ink); overflow-wrap: anywhere; }
+.pk-links-when { flex: none; font-size: 0.8rem; color: var(--muted); white-space: nowrap; }
+.pk-links-added { margin: 0; font-size: 0.86rem; color: var(--ink-soft); }
+.pk-links-people { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.pk-links-people li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 0.88rem;
+  color: var(--ink);
+}
+
+@media (max-width: 520px) {
+  .pk-selectbar-actions { width: 100%; margin-left: 0; }
+  .pk-selectbar-actions .btn { flex: 1; }
+  .pk-links-top { flex-direction: column; gap: 4px; }
+}
+
+/* Deleting from the selection bar. */
+.pk-delete { color: var(--danger-ink, var(--danger)); }
+.pk-delete:hover:not(:disabled) { background: color-mix(in srgb, var(--danger) 10%, transparent); color: var(--danger-ink, var(--danger)); }
+.pk-selectbar-warn { flex: 1 1 260px; font-size: 0.86rem; line-height: 1.45; color: var(--ink-soft); }
+.pk-btn-danger { background: var(--danger); color: var(--on-accent); }
+.pk-btn-danger:hover:not(:disabled) { background: color-mix(in srgb, var(--danger) 86%, #000); }

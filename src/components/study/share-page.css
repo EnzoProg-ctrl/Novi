@@ -1,0 +1,30 @@
+/* ── /share/:code, a share link someone sent ─────────────────── */
+.sh { max-width: 620px; margin: 24px auto 0; }
+.sh-card { display: flex; flex-direction: column; align-items: flex-start; gap: 14px; padding: 28px; }
+.sh-icon { width: 52px; height: 52px; margin: 0; }
+.sh-icon svg { width: 26px; height: 26px; }
+.sh-title { margin: 0; font-size: clamp(1.3rem, 1vw + 1rem, 1.6rem); font-weight: 740; letter-spacing: -0.02em; color: var(--ink); }
+.sh-card .hm-sub { margin: 0; }
+.sh-cta { margin-top: 4px; }
+
+.sh-packs { list-style: none; margin: 0; padding: 0; width: 100%; display: flex; flex-direction: column; gap: 8px; }
+.sh-packs li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--bg-soft);
+}
+.sh-packs strong { font-size: 0.95rem; color: var(--ink); overflow-wrap: anywhere; }
+.sh-packs span { font-size: 0.84rem; color: var(--muted); }
+
+.sh-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+@media (max-width: 520px) {
+  .sh { margin-top: 8px; }
+  .sh-card { padding: 22px 18px; }
+  .sh-actions { width: 100%; }
+  .sh-actions .btn { flex: 1; }
+}

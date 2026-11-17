@@ -62,18 +62,22 @@ function excerptFrom(markdown, max = 180) {
   return (lastStop > 80 ? cut.slice(0, lastStop + 1) : cut.trimEnd() + '…')
 }
 
-export async function fetchPackList(userId, { subjectId = null, sort = 'updated' } = {}) {
+export async function fetchPackList(userId, { subjectId = null, sort = 'updated', shared = false } = {}) {
   let query = supabase
     .from('study_sets')
     .select(`
-      id, title, status, created_at, updated_at,
+      id, title, status, created_at, updated_at, shared_by_name,
       subjects ( id, name ),
-      materials ( title ),
+      materials ( id, title, storage_path ),
       key_concepts ( count ),
       questions ( count ),
       summaries ( kind, content )
     `)
     .eq('user_id', userId)
+
+  // Shared with Me: copies added from someone's link. Keyed on the sender's
+  // name rather than the link, so a copy stays put after the link is gone.
+  query = shared ? query.not('shared_by_name', 'is', null) : query.is('shared_by_name', null)
 
   if (subjectId) query = query.eq('subject_id', subjectId)
 
@@ -97,7 +101,10 @@ export async function fetchPackList(userId, { subjectId = null, sort = 'updated'
       updatedAt: row.updated_at,
       subject: row.subjects?.name ?? null,
       subjectId: row.subjects?.id ?? null,
+      sharedBy: row.shared_by_name ?? null,
       sourceTitle: row.materials?.title ?? null,
+      // What deleting the pack removes (with its file), via lib/pendingDelete.
+      material: row.materials ? { id: row.materials.id, title: row.materials.title, storage_path: row.materials.storage_path } : null,
       concepts: countOf(row.key_concepts),
       questions: countOf(row.questions),
       summaries: summaries.length,

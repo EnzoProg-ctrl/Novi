@@ -268,14 +268,13 @@ export function AuthProvider({ children }) {
   }, [userId, signOut])
 
   const createBuddy = useCallback(
-    async ({ name, personality, outfit, colour }) => {
+    async ({ name, personality, outfit }) => {
       if (!userId) throw new Error('You need to be signed in to create a buddy.')
 
       // Only the fields being set: an upsert overwrites whatever it's given,
       // and this used to blank the buddy's greeting on every save.
       const row = { user_id: userId, name: name.trim(), personality }
       if (outfit) row.mascot_variant = outfit
-      if (colour) row.accent_color = colour
       const { data, error } = await supabase
         .from('buddies')
         .upsert(row, { onConflict: 'user_id' })
