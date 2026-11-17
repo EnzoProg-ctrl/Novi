@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { TwoStepRow } from './TwoStepCard'
 
 export function Head({ id, title, sub }) {
   return (
@@ -9,26 +10,19 @@ export function Head({ id, title, sub }) {
   )
 }
 
-/** Email, password and sign out: the account itself, as Supabase Auth holds it. */
-export function AccountCard({ user, onChangeEmail, onChangePassword, onSignOut }) {
-  const [signingOut, setSigningOut] = useState(false)
-
-  async function signOut() {
-    setSigningOut(true)
-    try {
-      await onSignOut()
-    } finally {
-      setSigningOut(false)
-    }
-  }
-
+/**
+ * Email, password and two-step verification: how the student signs in, as
+ * Supabase Auth holds it. Each is a row with its action on the right. (Sign
+ * out lives in the account menu at the top right.)
+ */
+export function AccountSecurityCard({ user, onChangeEmail, onChangePassword, notify }) {
   return (
     <section className="hm-card st-card" aria-labelledby="st-account-title">
-      <Head id="st-account-title" title="Account" sub="Manage your account settings." />
+      <Head id="st-account-title" title="Account Security" sub="How you sign in to Novi." />
       <ul className="st-actions">
         <li className="st-action">
           <span className="st-action-text">
-            <span className="st-row-label">Email</span>
+            <span className="st-row-label">Email address</span>
             <span className="st-row-help st-ellipsis" title={user?.email}>{user?.email}</span>
             {user?.new_email && (
               <span className="st-pending">Confirming {user.new_email}: click the links sent to both addresses</span>
@@ -43,15 +37,7 @@ export function AccountCard({ user, onChangeEmail, onChangePassword, onSignOut }
           </span>
           <button type="button" className="btn btn-secondary st-action-btn" onClick={onChangePassword}>Change</button>
         </li>
-        <li className="st-action">
-          <span className="st-action-text">
-            <span className="st-row-label">Sign out</span>
-            <span className="st-row-help">Sign out of Novi on this device.</span>
-          </span>
-          <button type="button" className="btn btn-secondary st-action-btn" onClick={signOut} disabled={signingOut}>
-            {signingOut ? 'Signing out…' : 'Sign out'}
-          </button>
-        </li>
+        <TwoStepRow notify={notify} />
       </ul>
     </section>
   )
@@ -137,7 +123,10 @@ export function DangerZone({ onDelete }) {
       <div className="st-block-row">
         <div>
           <p className="st-row-label">Delete account</p>
-          <p className="st-row-help">Permanently delete your account and all associated data.</p>
+          <p className="st-row-help">
+            Permanently deletes your account, uploads, study packs, practice history and plans.
+            You&apos;ll confirm with your password first.
+          </p>
         </div>
         <button type="button" className="btn st-btn-danger-ghost st-action-btn" onClick={onDelete}>
           Delete account

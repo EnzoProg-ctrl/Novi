@@ -2,12 +2,12 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import '../components/home/home.css'
 import { Modal } from '../components/Modal'
-import { AccountCard, DangerZone, DataPrivacyCard } from '../components/settings/AccountCards'
+import { AccountSecurityCard, DangerZone, DataPrivacyCard } from '../components/settings/AccountCards'
 import { DeleteForm, EmailForm, PasswordForm } from '../components/settings/AccountForms'
 import { EmailChangeNotice } from '../components/settings/EmailChangeNotice'
 import { AppearanceSettings, NotificationSettings, StudyPreferences } from '../components/settings/PreferenceCards'
-import { ProfileCard, ProfilePreview } from '../components/settings/ProfileSettings'
-import { TwoStepCard } from '../components/settings/TwoStepCard'
+import { BuddySettingsCard } from '../components/settings/BuddyCard'
+import { ProfileCard } from '../components/settings/ProfileSettings'
 import '../components/settings/settings.css'
 import '../components/study/packs-page.css'
 import { useAuth } from '../context/auth-context'
@@ -21,8 +21,10 @@ const TABS = [
   { id: 'study', label: 'Study Preferences' },
   { id: 'notifications', label: 'Notifications' },
   { id: 'appearance', label: 'Appearance' },
-  { id: 'privacy', label: 'Data & Privacy' },
+  { id: 'account', label: 'Account & Privacy' },
 ]
+// Links to the old Data & Privacy tab open its new home.
+const RENAMED = { privacy: 'account' }
 
 export function Settings() {
   const { user, buddy, signOut, refreshUser } = useAuth()
@@ -31,7 +33,7 @@ export function Settings() {
   const navigate = useNavigate()
 
   // The open tab lives in the URL hash, so a refresh or a shared link keeps it.
-  const fromHash = location.hash.slice(1)
+  const fromHash = RENAMED[location.hash.slice(1)] ?? location.hash.slice(1)
   const tab = TABS.some((t) => t.id === fromHash) ? fromHash : 'profile'
   const tabRefs = useRef({})
 
@@ -143,15 +145,6 @@ export function Settings() {
     }
   }
 
-  async function handleSignOut() {
-    try {
-      await signOut()
-      navigate('/', { replace: true })
-    } catch {
-      notify('You could not be signed out. Try again.', 'error')
-    }
-  }
-
   async function handleDownload() {
     try {
       return await downloadMyData(user)
@@ -228,17 +221,16 @@ export function Settings() {
         ))}
       </div>
 
-      <div className="st-layout">
-        <div id="st-panel" role="tabpanel" aria-labelledby={`st-tab-${tab}`} className="st-main" tabIndex={-1}>
+      <div id="st-panel" role="tabpanel" aria-labelledby={`st-tab-${tab}`} className="st-main" tabIndex={-1}>
           {tab === 'profile' && (
             <ProfileCard
               user={user}
               details={prefs}
               detailsReady={prefsStatus === 'ready'}
               onSave={handleProfile}
-              onChangeEmail={() => open('email')}
             />
           )}
+          {tab === 'study' && <BuddySettingsCard buddy={buddy} />}
           {tab === 'study' && (
             <StudyPreferences
               {...prefProps}
@@ -253,20 +245,18 @@ export function Settings() {
           )}
           {tab === 'notifications' && <NotificationSettings {...prefProps} />}
           {tab === 'appearance' && <AppearanceSettings {...prefProps} />}
-          {tab === 'privacy' && <DataPrivacyCard onDownload={handleDownload} />}
-        </div>
-
-        <aside className="st-side" aria-label="Your account">
-          <ProfilePreview user={user} buddy={buddy} details={prefs} />
-          <AccountCard
-            user={user}
-            onChangeEmail={() => open('email')}
-            onChangePassword={() => open('password')}
-            onSignOut={handleSignOut}
-          />
-          <TwoStepCard notify={notify} />
-          <DangerZone onDelete={() => open('delete')} />
-        </aside>
+          {tab === 'account' && (
+            <>
+              <AccountSecurityCard
+                user={user}
+                onChangeEmail={() => open('email')}
+                onChangePassword={() => open('password')}
+                notify={notify}
+              />
+              <DataPrivacyCard onDownload={handleDownload} />
+              <DangerZone onDelete={() => open('delete')} />
+            </>
+          )}
       </div>
 
       <Modal

@@ -132,18 +132,21 @@ export function StudyPreferences({ prefs, prefsStatus, onRetry, update, goal, go
   // A goal set elsewhere (the Calendar allows 1-21) still shows as selected.
   const goals = goal && !GOAL_OPTIONS.includes(goal) ? [...GOAL_OPTIONS, goal].sort((a, b) => a - b) : GOAL_OPTIONS
 
-  return (
-    <section className="hm-card st-card" aria-labelledby="st-study-title">
-      <CardHead id="st-study-title" title="Study Preferences" sub="Set your default preferences for a better study experience." />
-      {prefsStatus === 'error' || goalStatus === 'error' ? (
-        <PrefsError onRetry={onRetry} />
-      ) : loading ? (
-        <PrefsSkeleton />
-      ) : (
-        <div className="st-rows">
-          <h3 className="st-subhead">Studying</h3>
+  if (prefsStatus === 'error' || goalStatus === 'error' || loading) {
+    return (
+      <section className="hm-card st-card" aria-labelledby="st-study-title">
+        <CardHead id="st-study-title" title="Study Preferences" sub="How practice and planned sessions work by default." />
+        {loading ? <PrefsSkeleton /> : <PrefsError onRetry={onRetry} />}
+      </section>
+    )
+  }
 
-          <Row id="st-practice-size" label="Practice session length" help="How many questions a practice session has. Choose a number to skip the question at the start." status={status.practice}>
+  return (
+    <>
+      <section className="hm-card st-card" aria-labelledby="st-study-title">
+        <CardHead id="st-study-title" title="Study Preferences" sub="How practice and planned sessions work by default." />
+        <div className="st-rows">
+          <Row id="st-practice-size" label="Practice session length" help="Questions per practice session. Choose a number to skip the question at the start." status={status.practice}>
             <Select
               id="st-practice-size"
               className="input st-select"
@@ -155,15 +158,27 @@ export function StudyPreferences({ prefs, prefsStatus, onRetry, update, goal, go
             />
           </Row>
 
-          <Row id="st-quiz-size" label="AI Chat quiz size" help="Used when you ask for a practice quiz without saying how many questions." status={status.quiz}>
+          <Row id="st-session-length" label="Default session duration" help="How long a new planned session is, unless you change it." status={status.session}>
             <Select
-              id="st-quiz-size"
+              id="st-session-length"
               className="input st-select"
-              labelledBy="st-quiz-size-label"
-              describedBy="st-quiz-size-help"
-              value={prefs.chatQuizSize ?? ASK}
-              onChange={(v) => save('quiz', () => update({ chatQuizSize: v === ASK ? null : v }))}
-              options={[{ value: ASK, label: 'Ask me each time' }, ...QUIZ_SIZES.map((n) => ({ value: n, label: `${n} questions` }))]}
+              labelledBy="st-session-length-label"
+              describedBy="st-session-length-help"
+              value={prefs.defaultSessionMinutes}
+              onChange={(v) => save('session', () => update({ defaultSessionMinutes: v }))}
+              options={SESSION_LENGTHS.map(([v, label]) => ({ value: v, label }))}
+            />
+          </Row>
+
+          <Row id="st-break" label="Default break length" help="How long a new Break is in the Calendar." status={status.break}>
+            <Select
+              id="st-break"
+              className="input st-select"
+              labelledBy="st-break-label"
+              describedBy="st-break-help"
+              value={prefs.defaultBreakMinutes}
+              onChange={(v) => save('break', () => update({ defaultBreakMinutes: v }))}
+              options={BREAK_LENGTHS.map((n) => ({ value: n, label: `${n} minutes` }))}
             />
           </Row>
 
@@ -178,28 +193,36 @@ export function StudyPreferences({ prefs, prefsStatus, onRetry, update, goal, go
               options={REPLY_LENGTHS}
             />
           </Row>
+        </div>
+      </section>
+
+      <section className="hm-card st-card" aria-labelledby="st-quiz-title">
+        <CardHead id="st-quiz-title" title="Quiz Preferences" sub="What new practice questions and AI Chat quizzes look like." />
+        <div className="st-rows">
+          <Row id="st-quiz-size" label="AI Chat quiz size" help="Used when you ask for a quiz without saying how many questions." status={status.quiz}>
+            <Select
+              id="st-quiz-size"
+              className="input st-select"
+              labelledBy="st-quiz-size-label"
+              describedBy="st-quiz-size-help"
+              value={prefs.chatQuizSize ?? ASK}
+              onChange={(v) => save('quiz', () => update({ chatQuizSize: v === ASK ? null : v }))}
+              options={[{ value: ASK, label: 'Ask me each time' }, ...QUIZ_SIZES.map((n) => ({ value: n, label: `${n} questions` }))]}
+            />
+          </Row>
 
           <QuestionTypesRow
             value={prefs.questionTypes}
             status={status.types}
             onChange={(next) => save('types', () => update({ questionTypes: next }))}
           />
+        </div>
+      </section>
 
-          <h3 className="st-subhead">Planning</h3>
-
-          <Row id="st-session-length" label="Default session duration" help="How long a new planned session is, unless you change it." status={status.session}>
-            <Select
-              id="st-session-length"
-              className="input st-select"
-              labelledBy="st-session-length-label"
-              describedBy="st-session-length-help"
-              value={prefs.defaultSessionMinutes}
-              onChange={(v) => save('session', () => update({ defaultSessionMinutes: v }))}
-              options={SESSION_LENGTHS.map(([v, label]) => ({ value: v, label }))}
-            />
-          </Row>
-
-          <Row id="st-goal" label="Weekly study goal" help="Planned sessions to complete each week. The Calendar and Progress pages use this too." status={status.goal}>
+      <section className="hm-card st-card" aria-labelledby="st-goals-title">
+        <CardHead id="st-goals-title" title="Study Goals" sub="Your weekly target. The Calendar and Progress pages use it too." />
+        <div className="st-rows">
+          <Row id="st-goal" label="Weekly study goal" help="Planned sessions to complete each week." status={status.goal}>
             <Select
               id="st-goal"
               className="input st-select"
@@ -211,19 +234,7 @@ export function StudyPreferences({ prefs, prefsStatus, onRetry, update, goal, go
             />
           </Row>
 
-          <Row id="st-break" label="Default break length" help="How long a new session is when you plan a Break in the Calendar." status={status.break}>
-            <Select
-              id="st-break"
-              className="input st-select"
-              labelledBy="st-break-label"
-              describedBy="st-break-help"
-              value={prefs.defaultBreakMinutes}
-              onChange={(v) => save('break', () => update({ defaultBreakMinutes: v }))}
-              options={BREAK_LENGTHS.map((n) => ({ value: n, label: `${n} minutes` }))}
-            />
-          </Row>
-
-          <Row id="st-week" label="Start of week" help="Used by the Calendar, your weekly goal and Progress." status={status.week}>
+          <Row id="st-week" label="Start of week" help="When a new week begins for your goal, the Calendar and Progress." status={status.week}>
             <Select
               id="st-week"
               className="input st-select"
@@ -235,8 +246,8 @@ export function StudyPreferences({ prefs, prefsStatus, onRetry, update, goal, go
             />
           </Row>
         </div>
-      )}
-    </section>
+      </section>
+    </>
   )
 }
 

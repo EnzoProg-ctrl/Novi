@@ -1,8 +1,6 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
 import { COURSE_MAX, EDUCATION_LEVELS, educationLabel, NAME_MAX, SCHOOL_MAX, tidyText } from '../../lib/account'
 import { initialsFrom } from '../../lib/initials'
-import { MascotRig } from '../MascotRig'
 import { Select } from '../Select'
 
 export function Avatar({ name, email, size = 'md' }) {
@@ -28,14 +26,15 @@ function coursePlaceholder(level) {
 const notSet = <span className="st-muted">Not set yet</span>
 
 /**
- * Name, email and school details. Saved explicitly (Edit, then Save Changes),
- * since these are typed out rather than flipped.
+ * Name and school details. Saved explicitly (Edit Profile, then Save Changes),
+ * since these are typed out rather than flipped. The email lives under
+ * Account & Privacy with the other sign-in details.
  */
-export function ProfileCard({ user, details, detailsReady = true, onSave, onChangeEmail }) {
+export function ProfileCard({ user, details, detailsReady = true, onSave }) {
   const currentName = user?.user_metadata?.display_name ?? ''
   const [editing, setEditing] = useState(false)
   const [name, setName] = useState(currentName)
-  const [level, setLevel] = useState(NONE)
+  const [levelValue, setLevelValue] = useState(NONE)
   const [school, setSchool] = useState('')
   const [course, setCourse] = useState('')
   const [errors, setErrors] = useState({})
@@ -43,7 +42,7 @@ export function ProfileCard({ user, details, detailsReady = true, onSave, onChan
 
   function startEdit() {
     setName(currentName)
-    setLevel(details?.educationLevel ?? NONE)
+    setLevelValue(details?.educationLevel ?? NONE)
     setSchool(details?.school ?? '')
     setCourse(details?.course ?? '')
     setErrors({})
@@ -69,7 +68,7 @@ export function ProfileCard({ user, details, detailsReady = true, onSave, onChan
     try {
       await onSave({
         name: clean,
-        details: { educationLevel: level === NONE ? null : level, school: nextSchool, course: nextCourse },
+        details: { educationLevel: levelValue === NONE ? null : levelValue, school: nextSchool, course: nextCourse },
       })
       setEditing(false)
     } catch {
@@ -84,25 +83,29 @@ export function ProfileCard({ user, details, detailsReady = true, onSave, onChan
   const errorProps = (key) =>
     errors[key] ? { 'aria-invalid': true, 'aria-describedby': `st-${key}-error` } : {}
 
+  const shownName = currentName || user?.email?.split('@')[0]
+  const level = educationLabel(details?.educationLevel)
+
   return (
     <section className="hm-card st-card" aria-labelledby="st-profile-title">
-      <header className="st-card-head st-card-head-row">
-        <div>
-          <h2 id="st-profile-title" className="st-card-title">Profile Information</h2>
-          <p className="hm-sub">Manage your account details and personal information.</p>
+      <h2 id="st-profile-title" className="st-card-title st-card-title-sm">Personal Information</h2>
+
+      <div className="st-profile-head">
+        <Avatar name={editing ? name : currentName} email={user?.email} size="lg" />
+        <div className="st-profile-who">
+          <p className="st-profile-name">{shownName}</p>
+          <p className="hm-sub">{level ?? 'Education level not set'}</p>
         </div>
         {!editing && (
           <button type="button" className="btn btn-secondary st-edit" onClick={startEdit} disabled={!detailsReady}>
-            Edit
+            Edit Profile
           </button>
         )}
-      </header>
+      </div>
 
-      <div className="st-profile">
-        <Avatar name={editing ? name : currentName} email={user?.email} size="lg" />
-
-        {editing ? (
-          <form className="st-profile-form" onSubmit={submit} noValidate>
+      {editing ? (
+        <form className="st-profile-form" onSubmit={submit} noValidate>
+          <div className="st-field-row">
             <div className="field">
               <label className="label" htmlFor="st-name">Full name</label>
               <input
@@ -120,15 +123,6 @@ export function ProfileCard({ user, details, detailsReady = true, onSave, onChan
             </div>
 
             <div className="field">
-              <span className="label">Email address</span>
-              <p className="st-readonly">{user?.email}</p>
-              <span className="hint">
-                Changing your email needs a confirmation link.{' '}
-                <button type="button" className="st-link" onClick={onChangeEmail}>Change email</button>
-              </span>
-            </div>
-
-            <div className="field">
               <span id="st-level-label" className="label">Education level</span>
               <Select
                 id="st-level"
@@ -136,125 +130,74 @@ export function ProfileCard({ user, details, detailsReady = true, onSave, onChan
                 block
                 labelledBy="st-level-label"
                 describedBy="st-level-help"
-                value={level}
-                onChange={setLevel}
+                value={levelValue}
+                onChange={setLevelValue}
                 options={LEVEL_OPTIONS}
                 disabled={saving}
               />
-              <span id="st-level-help" className="hint">
-                Your buddy uses your level and course to explain things at the right level in AI Chat.
-              </span>
+              <span id="st-level-help" className="hint">Your buddy explains things at this level in AI Chat.</span>
             </div>
 
-            <div className="st-field-row">
-              <div className="field">
-                <label className="label" htmlFor="st-school">School <span className="st-muted">(optional)</span></label>
-                <input
-                  id="st-school"
-                  className="input"
-                  value={school}
-                  onChange={(e) => setSchool(e.target.value)}
-                  maxLength={SCHOOL_MAX + 20}
-                  autoComplete="organization"
-                  placeholder="e.g. University of the Philippines"
-                  disabled={saving}
-                  {...errorProps('school')}
-                />
-                {fieldError('school')}
-              </div>
-              <div className="field">
-                <label className="label" htmlFor="st-course">Course or strand <span className="st-muted">(optional)</span></label>
-                <input
-                  id="st-course"
-                  className="input"
-                  value={course}
-                  onChange={(e) => setCourse(e.target.value)}
-                  maxLength={COURSE_MAX + 20}
-                  placeholder={coursePlaceholder(level)}
-                  disabled={saving}
-                  {...errorProps('course')}
-                />
-                {fieldError('course')}
-              </div>
+            <div className="field">
+              <label className="label" htmlFor="st-school">School <span className="st-muted">(optional)</span></label>
+              <input
+                id="st-school"
+                className="input"
+                value={school}
+                onChange={(e) => setSchool(e.target.value)}
+                maxLength={SCHOOL_MAX + 20}
+                autoComplete="organization"
+                placeholder="e.g. University of the Philippines"
+                disabled={saving}
+                {...errorProps('school')}
+              />
+              {fieldError('school')}
             </div>
 
-            <div className="st-form-actions">
-              <button type="button" className="btn btn-secondary" onClick={() => setEditing(false)} disabled={saving}>Cancel</button>
-              <button className="btn btn-primary" disabled={saving}>
-                {saving && <span className="spinner" />}
-                {saving ? 'Saving…' : 'Save Changes'}
-              </button>
+            <div className="field">
+              <label className="label" htmlFor="st-course">Course or strand <span className="st-muted">(optional)</span></label>
+              <input
+                id="st-course"
+                className="input"
+                value={course}
+                onChange={(e) => setCourse(e.target.value)}
+                maxLength={COURSE_MAX + 20}
+                placeholder={coursePlaceholder(levelValue)}
+                disabled={saving}
+                {...errorProps('course')}
+              />
+              {fieldError('course')}
             </div>
-          </form>
-        ) : (
-          <dl className="st-facts">
-            <div>
-              <dt>Full name</dt>
-              <dd>{currentName || notSet}</dd>
-            </div>
-            <div>
-              <dt>Email address</dt>
-              <dd>
-                {user?.email}
-                {user?.new_email && (
-                  <span className="st-pending">
-                    Changing to {user.new_email}. Click the links sent to both addresses to finish.
-                  </span>
-                )}
-              </dd>
-            </div>
-            <div>
-              <dt>Education level</dt>
-              <dd>{educationLabel(details?.educationLevel) ?? notSet}</dd>
-            </div>
-            <div>
-              <dt>School</dt>
-              <dd>{details?.school || notSet}</dd>
-            </div>
-            <div>
-              <dt>Course or strand</dt>
-              <dd>{details?.course || notSet}</dd>
-            </div>
-          </dl>
-        )}
-      </div>
+          </div>
+
+          <div className="st-form-actions">
+            <button type="button" className="btn btn-secondary" onClick={() => setEditing(false)} disabled={saving}>Cancel</button>
+            <button className="btn btn-primary" disabled={saving}>
+              {saving && <span className="spinner" />}
+              {saving ? 'Saving…' : 'Save Changes'}
+            </button>
+          </div>
+        </form>
+      ) : (
+        <dl className="st-facts">
+          <div>
+            <dt>Full name</dt>
+            <dd>{currentName || notSet}</dd>
+          </div>
+          <div>
+            <dt>Education level</dt>
+            <dd>{level ?? notSet}</dd>
+          </div>
+          <div>
+            <dt>School</dt>
+            <dd>{details?.school || notSet}</dd>
+          </div>
+          <div>
+            <dt>Course or strand</dt>
+            <dd>{details?.course || notSet}</dd>
+          </div>
+        </dl>
+      )}
     </section>
-  )
-}
-
-/** How the student appears in Novi, plus a word of encouragement. */
-export function ProfilePreview({ user, buddy, details }) {
-  const name = user?.user_metadata?.display_name
-  const meta = [educationLabel(details?.educationLevel), details?.course].filter(Boolean).join(' · ')
-  return (
-    <div className="st-preview-group">
-      <section className="hm-card st-card" aria-labelledby="st-preview-title">
-        <header className="st-card-head">
-          <h2 id="st-preview-title" className="st-card-title">Your Profile</h2>
-          <p className="hm-sub">This is how you appear in Novi.</p>
-        </header>
-        <div className="st-preview">
-          <Avatar name={name} email={user?.email} size="xl" />
-          <p className="st-preview-name">{name || user?.email?.split('@')[0]}</p>
-          {meta && <p className="st-preview-meta">{meta}</p>}
-          {details?.school && <p className="st-preview-school">{details.school}</p>}
-          {buddy && (
-            <p className="st-preview-buddy">
-              Studying with <strong>{buddy.name}</strong>
-              {' · '}
-              <Link to="/buddy/new" className="st-link">Edit buddy</Link>
-            </p>
-          )}
-        </div>
-      </section>
-
-      <section className="st-cheer" aria-label="A note from Novi">
-        <MascotRig pose="front" className="st-cheer-art" />
-        <div>
-          <p className="st-cheer-line">Keep going!</p>
-          <p className="st-cheer-quote">&ldquo;Small steps lead to big results.&rdquo;</p>
-        </div>
-      </section>
-    </div>
   )
 }

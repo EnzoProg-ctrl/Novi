@@ -31,19 +31,16 @@
 .st-tab:focus-visible { outline: 2px solid var(--coral); outline-offset: -2px; border-radius: 8px 8px 0 0; }
 
 /* ── Layout ────────────────────────────────────────────────────── */
-.st-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) clamp(300px, 27vw, 380px);
-  gap: 20px;
-  align-items: start;
-}
-.st-main, .st-side, .st-preview-group { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+/* One centred column, so cards never stretch across a wide screen. */
+.pk.st { max-width: 960px; }
+.st-main { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
 .st-main:focus { outline: none; }
 
-.st-card { padding: 22px; min-width: 0; }
+.st-card { padding: 24px; min-width: 0; }
 .st-card-head { margin-bottom: 18px; }
 .st-card-head-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
-.st-card-title { margin: 0 0 4px; font-size: 1.05rem; font-weight: 720; color: var(--ink); }
+.st-card-title { margin: 0 0 4px; font-size: 1.1rem; font-weight: 720; color: var(--ink); }
+.st-card-title-sm { margin-bottom: 18px; }
 .st-muted { color: var(--faint); }
 .st-ellipsis { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .st-link {
@@ -68,7 +65,8 @@
   font-size: 0.84rem;
   color: var(--ink-soft);
 }
-.st-edit { padding: 8px 16px; font-size: 0.86rem; }
+.st-edit { flex: none; padding: 9px 16px; font-size: 0.88rem; text-decoration: none; }
+.st-edit:hover { text-decoration: none; }
 
 /* ── Avatar & profile ──────────────────────────────────────────── */
 .st-avatar {
@@ -82,13 +80,18 @@
   letter-spacing: 0.02em;
 }
 .st-avatar.is-lg { width: 72px; height: 72px; font-size: 1.5rem; }
-.st-avatar.is-xl { width: 84px; height: 84px; font-size: 1.75rem; }
-.st-profile { display: flex; align-items: flex-start; gap: 20px; }
-.st-profile-form { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 16px; }
+.st-profile-head,
+.st-buddy { display: flex; align-items: center; gap: 18px; }
+.st-profile-head { padding-bottom: 20px; margin-bottom: 20px; border-bottom: 1px solid var(--line); }
+.st-profile-who,
+.st-buddy-text { flex: 1; min-width: 0; }
+.st-profile-name { margin: 0 0 2px; font-size: 1.1rem; font-weight: 720; color: var(--ink); overflow-wrap: anywhere; }
+.st-buddy-art { flex: none; }
+.st-profile-form { display: flex; flex-direction: column; gap: 18px; }
 .st-profile-form .field + .field { margin-top: 0; }
 .st-readonly { margin: 0; padding: 11px 13px; border: 1px dashed var(--line-strong); border-radius: var(--r-md); color: var(--ink-soft); overflow-wrap: anywhere; }
 .st-form-actions { display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap; }
-.st-facts { flex: 1; min-width: 0; margin: 0; display: grid; gap: 14px; }
+.st-facts { margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 24px; }
 .st-facts dt { font-size: 0.8rem; font-weight: 620; color: var(--muted); }
 .st-facts dd { margin: 2px 0 0; font-size: 0.98rem; font-weight: 600; color: var(--ink); overflow-wrap: anywhere; }
 .st-notice { margin: 0 0 16px; align-items: flex-start; justify-content: space-between; gap: 12px; }
@@ -110,29 +113,11 @@
 }
 .st-pending { display: block; margin-top: 4px; font-size: 0.78rem; font-weight: 600; color: var(--warn-ink); }
 
-.st-preview { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px; }
-.st-preview-name { margin: 6px 0 0; font-size: 1.1rem; font-weight: 720; color: var(--ink); overflow-wrap: anywhere; }
-.st-preview-buddy { margin: 0; font-size: 0.86rem; color: var(--muted); }
-.st-preview-meta { margin: 0; font-size: 0.9rem; font-weight: 620; color: var(--ink-soft); overflow-wrap: anywhere; }
-.st-preview-school { margin: -2px 0 0; font-size: 0.84rem; color: var(--muted); overflow-wrap: anywhere; }
 .st-field-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 .st-field-row .field { margin-top: 0; }
 @media (max-width: 560px) {
   .st-field-row { grid-template-columns: 1fr; }
 }
-.st-preview-buddy strong { color: var(--ink-soft); }
-
-.st-cheer {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 14px 16px;
-  border-radius: var(--r-lg);
-  background: var(--coral-tint);
-}
-.st-cheer-art { flex: none; width: 56px; }
-.st-cheer-line { margin: 0; font-weight: 720; color: var(--ink); }
-.st-cheer-quote { margin: 2px 0 0; font-size: 0.86rem; font-style: italic; color: var(--coral-active); }
 
 /* ── Preference rows ───────────────────────────────────────────── */
 .st-rows { display: flex; flex-direction: column; }
@@ -308,6 +293,11 @@
 .st-action { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 13px 0; border-top: 1px solid var(--line); }
 .st-action:first-child { border-top: 0; padding-top: 0; }
 .st-action:last-child { padding-bottom: 0; }
+/* Two-step verification: a row like the others, with its set-up below it. */
+.st-2fa { padding: 13px 0 0; border-top: 1px solid var(--line); }
+.st-2fa > .st-action { padding: 0; border-top: 0; }
+.st-2fa .st-2fa-confirm,
+.st-2fa .st-2fa-setup { margin-top: 13px; }
 .st-action-text { min-width: 0; flex: 1; }
 .st-action-btn { flex: none; padding: 8px 14px; font-size: 0.85rem; }
 
@@ -354,20 +344,15 @@
 .st-modal-text { margin: 0; color: var(--ink-soft); line-height: 1.6; }
 
 /* ── Responsive ────────────────────────────────────────────────── */
-@media (max-width: 1100px) {
-  .st-layout { grid-template-columns: minmax(0, 1fr); }
-  .st-side { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
-}
-
 @media (max-width: 720px) {
-  .st-side { grid-template-columns: minmax(0, 1fr); }
   .st-card { padding: 18px; }
+  .st-facts { grid-template-columns: minmax(0, 1fr); }
+  .st-profile-head, .st-buddy { flex-wrap: wrap; }
+  .st-profile-head .st-edit, .st-buddy .st-edit { width: 100%; justify-content: center; }
   .st-row { grid-template-columns: minmax(0, 1fr); }
   .st-row-control { justify-content: flex-start; }
   .st-select { width: 100%; flex: 1; }
   .st-row-control .nv-select { flex: 1; }
-  .st-profile { flex-direction: column; align-items: stretch; }
-  .st-profile .st-avatar { align-self: flex-start; }
   .st-tiles-accent { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .st-block-row, .st-action { flex-direction: column; align-items: stretch; }
   .st-action-btn { align-self: flex-start; }

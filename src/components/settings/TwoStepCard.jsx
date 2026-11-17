@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAuth } from '../../context/auth-context'
 import { supabase } from '../../lib/supabase'
-import { Head } from './AccountCards'
 
 /**
  * Two-step verification with an authenticator app (TOTP: Google
@@ -10,7 +9,7 @@ import { Head } from './AccountCards'
  * Once on, signing in needs a code from the app as well as the password, and
  * the database only returns the student's data to sessions that entered one.
  */
-export function TwoStepCard({ notify }) {
+export function TwoStepRow({ notify }) {
   const { refreshAssurance } = useAuth()
   // loading | off | setup | on | confirm-off | unavailable
   const [phase, setPhase] = useState('loading')
@@ -129,40 +128,38 @@ export function TwoStepCard({ notify }) {
   const grouped = setup?.secret?.match(/.{1,4}/g)?.join(' ') ?? ''
 
   return (
-    <section className="hm-card st-card" aria-labelledby="st-2fa-title">
-      <Head id="st-2fa-title" title="Two-step verification" sub="Protect your account with a code from your phone." />
-
-      {phase === 'loading' && <p className="st-row-help">Checking…</p>}
-
-      {phase === 'unavailable' && (
-        <p className="st-row-help">Two-step verification isn&rsquo;t available right now.</p>
-      )}
-
-      {(phase === 'off' || phase === 'on' || phase === 'confirm-off') && (
-        <div className="st-action">
-          <span className="st-action-text">
-            <span className="st-row-label">
-              Authenticator app{' '}
-              <span className={`st-2fa-state${phase === 'off' ? '' : ' is-on'}`}>{phase === 'off' ? 'Off' : 'On'}</span>
-            </span>
-            <span className="st-row-help">
-              {phase === 'off'
-                ? 'When you sign in, also enter a code from an app like Google Authenticator.'
-                : 'Signing in asks for a code from your authenticator app.'}
-            </span>
+    <li className="st-2fa">
+      <div className="st-action">
+        <span className="st-action-text">
+          <span className="st-row-label">
+            Two-step verification{' '}
+            {(phase === 'off' || phase === 'on' || phase === 'confirm-off' || phase === 'setup') && (
+              <span className={`st-2fa-state${phase === 'off' || phase === 'setup' ? '' : ' is-on'}`}>
+                {phase === 'off' || phase === 'setup' ? 'Off' : 'On'}
+              </span>
+            )}
           </span>
-          {phase === 'off' && (
-            <button type="button" className="btn btn-secondary st-action-btn" onClick={start} disabled={busy}>
-              {busy ? 'Starting…' : 'Set up'}
-            </button>
-          )}
-          {phase === 'on' && (
-            <button type="button" className="btn btn-secondary st-action-btn" onClick={() => setPhase('confirm-off')}>
-              Turn off
-            </button>
-          )}
-        </div>
-      )}
+          <span className="st-row-help">
+            {phase === 'loading'
+              ? 'Checking…'
+              : phase === 'unavailable'
+                ? 'Two-step verification isn’t available right now.'
+                : phase === 'on' || phase === 'confirm-off'
+                  ? 'Signing in asks for a code from your authenticator app.'
+                  : 'Also enter a code from an app like Google Authenticator when you sign in.'}
+          </span>
+        </span>
+        {phase === 'off' && (
+          <button type="button" className="btn btn-secondary st-action-btn" onClick={start} disabled={busy}>
+            {busy ? 'Starting…' : 'Set Up'}
+          </button>
+        )}
+        {phase === 'on' && (
+          <button type="button" className="btn btn-secondary st-action-btn" onClick={() => setPhase('confirm-off')}>
+            Turn Off
+          </button>
+        )}
+      </div>
 
       {phase === 'confirm-off' && (
         <div className="st-2fa-confirm" role="group" aria-label="Turn off two-step verification">
@@ -210,6 +207,6 @@ export function TwoStepCard({ notify }) {
       )}
 
       {error && <p className="st-inline-msg is-error" role="alert">{error}</p>}
-    </section>
+    </li>
   )
 }
