@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { clearRecoveryPending, isRecoveryPending, RECOVERY_STORAGE_KEY, setRecoveryPending } from '../lib/auth-redirect'
 import { inflight } from '../lib/chatInflight'
+import { clearOfflinePacks } from '../lib/offlinePacks'
 import { commitDelete } from '../lib/pendingDelete'
 import { supabase } from '../lib/supabase'
 import { ACTIVITY_KEY, AuthContext, SIGNED_OUT_NOTICE_KEY } from './auth-context'
@@ -74,6 +75,9 @@ export function AuthProvider({ children }) {
       } else if (event === 'SIGNED_OUT') {
         clearRecoveryPending()
         setRecovery(false)
+        // Packs kept for offline use belong to this student: never leave
+        // them for whoever signs in next on this device.
+        clearOfflinePacks()
       }
       setSession(nextSession)
       setLoadingSession(false)

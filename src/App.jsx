@@ -6,6 +6,7 @@ import { ProtectedRoute } from './components/ProtectedRoute'
 import { AuthProvider } from './context/AuthProvider'
 import { PreferencesProvider } from './context/PreferencesProvider'
 import { useAuth } from './context/auth-context'
+import { useOnline } from './lib/offlinePacks'
 
 /**
  * Each page is loaded the first time it's opened, not all up front, so the
@@ -22,6 +23,7 @@ const CreateBuddy = page(() => import('./pages/CreateBuddy'), 'CreateBuddy')
 const Dashboard = page(() => import('./pages/Dashboard'), 'Dashboard')
 const ForgotPassword = page(() => import('./pages/ForgotPassword'), 'ForgotPassword')
 const Landing = page(() => import('./pages/Landing'), 'Landing')
+const Offline = page(() => import('./pages/Offline'), 'Offline')
 const Packs = page(() => import('./pages/Packs'), 'Packs')
 const Practice = page(() => import('./pages/Practice'), 'Practice')
 const Progress = page(() => import('./pages/Progress'), 'Progress')
@@ -43,6 +45,17 @@ function PublicOnly({ children, skeleton = <AuthCardSkeleton /> }) {
 }
 
 function AppRoutes() {
+  // No connection: the packs kept on this device, whatever the address.
+  // The usual page comes back on its own when the connection does.
+  const online = useOnline()
+  if (!online) {
+    return (
+      <Suspense fallback={<AuthCardSkeleton />}>
+        <Offline />
+      </Suspense>
+    )
+  }
+
   return (
     <Routes>
       <Route path="/" element={<PublicOnly skeleton={<LandingSkeleton />}><Landing /></PublicOnly>} />

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { clearOfflinePacks, useOfflinePackIds } from '../../lib/offlinePacks'
 import { TwoStepRow } from './TwoStepCard'
 
 export function Head({ id, title, sub }) {
@@ -94,6 +95,8 @@ export function DataPrivacyCard({ onDownload }) {
         )}
       </div>
 
+      <OfflineBlock />
+
       <div className="st-block">
         <p className="st-row-label">What Novi keeps</p>
         <ul className="st-list">
@@ -113,6 +116,45 @@ export function DataPrivacyCard({ onDownload }) {
         <p className="st-row-help">Novi doesn&apos;t have a published privacy policy yet.</p>
       </div>
     </section>
+  )
+}
+
+/** Packs kept on this device for offline use, and how to get Novi on a phone. */
+function OfflineBlock() {
+  const count = useOfflinePackIds().size
+  const [busy, setBusy] = useState(false)
+
+  async function removeAll() {
+    setBusy(true)
+    try {
+      await clearOfflinePacks()
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className="st-block">
+      <div className="st-block-row">
+        <div>
+          <p className="st-row-label">Offline packs on this device</p>
+          <p className="st-row-help">
+            {count === 0
+              ? 'None yet. Choose Keep offline on a study pack to study it without internet.'
+              : `${count} ${count === 1 ? 'pack is' : 'packs are'} saved here. Signing out removes them.`}
+          </p>
+          <p className="st-row-help">
+            To use Novi like an app: on iPhone or iPad, tap Share, then Add to Home Screen. On Android,
+            open the browser menu and choose Install app or Add to Home screen.
+          </p>
+        </div>
+        {count > 0 && (
+          <button type="button" className="btn btn-secondary st-action-btn" onClick={removeAll} disabled={busy}>
+            {busy ? 'Removing…' : 'Remove all'}
+          </button>
+        )}
+      </div>
+    </div>
   )
 }
 

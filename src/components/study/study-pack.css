@@ -108,3 +108,10 @@
   .sp-q-meta,
   .sp-q-body { margin-left: 0; }
 }
+
+/* Keep offline (KeepOfflineButton): on the pack page and wherever else it's used. */
+.sp-head-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 6px; }
+.keep-offline { display: inline-flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.keep-offline-btn { padding: 8px 14px; font-size: 0.88rem; }
+.keep-offline-btn.is-kept { border-color: color-mix(in srgb, var(--success-ink, #1f8a5b) 45%, var(--line)); color: var(--success-ink, #1f8a5b); }
+.keep-offline-error { font-size: 0.82rem; font-weight: 600; color: var(--danger); }

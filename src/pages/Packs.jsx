@@ -19,6 +19,7 @@ import { useUpload } from '../context/upload-context'
 import { fetchPackList } from '../lib/packs'
 import { friendlyError } from '../lib/errors'
 import { downloadOffline } from '../lib/offlineExport'
+import { keepOffline, useOfflinePackIds } from '../lib/offlinePacks'
 import { getDeleteSnapshot, hiddenMaterialIds, scheduleDelete, subscribeDeletes } from '../lib/pendingDelete'
 import '../components/modal.css'
 // Shared card styles (hm-card, hm-sub) live with Home; pages load on their own now.
@@ -129,6 +130,8 @@ export function Packs() {
   const [modalBusy, setModalBusy] = useState(false)
   const closeModal = () => setModal((m) => (m ? { ...m, open: false } : m))
   const [downloading, setDownloading] = useState(false)
+  const [keeping, setKeeping] = useState(false)
+  const offlineIds = useOfflinePackIds()
   const [toast, setToast] = useState(null)
   useEffect(() => {
     if (!toast) return
@@ -233,6 +236,21 @@ export function Packs() {
       setToast({ id: Date.now(), tone: 'error', text: friendlyError(err, 'Those packs could not be deleted.') })
     } finally {
       setDeleting(false)
+    }
+  }
+
+  // Kept on this device for the Offline screen (installed app or open tab).
+  async function handleKeepOffline() {
+    if (pickedPacks.length === 0 || keeping) return
+    setKeeping(true)
+    try {
+      const kept = await keepOffline(user.id, pickedPacks.map((p) => p.id))
+      setToast({ id: Date.now(), text: `Kept ${kept} ${kept === 1 ? 'pack' : 'packs'} on this device. They open without internet.` })
+      stopSelecting()
+    } catch (err) {
+      setToast({ id: Date.now(), tone: 'error', text: friendlyError(err, 'Those packs couldn’t be kept offline. Try again.') })
+    } finally {
+      setKeeping(false)
     }
   }
 
@@ -387,10 +405,20 @@ export function Packs() {
             <button
               type="button"
               className="btn btn-secondary"
+              disabled={pickedPacks.length === 0 || keeping}
+              onClick={handleKeepOffline}
+              title="Keep on this device: opens without internet in Novi, including on phones"
+            >
+              {keeping ? 'Saving…' : 'Keep offline'}
+            </button>
+            <button
+              type="button"
+              className="btn btn-secondary"
               disabled={pickedPacks.length === 0 || downloading}
               onClick={handleDownload}
+              title="A single file that opens in a browser on a computer, even without internet"
             >
-              {downloading ? 'Preparing…' : 'Download for offline'}
+              {downloading ? 'Preparing…' : 'Download file'}
             </button>
             <button
               type="button"
@@ -490,6 +518,7 @@ export function Packs() {
                   </span>
                   <span className="pk-card-meta">
                     {pack.sharedBy ? `From ${pack.sharedBy}` : relativeDay(pack.updatedAt)}
+                    {offlineIds.has(pack.id) && <span className="pk-offline-pill">Offline</span>}
                   </span>
                 </button>
               </li>

@@ -537,3 +537,16 @@ button.pk-tab:focus-visible { outline: 2px solid var(--coral); outline-offset: 2
 .pk-selectbar-warn { flex: 1 1 260px; font-size: 0.86rem; line-height: 1.45; color: var(--ink-soft); }
 .pk-btn-danger { background: var(--danger); color: var(--on-accent); }
 .pk-btn-danger:hover:not(:disabled) { background: color-mix(in srgb, var(--danger) 86%, #000); }
+
+/* A pack kept on this device for offline use. */
+.pk-offline-pill {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 1px 8px;
+  border-radius: var(--r-pill);
+  background: var(--success-tint);
+  color: var(--success-ink);
+  font-size: 0.72rem;
+  font-weight: 650;
+  vertical-align: 1px;
+}

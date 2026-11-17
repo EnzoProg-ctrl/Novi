@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Markdown } from '../components/study/Markdown'
+import { KeepOfflineButton } from '../components/study/KeepOfflineButton'
 import { PackQuiz } from '../components/study/PackQuiz'
 import '../components/study/study-pack.css'
 import { fetchStudyPack } from '../lib/packs'
@@ -103,6 +104,9 @@ export function StudyPack() {
           {new Date(pack.createdAt).toLocaleDateString()}
           {pack.model && <> · Written by {pack.model}</>}
         </p>
+        <div className="sp-head-actions">
+          <KeepOfflineButton packId={pack.id} />
+        </div>
       </header>
 
       {pack.summary && (
