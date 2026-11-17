@@ -368,7 +368,9 @@
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 16px 18px;
+  /* The right edge leaves room for the hover-only "Not now" ×, so it never
+     lands on the action pill. */
+  padding: 16px 44px 16px 18px;
 }
 .hm-rec-icon {
   flex: none;
