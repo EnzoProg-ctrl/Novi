@@ -92,7 +92,6 @@
 }
 .hm-ask-send:hover { background: var(--coral); border-color: var(--coral); color: var(--on-accent); }
 .hm-ask-send:focus-visible { outline: 2px solid var(--coral); outline-offset: 2px; }
-.hm-ask-add { flex: none; margin-top: 0; }
 
 @container (max-width: 640px) {
   .hm-ask { flex-wrap: wrap; gap: 14px 16px; }

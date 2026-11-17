@@ -2,18 +2,16 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import buddyHead from '../../assets/ask-buddy-head.webp'
 import { IconArrowRight } from './HomeIcons'
-import { useUpload } from '../../context/upload-context'
 import { MAX_MESSAGE_CHARS } from '../../lib/chat'
 import { Sk } from '../Skeleton'
 
 /**
- * "Ask <buddy>": the way into AI Chat from Home. A question typed here opens
- * a new chat with it already sent (Chat reads it from the navigation state);
- * sending with nothing typed just opens AI Chat. Before any material, adding
- * some is the only useful next step, so that becomes the button.
+ * "Ask <buddy>": the way into AI Chat from Home, with or without material. A
+ * question typed here opens a new chat with it already sent (Chat reads it
+ * from the navigation state); sending with nothing typed just opens AI Chat.
+ * Without material the buddy answers from general knowledge, and says so.
  */
 export function BuddyCard({ buddyName, hasMaterial, loading = false }) {
-  const { openUpload } = useUpload()
   const navigate = useNavigate()
   const name = buddyName ?? 'Novi'
   const [question, setQuestion] = useState('')
@@ -32,13 +30,13 @@ export function BuddyCard({ buddyName, hasMaterial, loading = false }) {
       <div className="hm-ask-text">
         <h2 id="hm-ask-title" className="hm-ask-title">Ask {name}</h2>
         <p className="hm-sub">
-          {loading || hasMaterial ? 'Need help understanding a topic?' : `Add study material and ${name} can explain it.`}
+          {loading || hasMaterial ? 'Need help understanding a topic?' : 'Ask anything. Add study material for answers from your own notes.'}
         </p>
       </div>
 
       {loading ? (
         <Sk className="hm-ask-form" h={46} r={12} />
-      ) : hasMaterial ? (
+      ) : (
         <form className="hm-ask-form" onSubmit={ask}>
           <input
             className="hm-ask-input"
@@ -59,11 +57,6 @@ export function BuddyCard({ buddyName, hasMaterial, loading = false }) {
             <IconArrowRight width={20} height={20} />
           </button>
         </form>
-      ) : (
-        <button type="button" className="hm-buddy-cta hm-ask-add" onClick={openUpload}>
-          Add material
-          <IconArrowRight width={14} height={14} />
-        </button>
       )}
     </section>
   )
