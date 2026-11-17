@@ -71,7 +71,7 @@
   border-bottom: 1px solid var(--line);
   animation: ch-head-in 0.28s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
-.ch-head .ch-avatar { animation: ch-avatar-in 0.32s cubic-bezier(0.2, 0.9, 0.25, 1.1) both; }
+.ch-head .ch-avatar { animation: ch-avatar-in var(--dur-dialog) var(--ease-out) both; }
 .ch-head-text { min-width: 0; }
 .ch-head-name {
   margin: 0;
@@ -119,7 +119,7 @@
 }
 
 @keyframes ch-head-in { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
-@keyframes ch-avatar-in { from { opacity: 0; transform: translateY(14px) scale(1.5); } to { opacity: 1; transform: none; } }
+@keyframes ch-avatar-in { from { opacity: 0; transform: translateY(4px) scale(0.96); } to { opacity: 1; transform: none; } }
 
 .ch-avatar {
   flex: none;
@@ -335,7 +335,7 @@
 .ch-msg.is-typing {
   align-items: center;
   gap: 4px;
-  animation: ch-typing-in 0.36s cubic-bezier(0.2, 0.9, 0.25, 1.05) both;
+  animation: ch-typing-in var(--dur-dialog) var(--ease-out) both;
 }
 .ch-typing-art {
   flex: none;
@@ -378,7 +378,7 @@
 }
 
 @keyframes ch-typing-in {
-  from { opacity: 0; transform: translateY(8px) scale(0.97); }
+  from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: none; }
 }
 @keyframes ch-typing-bob {
@@ -427,10 +427,10 @@
 @keyframes ch-vt-in { from { opacity: 0; } }
 
 /* Browsers without view transitions: the avatar pops in, the bubble rises. */
-.ch-msg.is-arrived-fade .ch-avatar { animation: ch-arrive-pop 0.36s cubic-bezier(0.2, 0.9, 0.25, 1.2) both; }
+.ch-msg.is-arrived-fade .ch-avatar { animation: ch-arrive-pop var(--dur-dialog) var(--ease-out) both; }
 .ch-msg.is-arrived-fade .ch-bubble { animation: ch-arrive-rise 0.32s 0.05s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
-@keyframes ch-arrive-pop { from { opacity: 0; transform: scale(1.6); } to { opacity: 1; transform: none; } }
-@keyframes ch-arrive-rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes ch-arrive-pop { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: none; } }
+@keyframes ch-arrive-rise { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 
 /* Either way, the controls and suggestions settle in just after the reply. */
 .ch-msg.is-arrived .ch-actions,

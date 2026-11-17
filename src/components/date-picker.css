@@ -30,26 +30,26 @@
   background: var(--bg);
   box-shadow: var(--shadow-lg);
   opacity: 0;
-  transform: translateY(-6px) scale(0.98);
+  transform: translateY(-4px);
   transform-origin: top left;
   transition:
-    opacity 0.14s ease,
-    transform 0.16s ease,
-    display 0.16s allow-discrete;
+    opacity 0.14s ease-in,
+    transform 0.14s ease-in,
+    display 0.14s allow-discrete;
 }
-.nv-date-panel.is-up { top: auto; transform: translateY(6px) scale(0.98); transform-origin: bottom left; }
+.nv-date-panel.is-up { top: auto; transform: translateY(4px); transform-origin: bottom left; }
 .nv-date-panel.is-open {
   display: block;
   opacity: 1;
   transform: none;
   transition:
-    opacity 0.18s ease,
-    transform 0.22s cubic-bezier(0.2, 0.9, 0.25, 1.05),
+    opacity var(--dur-pop) var(--ease-out),
+    transform var(--dur-pop) var(--ease-out),
     display 0s allow-discrete;
 }
 @starting-style {
-  .nv-date-panel.is-open { opacity: 0; transform: translateY(-6px) scale(0.98); }
-  .nv-date-panel.is-up.is-open { transform: translateY(6px) scale(0.98); }
+  .nv-date-panel.is-open { opacity: 0; transform: translateY(-4px); }
+  .nv-date-panel.is-up.is-open { transform: translateY(4px); }
 }
 
 .nv-date-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }

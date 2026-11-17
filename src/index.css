@@ -220,7 +220,7 @@ a:hover { text-decoration: underline; }
   background: var(--bg);
   border: 1px solid var(--line-strong);
   border-radius: var(--r-md);
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: border-color var(--dur-hover) ease-out, box-shadow var(--dur-hover) ease-out;
 }
 .input::placeholder { color: var(--faint); }
 .input:hover:not(:disabled) { border-color: var(--faint); }
@@ -324,6 +324,9 @@ a:hover { text-decoration: underline; }
   flex: none;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
+/* A pop-up that appears in place: fade in from 4px away. */
+@keyframes nv-pop-in { from { opacity: 0; transform: translateY(-4px); } }
+@keyframes nv-fade-in { from { opacity: 0; } }
 
 .sr-only {
   position: absolute; width: 1px; height: 1px;
@@ -349,20 +352,29 @@ a:hover { text-decoration: underline; }
    list scale and translate too; everything here is wrapped in :where() so
    any component rule still wins. Dropdown and date triggers are left still:
    their pop-ups are placed from the trigger's size when they open. */
-:root { --ease-press: cubic-bezier(0.2, 0.8, 0.2, 1); }
+:root {
+  /* One motion vocabulary for the whole app. Quick, ease-out, no overshoot. */
+  --ease-press: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --dur-press: 120ms;   /* the squeeze when something is pressed */
+  --dur-hover: 180ms;   /* colour, border and focus-ring changes */
+  --dur-pop: 180ms;     /* dropdowns, menus, tooltips */
+  --dur-dialog: 220ms;  /* pop-ups */
+}
 
 /* Baseline for clickables without a transition of their own. */
 :where(button, a, summary, [role="button"], [role="tab"]) {
   transition:
-    color 0.18s ease, background-color 0.18s ease, border-color 0.18s ease,
-    box-shadow 0.18s ease, opacity 0.18s ease,
-    scale 0.16s var(--ease-press), translate 0.2s var(--ease-press);
+    color var(--dur-hover) ease-out, background-color var(--dur-hover) ease-out,
+    border-color var(--dur-hover) ease-out, box-shadow var(--dur-hover) ease-out,
+    opacity var(--dur-hover) ease-out,
+    scale var(--dur-press) var(--ease-out), translate var(--dur-hover) var(--ease-out);
 }
 
 @media (prefers-reduced-motion: no-preference) {
   /* Press: buttons, links, chips and tabs. */
   :where(button, a, summary, [role="button"], [role="tab"], label:has(> input:is([type="checkbox"], [type="radio"]))):where(:not(:disabled, [aria-disabled="true"], [aria-haspopup], .nv-select-trigger, .cal-cell)):active {
-    scale: 0.96;
+    scale: 0.97;
   }
   /* Big targets (cards, rows, full-width buttons) squeeze less. */
   :where(a.hm-pack, .hm-pack-add, .pk-card, .pg-pack, .ch-starter, .cal-item, .cal-up-item,
@@ -527,11 +539,11 @@ a:hover > .logo .mascot { animation: nv-wiggle 0.6s ease-in-out; }
   font-weight: 620;
   color: var(--tooltip-ink);
   transform: translateX(-50%);
-  animation: nv-toast-in 0.25s ease both;
+  animation: nv-toast-in var(--dur-dialog) var(--ease-out) both;
 }
 .nv-toast.is-error { background: var(--danger); }
 @keyframes nv-toast-in {
-  from { opacity: 0; transform: translate(-50%, 10px); }
+  from { opacity: 0; transform: translate(-50%, 4px); }
   to { opacity: 1; transform: translate(-50%, 0); }
 }
 @media (prefers-reduced-motion: reduce) {

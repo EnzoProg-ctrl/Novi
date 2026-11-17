@@ -200,6 +200,7 @@
 .pg-chart.is-dense .pg-bar-col:nth-child(even) .pg-bar-label { visibility: hidden; }
 
 .pg-tooltip {
+  animation: nv-fade-in 0.12s ease-out both;
   position: absolute;
   top: -6px;
   z-index: 3;

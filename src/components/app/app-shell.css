@@ -192,6 +192,7 @@
   border-radius: var(--r-lg, 16px);
   background: var(--bg);
   box-shadow: var(--shadow-lg);
+  animation: nv-pop-in var(--dur-pop) var(--ease-out) both;
 }
 .nv-search-note { margin: 0; padding: 12px 12px; font-size: 0.86rem; color: var(--muted); }
 .nv-search-list, .nv-search-list ul { list-style: none; margin: 0; padding: 0; }
@@ -275,7 +276,19 @@
   background: var(--bg);
   box-shadow: var(--shadow-lg);
 }
-.nv-user-menu[hidden] { display: none; }
+/* Eases in and out: `hidden` sets display: none, and allow-discrete keeps it
+   shown until the fade-out ends; @starting-style gives the fade-in its start. */
+.nv-user-menu {
+  transform-origin: top right;
+  transition:
+    opacity var(--dur-pop) var(--ease-out),
+    transform var(--dur-pop) var(--ease-out),
+    display var(--dur-pop) allow-discrete;
+}
+.nv-user-menu[hidden] { display: none; opacity: 0; transform: translateY(-4px); pointer-events: none; }
+@starting-style {
+  .nv-user-menu:not([hidden]) { opacity: 0; transform: translateY(-4px); }
+}
 .nv-user-name { margin: 0; font-size: 0.92rem; font-weight: 650; }
 .nv-user-email {
   margin: 1px 0 10px;
