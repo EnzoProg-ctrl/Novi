@@ -13,6 +13,7 @@ import { generateJson } from "../_shared/ai/generate.ts";
 import { logError } from "../_shared/security.ts";
 import { classify, DECLINE, stripCode } from "./guard.ts";
 import { makeQuiz } from "./quiz.ts";
+import { clarifyReply, vagueRequest } from "./vague.ts";
 
 export type ChatRequest = {
   conversation_id?: string | null;
@@ -165,7 +166,8 @@ function buildPrompt({ name, buddy, learner, replyLength, packTitle, chunks, tit
     "- Never write code: no code blocks, programs, scripts, commands, queries or formulas to run. If programming comes up, explain the idea in plain words.",
     "- For homework-style problems, teach the method step by step and let the student try. Check their answer if they share it. Never hand over answers to graded work, tests or assignments.",
     "- Write maths in plain text (for example x^2 + 3x = 0), not LaTeX.",
-    "- If the request is missing something you need, ask one short question instead of guessing. For example \"Explain a concept\" or \"Summarize my notes\" with no subject means: ask which concept or which notes (unless the study material below makes it clear).",
+    "- If the request is missing something you need, ask one short question instead of guessing. For example \"Explain a concept\", \"Summarize my notes\", \"Summarize\" or \"Let's discuss\" with no subject means: ask which concept, notes or topic (unless the study material below or the conversation so far makes it clear).",
+    "- Never choose a topic yourself. If the student hasn't named a subject and nothing below names one, don't explain, summarize or discuss anything: ask what they'd like to cover.",
     "- If they want practice questions saved to a pack, that is handled separately; here, answer what they asked.",
     "- Only help with studying and learning.",
     "- About yourself, only say what is true. If asked what AI you use: you run on more than one AI model from two providers, Groq (an open model called gpt-oss) and Google Gemini, and which one writes a reply depends on availability. You are not fine-tuned or trained by Novi, and you are not GPT-4. Each reply is written from the conversation and, when relevant, excerpts of the student's uploaded material. You don't remember other conversations and can't browse the internet. For how their data is handled, point them to Settings, under Data & Privacy. Never invent other details about how you were built; if you don't know, say so.",
@@ -390,6 +392,21 @@ export async function runChat(
   const userMeta = { ...(attachment ? { attachment } : {}), guard: verdict.category, guard_reason: verdict.reason ?? null };
   await db.from("chat_messages").update({ metadata: userMeta }).eq("id", question.id);
   if (userMessage) userMessage = { ...userMessage, metadata: userMeta };
+
+  // ── "Summarize" / "let's discuss" with no subject ────────────
+  // With no file, no chosen pack and nothing said before, there is nothing
+  // to go on, and the model would pick a topic of its own. Ask instead.
+  const vague = verdict.category === "study" && !attachment && !packTitle && history.length === 0
+    ? vagueRequest(question.content)
+    : null;
+  if (vague) {
+    const { count } = await db.from("study_sets").select("id", { count: "exact", head: true });
+    const { content, followUps } = clarifyReply(vague, (count ?? 0) > 0);
+    return await saveReply({
+      db, user, conversation, conversationId, userMessage, content,
+      metadata: { guard: "clarify", follow_ups: followUps, used_material: false },
+    });
+  }
 
   // ── A quiz with no number: their default size, or they choose ─
   // (Not for resizing: "make it smaller" with no number needs them to say how small.)
