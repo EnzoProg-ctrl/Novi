@@ -31,6 +31,8 @@
 }
 
 /* ── Features ────────────────────────────────────────────────── */
+/* Closer to the hero than the other sections are to each other. */
+.nv-features { padding-top: clamp(40px, 4.5vw, 80px); }
 .nv-section-head { text-align: center; }
 
 .nv-feature-grid {
