@@ -342,6 +342,15 @@ a:hover { text-decoration: underline; }
   }
 }
 
+/* ── Tones ───────────────────────────────────────────────────────
+   Pastel fill, dark ink for text, a mid tone for marks. Shared by Calendar
+   session types, Progress and AI Chat's starters and tasks, so they live
+   here: a page-only stylesheet isn't loaded when another page opens first. */
+.tone-blue   { --tone-bg: #e9f0fe; --tone-ink: #234690; --tone-mark: #5b8def; }
+.tone-violet { --tone-bg: #efecfe; --tone-ink: #4a3a9e; --tone-mark: #8b7cf0; }
+.tone-green  { --tone-bg: #e7f6ed; --tone-ink: #16613a; --tone-mark: #2fb36e; }
+.tone-coral  { --tone-bg: #fff1ee; --tone-ink: #9e3626; --tone-mark: #ff6b5a; }
+
 /* ── Interaction motion ──────────────────────────────────────────
    One feel for everything clickable: colours ease, a press gives a small
    squeeze, and card-like links lift a little under a mouse.

@@ -2,11 +2,7 @@
    Built on the Study Packs page shell (.pk, .pk-head, .pk-create) and the Home
    cards (.hm-card), so it reads as the same app. */
 
-/* Session-type colours: pastel fill, dark ink for text, a mid tone for marks. */
-.tone-blue   { --tone-bg: #e9f0fe; --tone-ink: #234690; --tone-mark: #5b8def; }
-.tone-violet { --tone-bg: #efecfe; --tone-ink: #4a3a9e; --tone-mark: #8b7cf0; }
-.tone-green  { --tone-bg: #e7f6ed; --tone-ink: #16613a; --tone-mark: #2fb36e; }
-.tone-coral  { --tone-bg: #fff1ee; --tone-ink: #9e3626; --tone-mark: #ff6b5a; }
+/* Session-type colours (.tone-*) live in index.css: AI Chat uses them too. */
 
 .cal-error { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 

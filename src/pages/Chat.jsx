@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { flushSync } from 'react-dom'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
+// Chat is built on the Home cards and the Study Packs page header, so it
+// loads their styles itself; on a reload of /chat nothing else has.
+import '../components/home/home.css'
+import '../components/study/packs-page.css'
 import '../components/chat/chat.css'
 import { IconPanel, IconPlus, IconX } from '../components/chat/ChatIcons'
 import { BuddyMessage, NoviAvatar, TypingIndicator, UserMessage } from '../components/chat/ChatMessage'
