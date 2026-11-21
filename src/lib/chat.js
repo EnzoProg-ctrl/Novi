@@ -102,6 +102,8 @@ export async function sendChat({ conversationId = null, message, studySetId = nu
         material_id: materialId,
         // The student's wall clock, so "tomorrow at 4" means their tomorrow.
         client_now: `${dateKey(new Date())}T${timeKey(new Date())}`,
+        // To place their planned sessions on the right days ("which days are free?").
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
         // Confirm on a planned session's card: the instants to save.
         ...(schedule ? { schedule } : {}),
         stream: true,

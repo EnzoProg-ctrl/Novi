@@ -26,6 +26,8 @@ export type ChatRequest = {
   material_id?: string | null;
   /** The student's wall clock, "YYYY-MM-DDTHH:MM", for planning sessions. */
   client_now?: string;
+  /** The student's IANA time zone, for reading their calendar. */
+  timezone?: string;
   /** Sent by Confirm on a planned session's summary card. */
   schedule?: { action: "confirm"; starts_at: string; ends_at: string };
 };
@@ -397,7 +399,7 @@ export async function runChat(
   const pendingDraft = (lastReply?.metadata?.schedule_draft ?? null) as Draft | null;
   const confirm = body.schedule?.action === "confirm" ? body.schedule : null;
 
-  const planSession = async (draft: Draft, opening: boolean): Promise<Result | null> => {
+  const planSession = async (draft: Draft, opening: boolean, force = false): Promise<Result | null> => {
     const { data: packRows } = await db.from("study_sets").select("id, title")
       .order("created_at", { ascending: false }).limit(30);
     let turn;
@@ -409,7 +411,9 @@ export async function runChat(
         history,
         draft,
         opening,
+        force,
         now: localNowFrom(body.client_now),
+        timeZone: typeof body.timezone === "string" ? body.timezone : null,
         packs: (packRows ?? []) as { id: string; title: string }[],
         defaults: {
           session: (profile?.default_session_minutes as number | null | undefined) ?? 60,
@@ -446,8 +450,11 @@ export async function runChat(
   await db.from("chat_messages").update({ metadata: userMeta }).eq("id", question.id);
   if (userMessage) userMessage = { ...userMessage, metadata: userMeta };
 
+  // A message the planner set aside that is still about scheduling (for
+  // example "which days are free?"): carry on with the same draft rather than
+  // starting over.
   if (verdict.category === "schedule") {
-    const handled = await planSession({}, true);
+    const handled = await planSession(pendingDraft ?? {}, !pendingDraft, true);
     if (handled) return handled;
   }
 

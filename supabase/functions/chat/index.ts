@@ -50,6 +50,9 @@ Deno.serve(async (req: Request) => {
   if (body.client_now !== undefined && (typeof body.client_now !== "string" || body.client_now.length > 40)) {
     return json({ error: "Invalid request" }, 400);
   }
+  if (body.timezone !== undefined && (typeof body.timezone !== "string" || body.timezone.length > 64)) {
+    return json({ error: "Invalid request" }, 400);
+  }
   if (
     body.schedule !== undefined &&
     (typeof body.schedule !== "object" || body.schedule === null || body.schedule.action !== "confirm" ||

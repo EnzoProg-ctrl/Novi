@@ -11,8 +11,10 @@ import {
   confirmedTimes,
   type Draft,
   localNowFrom,
+  localParts,
   nextQuestion,
   validateDraft,
+  weekOverview,
 } from "./schedule.ts";
 
 const now = { date: "2026-11-21", time: "14:05" }; // a Saturday
@@ -120,4 +122,31 @@ Deno.test("reads the app's clock, and falls back when it is missing", () => {
   assertEquals(localNowFrom("2026-11-21T14:05"), { date: "2026-11-21", time: "14:05" });
   const fallback = localNowFrom(undefined);
   assert(/^\d{4}-\d{2}-\d{2}$/.test(fallback.date) && /^\d{2}:\d{2}$/.test(fallback.time));
+});
+
+Deno.test("places planned sessions on the student's local day", () => {
+  // 17:30 UTC on the 21st is 01:30 on the 22nd in Manila.
+  assertEquals(localParts("2026-11-21T17:30:00Z", "Asia/Manila"), { date: "2026-11-22", time: "01:30" });
+  assertEquals(localParts("2026-11-21T17:30:00Z", "Not/AZone"), { date: "2026-11-21", time: "17:30" });
+});
+
+Deno.test("shows the week with busy and free days, and offers the free ones", () => {
+  const week = weekOverview([
+    { date: "2026-11-22", start: "16:00", end: "17:00", title: "Biology" },
+    { date: "2026-11-24", start: "09:00", end: "10:30", title: "SQL practice" },
+    { date: "2026-12-05", start: "09:00", end: "10:00", title: "Too far ahead" },
+  ], now);
+  assert(week.text.includes("- **Today**: free"));
+  assert(week.text.includes("- **Tomorrow**: Biology (4:00 PM – 5:00 PM)"));
+  assert(week.text.includes("- **Tuesday, November 24**: SQL practice (9:00 AM – 10:30 AM)"));
+  assert(!week.text.includes("Too far ahead"));
+  assertEquals(week.freeDates, ["2026-11-21", "2026-11-23", "2026-11-25", "2026-11-26", "2026-11-27"]);
+  const q = nextQuestion(validateDraft({ title: "Biology" }, now, packs, defaults), now, packs, false, week.freeDates);
+  assertEquals(q.options, ["Today", "Monday", "Wednesday", "Thursday"]);
+});
+
+Deno.test("an empty week says the calendar is clear", () => {
+  const week = weekOverview([], now);
+  assert(week.text.startsWith("Your calendar is clear"));
+  assertEquals(week.freeDates.length, 7);
 });

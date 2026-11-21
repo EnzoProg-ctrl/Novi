@@ -98,6 +98,73 @@ export function durationLabel(minutes: number): string {
   return m ? `${hours} ${m} minutes` : hours;
 }
 
+/** "Today", "Tomorrow", or the weekday name for the days after (within a week). */
+export function dayChip(date: string, now: LocalNow): string {
+  if (date === now.date) return "Today";
+  if (date === addDays(now.date, 1)) return "Tomorrow";
+  return weekdayOf(date);
+}
+
+// ── The student's week ─────────────────────────────────────────
+
+/** A planned session in the student's own wall-clock time. */
+export type Planned = { date: string; start: string; end: string; title: string };
+
+/** An instant as the student's local date and time ("YYYY-MM-DD", "HH:MM"). */
+export function localParts(iso: string, timeZone: string | null): LocalNow {
+  let fmt: Intl.DateTimeFormat;
+  try {
+    fmt = new Intl.DateTimeFormat("en-CA", {
+      timeZone: timeZone || "UTC", year: "numeric", month: "2-digit", day: "2-digit",
+      hour: "2-digit", minute: "2-digit", hourCycle: "h23",
+    });
+  } catch {
+    return localParts(iso, "UTC");
+  }
+  const part = Object.fromEntries(fmt.formatToParts(new Date(iso)).map((p) => [p.type, p.value]));
+  return { date: `${part.year}-${part.month}-${part.day}`, time: `${part.hour}:${part.minute}` };
+}
+
+/** The student's unfinished planned sessions from today through the next week. */
+export async function fetchPlanned(db: SupabaseClient, now: LocalNow, timeZone: string | null): Promise<Planned[]> {
+  // A generous window in UTC; each session is then placed on its local day.
+  const from = new Date(`${addDays(now.date, -1)}T00:00:00Z`).toISOString();
+  const to = new Date(`${addDays(now.date, 9)}T00:00:00Z`).toISOString();
+  const { data } = await db.from("scheduled_sessions").select("title, starts_at, ends_at")
+    .is("completed_at", null).gte("starts_at", from).lt("starts_at", to).order("starts_at");
+  return (data ?? []).map((row) => {
+    const start = localParts(row.starts_at as string, timeZone);
+    const end = localParts(row.ends_at as string, timeZone);
+    return { date: start.date, start: start.time, end: end.time, title: row.title as string };
+  });
+}
+
+/**
+ * The next seven days, each with its planned sessions or "free", and the free
+ * days in order. Pure, so it is tested directly.
+ */
+export function weekOverview(planned: Planned[], now: LocalNow): { text: string; freeDates: string[] } {
+  const late = (minutesOf(now.time) ?? 0) > 22 * 60;
+  const lines: string[] = [];
+  const freeDates: string[] = [];
+  for (let i = 0; i < 7; i++) {
+    const date = addDays(now.date, i);
+    const label = dayChip(date, now) === weekdayOf(date) ? dayLabel(date, now) : dayChip(date, now);
+    const sessions = planned.filter((p) => p.date === date).sort((a, b) => a.start.localeCompare(b.start));
+    if (sessions.length) {
+      const list = sessions.map((p) => `${p.title} (${timeLabel(p.start)} – ${timeLabel(p.end)})`).join(", ");
+      lines.push(`- **${label}**: ${list}`);
+    } else {
+      lines.push(`- **${label}**: free`);
+      if (!(late && date === now.date)) freeDates.push(date);
+    }
+  }
+  const intro = planned.some((p) => p.date >= now.date && p.date <= addDays(now.date, 6))
+    ? "Here's your next 7 days:"
+    : "Your calendar is clear for the next 7 days:";
+  return { text: `${intro}\n\n${lines.join("\n")}`, freeDates };
+}
+
 export type Checked = {
   draft: Draft;
   /** The first detail still needed, in the order Novi asks for them. */
@@ -187,7 +254,14 @@ const QUESTIONS: Record<Field, string> = {
 };
 
 /** Novi's question for the next missing detail, with tappable answers. */
-export function nextQuestion(checked: Checked, now: LocalNow, packs: Pack[], opening: boolean): { content: string; options: string[] } {
+export function nextQuestion(
+  checked: Checked,
+  now: LocalNow,
+  packs: Pack[],
+  opening: boolean,
+  /** Days to offer first, for example the free ones in the student's week. */
+  preferDates: string[] | null = null,
+): { content: string; options: string[] } {
   const { draft, missing, problem } = checked;
   const lead = [opening ? "Sure, let's plan a study session." : "", problem ?? ""].filter(Boolean).join(" ");
   let question = missing ? QUESTIONS[missing] : "";
@@ -198,9 +272,10 @@ export function nextQuestion(checked: Checked, now: LocalNow, packs: Pack[], ope
       options = packs.slice(0, 4).map((p) => p.title);
       break;
     case "date": {
-      options = ["Today", "Tomorrow", weekdayOf(addDays(now.date, 2)), weekdayOf(addDays(now.date, 3))];
+      const dates = preferDates?.length ? preferDates : [0, 1, 2, 3].map((n) => addDays(now.date, n));
       // Late in the evening, today has no room left for a session.
-      if ((minutesOf(now.time) ?? 0) > 22 * 60) options = options.slice(1);
+      const late = (minutesOf(now.time) ?? 0) > 22 * 60;
+      options = dates.filter((d) => !(late && d === now.date)).slice(0, 4).map((d) => dayChip(d, now));
       break;
     }
     case "start": {
@@ -250,6 +325,8 @@ export type Plan = {
   confirm?: boolean;
   cancel?: boolean;
   unrelated?: boolean;
+  /** They asked when they're free or what's already planned. */
+  asks_availability?: boolean;
 };
 
 const PLAN_SCHEMA = {
@@ -268,6 +345,7 @@ const PLAN_SCHEMA = {
     confirm: { type: "BOOLEAN" },
     cancel: { type: "BOOLEAN" },
     unrelated: { type: "BOOLEAN" },
+    asks_availability: { type: "BOOLEAN" },
   },
   required: ["unrelated"],
 };
@@ -306,7 +384,8 @@ export async function planSession({ draft, message, history, now, packs, signal 
     "- If they want to change a detail without giving the new value (\"change the time\"), list it in clear_fields. If they want to change something but don't say what, set wants_change.",
     "- confirm: true if they say the session is right and should be saved (\"yes\", \"looks good\", \"save it\").",
     "- cancel: true if they no longer want to plan this session.",
-    "- unrelated: true only if the message is about something else entirely (for example a study question) and not an answer about this session.",
+    "- asks_availability: true if they ask which days or times are free, what is already on their calendar, or when they have time.",
+    "- unrelated: true only if the message is about something else entirely (for example a study question) and not about planning this session. Questions about their calendar or free time are not unrelated.",
     "",
     "NEW MESSAGE:",
     message.slice(0, 1_000),
@@ -394,7 +473,7 @@ export type TurnResult =
  * draft, and either asks for the next detail, shows the summary to confirm,
  * saves the session (when the app sent Confirm), or stops.
  */
-export async function scheduleTurn({ db, userId, message, history, draft: previous, opening, now, packs, defaults, confirm, signal }: {
+export async function scheduleTurn({ db, userId, message, history, draft: previous, opening, force = false, now, timeZone = null, packs, defaults, confirm, signal }: {
   db: SupabaseClient;
   userId: string;
   message: string;
@@ -402,7 +481,11 @@ export async function scheduleTurn({ db, userId, message, history, draft: previo
   draft: Draft;
   /** The first message of the flow ("schedule a study session"). */
   opening: boolean;
+  /** Answer even if the message looks unrelated (the main check said it is about scheduling). */
+  force?: boolean;
   now: LocalNow;
+  /** The student's IANA time zone, to place their planned sessions on the right days. */
+  timeZone?: string | null;
   packs: Pack[];
   defaults: { session: number; brk: number };
   /** Sent by the app's Confirm button: the session's instants. */
@@ -465,7 +548,7 @@ export async function scheduleTurn({ db, userId, message, history, draft: previo
 
   // ── Anything else: read the message ─────────────────────────
   const plan = await planSession({ draft: previous, message, history, now, packs, signal });
-  if (plan.unrelated && !opening) return { kind: "unrelated" };
+  if (plan.unrelated && !plan.asks_availability && !opening && !force) return { kind: "unrelated" };
   if (plan.cancel) {
     return {
       kind: "reply",
@@ -489,6 +572,21 @@ export async function scheduleTurn({ db, userId, message, history, draft: previo
       },
     };
   }
+  // "Which days are free?": show their week, then carry on where they were.
+  if (plan.asks_availability) {
+    const week = weekOverview(await fetchPlanned(db, now, timeZone), now);
+    if (checked.missing) {
+      const { content, options } = nextQuestion(checked, now, packs, false, week.freeDates);
+      return {
+        kind: "reply",
+        content: `${week.text}\n\n${content}`,
+        metadata: { guard: "schedule", schedule_draft: checked.draft, ask_schedule: { field: checked.missing, options }, follow_ups: [] },
+      };
+    }
+    const card = summary(checked);
+    return { ...card, content: `${week.text}\n\n${card.content}` };
+  }
+
   if (checked.missing) return ask(checked, opening);
   // A typed "yes": the app saves it with the Confirm button, which knows the
   // student's time zone.
