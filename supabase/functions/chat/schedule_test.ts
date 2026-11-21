@@ -150,3 +150,40 @@ Deno.test("an empty week says the calendar is clear", () => {
   assert(week.text.startsWith("Your calendar is clear"));
   assertEquals(week.freeDates.length, 7);
 });
+
+Deno.test("changing the type: a new type, or asked for when none is given", () => {
+  const base = check(complete).draft;
+  const revision = check(applyPlan(base, { type: "revision" }));
+  assertEquals(revision.draft.type, "revision");
+  assertEquals(revision.missing, null);
+  const asked = check(applyPlan(base, { clear_fields: ["type"] }));
+  assertEquals(asked.missing, "type");
+  assertEquals(nextQuestion(asked, now, packs, false).options, ["Focus", "Practice", "Revision", "Break"]);
+  const answered = check(applyPlan(asked.draft, { type: "practice" }));
+  assertEquals(answered.draft.type, "practice");
+  assertEquals(answered.missing, null);
+});
+
+Deno.test("switching to a break takes the break length, unless they chose a length", () => {
+  const base = check(complete).draft; // 60 minutes from the default
+  assertEquals(check(applyPlan(base, { type: "break" })).draft.duration_minutes, 10);
+  const chosen = check(applyPlan(complete, { duration_minutes: 45 })).draft;
+  assertEquals(check(applyPlan(chosen, { type: "break" })).draft.duration_minutes, 45);
+});
+
+Deno.test("changing the day or time, or dropping them to pick again", () => {
+  const base = check(complete).draft;
+  assertEquals(check(applyPlan(base, { date: "2026-11-25" })).draft.date, "2026-11-25");
+  assertEquals(check(applyPlan(base, { start: "09:30" })).draft.start, "09:30");
+  assertEquals(check(applyPlan(base, { clear_fields: ["date"] })).missing, "date");
+  // "Change the length": asked for, not quietly refilled with the default.
+  assertEquals(check(applyPlan(base, { clear_fields: ["duration"] })).missing, "duration");
+  assertEquals(check(applyPlan(base, { clear_fields: ["duration"], duration_minutes: 90 })).draft.duration_minutes, 90);
+});
+
+Deno.test("a saved session keeps its id through changes", () => {
+  const savedDraft = { ...check(complete).draft, session_id: "s-1" };
+  const moved = check(applyPlan(savedDraft, { start: "18:00" }));
+  assertEquals(moved.draft.session_id, "s-1");
+  assertEquals(moved.missing, null);
+});

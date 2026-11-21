@@ -33,9 +33,26 @@ export type Draft = {
   suggested_pack_id?: string | null;
   /** True once the student has said yes or no to linking a pack. */
   pack_decided?: boolean;
+  /** The length came from their default, so it follows a change of type. */
+  duration_default?: boolean;
+  /** They want a different length but haven't said which. */
+  duration_pending?: boolean;
+  /** They want a different type but haven't said which. */
+  type_pending?: boolean;
+  /** Set once the session is saved: changes now update (or remove) that row. */
+  session_id?: string | null;
+  /** Novi asked whether to remove the saved session. */
+  pending_delete?: boolean;
 };
 
-export type Field = "title" | "date" | "start" | "duration" | "pack";
+export type Field = "title" | "date" | "start" | "duration" | "pack" | "type";
+
+export const TYPE_LABELS: Record<SessionType, string> = {
+  focus: "focus session",
+  practice: "practice session",
+  revision: "revision session",
+  break: "break",
+};
 export type Pack = { id: string; title: string };
 /** The student's wall clock right now. */
 export type LocalNow = { date: string; time: string };
@@ -188,13 +205,17 @@ export function validateDraft(input: Draft, now: LocalNow, packs: Pack[], defaul
 
   draft.type = SESSION_TYPES.includes(draft.type as SessionType) ? draft.type : "focus";
 
-  if (draft.duration_minutes == null) {
+  if (draft.duration_minutes == null && draft.duration_pending) {
+    // They want a different length: ask, don't refill the default.
+  } else if (draft.duration_minutes == null) {
     draft.duration_minutes = draft.type === "break" ? defaults.brk : defaults.session;
+    draft.duration_default = true;
   } else {
     const minutes = Math.round(Number(draft.duration_minutes));
     if (!Number.isFinite(minutes) || minutes < MIN_MINUTES || minutes > MAX_MINUTES) {
       problem = "Sessions can be from 5 minutes to 12 hours long.";
       draft.duration_minutes = null;
+      draft.duration_pending = true;
     } else {
       draft.duration_minutes = minutes;
     }
@@ -240,6 +261,8 @@ export function validateDraft(input: Draft, now: LocalNow, packs: Pack[], defaul
     ? "duration"
     : !draft.pack_decided
     ? "pack"
+    : draft.type_pending
+    ? "type"
     : null;
 
   return { draft, missing, problem };
@@ -251,6 +274,7 @@ const QUESTIONS: Record<Field, string> = {
   start: "What time should it start?",
   duration: "How long should it be?",
   pack: "",
+  type: "What kind of session should it be?",
 };
 
 /** Novi's question for the next missing detail, with tappable answers. */
@@ -290,6 +314,9 @@ export function nextQuestion(
     case "duration":
       options = ["30 minutes", "1 hour", "1 hour 30 minutes", "2 hours"];
       break;
+    case "type":
+      options = ["Focus", "Practice", "Revision", "Break"];
+      break;
     case "pack": {
       const pack = packs.find((p) => p.id === draft.suggested_pack_id);
       question = `Should I link it to your study pack **${pack?.title ?? "that pack"}**? Then it also shows on Home when it's time.`;
@@ -303,7 +330,7 @@ export function nextQuestion(
 /** One line describing a complete draft, for Novi's replies. */
 export function describe(draft: Draft, now: LocalNow, packs: Pack[]): string {
   const pack = packs.find((p) => p.id === draft.pack_id);
-  return `**${draft.title}**, ${dayLabel(draft.date!, now)} at ${timeLabel(draft.start!)} for ${durationLabel(draft.duration_minutes!)}` +
+  return `**${draft.title}** (${TYPE_LABELS[draft.type ?? "focus"]}), ${dayLabel(draft.date!, now)} at ${timeLabel(draft.start!)} for ${durationLabel(draft.duration_minutes!)}` +
     (pack ? `, linked to **${pack.title}**` : "");
 }
 
@@ -327,6 +354,8 @@ export type Plan = {
   unrelated?: boolean;
   /** They asked when they're free or what's already planned. */
   asks_availability?: boolean;
+  /** They want another, separate session (not a change to this one). */
+  new_session?: boolean;
 };
 
 const PLAN_SCHEMA = {
@@ -340,12 +369,13 @@ const PLAN_SCHEMA = {
     pack_id: { type: "STRING" },
     suggested_pack_id: { type: "STRING" },
     pack_answer: { type: "STRING", enum: ["link", "none"] },
-    clear_fields: { type: "ARRAY", items: { type: "STRING", enum: ["title", "date", "start", "duration", "pack"] } },
+    clear_fields: { type: "ARRAY", items: { type: "STRING", enum: ["title", "date", "start", "duration", "pack", "type"] } },
     wants_change: { type: "BOOLEAN" },
     confirm: { type: "BOOLEAN" },
     cancel: { type: "BOOLEAN" },
     unrelated: { type: "BOOLEAN" },
     asks_availability: { type: "BOOLEAN" },
+    new_session: { type: "BOOLEAN" },
   },
   required: ["unrelated"],
 };
@@ -374,16 +404,21 @@ export async function planSession({ draft, message, history, now, packs, signal 
     "",
     "Rules:",
     "- Fill a field only when the student said it or clearly implied it. Leave everything else out. Never guess a day or a time.",
+    draft.session_id
+      ? "- This session is ALREADY SAVED on their calendar. If they change their mind about anything (\"actually make it Friday\", \"move it to 5\", \"make it a revision session\"), return the new value: it will update the saved session."
+      : "",
+    "- Students often change their mind (\"actually\", \"instead\", \"make it\", \"move it\", \"not Monday\"). Return the NEW value for whatever they changed, even if it was set before.",
     "- title: a short name for what they'll study, like \"Biology: cell division\" or \"Exam revision\" (at most 60 characters). If they only name one of their packs, use that pack's title.",
     "- date: YYYY-MM-DD. Work out words like \"today\", \"tomorrow\", \"Friday\", \"next Monday\" or \"the 25th\" from today's date. A weekday name means the next one after today.",
     "- start: HH:MM, 24-hour (\"4pm\" is 16:00, \"half past 9 in the morning\" is 09:30). \"Evening\" or \"afternoon\" alone is not a time: leave it out.",
     "- duration_minutes: only if they gave a length (\"for 2 hours\" is 120), or a start and end time.",
-    "- type: \"practice\" for practice questions or quizzes, \"revision\" for reviewing or revising, \"break\" for a break, otherwise \"focus\".",
+    "- type: \"practice\" for practice questions or quizzes, \"revision\" for reviewing or revising, \"break\" for a break, \"focus\" for focused study. Set it when they first describe the session or when they change it.",
     "- suggested_pack_id: the id of one of their packs that clearly matches the topic, if any.",
     "- pack_id: only when they ask to link a specific pack. pack_answer: \"link\" if they agree to link the suggested pack (\"yes\", \"link it\"), \"none\" if they don't want a pack.",
-    "- If they want to change a detail without giving the new value (\"change the time\"), list it in clear_fields. If they want to change something but don't say what, set wants_change.",
+    "- If they want to change or drop a detail without giving the new value (\"change the time\", \"not that day\", \"different type\"), list it in clear_fields (title, date, start, duration, pack or type). If they want to change something but don't say what, set wants_change.",
     "- confirm: true if they say the session is right and should be saved (\"yes\", \"looks good\", \"save it\").",
-    "- cancel: true if they no longer want to plan this session.",
+    "- cancel: true if they no longer want this session at all (\"cancel\", \"never mind\", \"forget it\", \"remove it\"). Changing one detail is not cancelling.",
+    "- new_session: true if they want to plan another, separate session.",
     "- asks_availability: true if they ask which days or times are free, what is already on their calendar, or when they have time.",
     "- unrelated: true only if the message is about something else entirely (for example a study question) and not about planning this session. Questions about their calendar or free time are not unrelated.",
     "",
@@ -398,6 +433,15 @@ export async function planSession({ draft, message, history, now, packs, signal 
 /** Applies what the student said to the draft. */
 export function applyPlan(draft: Draft, plan: Plan): Draft {
   const next: Draft = { ...draft };
+  // A new type: the length follows it if it was only the default.
+  if (plan.type && plan.type !== draft.type) {
+    next.type_pending = false;
+    if (draft.duration_default && !plan.duration_minutes) next.duration_minutes = null;
+  } else if (plan.type) next.type_pending = false;
+  if (plan.duration_minutes) {
+    next.duration_default = false;
+    next.duration_pending = false;
+  }
   for (const key of ["title", "date", "start", "duration_minutes", "type", "suggested_pack_id"] as const) {
     const value = plan[key];
     if (value !== undefined && value !== null && value !== "") (next as Record<string, unknown>)[key] = value;
@@ -413,9 +457,21 @@ export function applyPlan(draft: Draft, plan: Plan): Draft {
     next.pack_id = null;
     next.pack_decided = true;
   }
+  // A detail dropped and given a new value in the same message keeps the new value.
+  const given: Record<Field, unknown> = {
+    title: plan.title, date: plan.date, start: plan.start, duration: plan.duration_minutes,
+    type: plan.type, pack: plan.pack_id ?? plan.pack_answer,
+  };
   for (const field of plan.clear_fields ?? []) {
-    if (field === "duration") next.duration_minutes = null;
-    else if (field === "pack") {
+    if (given[field] !== undefined && given[field] !== null && given[field] !== "") continue;
+    if (field === "duration") {
+      // Asked for again rather than refilled with the default they want to change.
+      next.duration_minutes = null;
+      next.duration_default = false;
+      next.duration_pending = true;
+    } else if (field === "type") {
+      if (!plan.type) next.type_pending = true;
+    } else if (field === "pack") {
       next.pack_id = null;
       next.pack_decided = false;
     } else next[field] = null;
@@ -437,6 +493,27 @@ export async function createSession(db: SupabaseClient, userId: string, draft: D
   }).select("id").single();
   if (error || !data) throw error ?? new Error("Session not saved");
   return data.id as string;
+}
+
+/**
+ * Updates a saved session after the student changed their mind. Returns
+ * false if it no longer exists (deleted from the Calendar meanwhile).
+ */
+export async function updateSession(db: SupabaseClient, id: string, draft: Draft, startsAt: Date, endsAt: Date): Promise<boolean> {
+  const { data, error } = await db.from("scheduled_sessions").update({
+    title: draft.title,
+    session_type: draft.type ?? "focus",
+    starts_at: startsAt.toISOString(),
+    ends_at: endsAt.toISOString(),
+    study_set_id: draft.pack_id ?? null,
+  }).eq("id", id).select("id");
+  if (error) throw error;
+  return (data ?? []).length > 0;
+}
+
+export async function deleteSession(db: SupabaseClient, id: string): Promise<void> {
+  const { error } = await db.from("scheduled_sessions").delete().eq("id", id);
+  if (error) throw error;
 }
 
 /**
@@ -468,10 +545,38 @@ export type TurnResult =
   | { kind: "unrelated" }
   | { kind: "reply"; content: string; metadata: Record<string, unknown> };
 
+type Reply = { kind: "reply"; content: string; metadata: Record<string, unknown> };
+
+const YES = /^(yes|yeah|yep|yup|sure|ok(ay)?|please do|do it|remove( it)?|delete( it)?|cancel( it)?)\b/i;
+const NO = /^(no|nope|nah|keep( it)?|don'?t|never ?mind|leave it)\b/i;
+
+/** What Novi says after a session was saved or updated. */
+function savedReply(draft: Draft, id: string, times: { start: Date; end: Date }, content: string): Reply {
+  return {
+    kind: "reply",
+    content,
+    metadata: {
+      guard: "schedule",
+      scheduled: {
+        id,
+        title: draft.title,
+        type: draft.type ?? "focus",
+        starts_at: times.start.toISOString(),
+        ends_at: times.end.toISOString(),
+        pack_id: draft.pack_id ?? null,
+      },
+      // Kept, so a change of mind right after ("actually make it 5pm") edits this session.
+      schedule_draft: { ...draft, session_id: id, pending_delete: false },
+      follow_ups: ["Move it to another time", "Plan another study session"],
+    },
+  };
+}
+
 /**
- * Handles one message while a session is being planned: reads it, updates the
- * draft, and either asks for the next detail, shows the summary to confirm,
- * saves the session (when the app sent Confirm), or stops.
+ * Handles one message while a session is being planned, or right after one
+ * was saved: reads it, updates the draft, and either asks for the next
+ * detail, shows the summary to confirm, saves or updates the session (when
+ * the app sent Confirm), removes it (after asking), or stops.
  */
 export async function scheduleTurn({ db, userId, message, history, draft: previous, opening, force = false, now, timeZone = null, packs, defaults, confirm, signal }: {
   db: SupabaseClient;
@@ -492,19 +597,25 @@ export async function scheduleTurn({ db, userId, message, history, draft: previo
   confirm: { starts_at?: unknown; ends_at?: unknown } | null;
   signal: AbortSignal;
 }): Promise<TurnResult> {
-  const ask = (checked: Checked, lead = false): TurnResult => {
+  const saved = Boolean(previous.session_id);
+
+  const ask = (checked: Checked, lead = false, prefix = ""): Reply => {
     const { content, options } = nextQuestion(checked, now, packs, lead);
     return {
       kind: "reply",
-      content,
+      content: [prefix, content].filter(Boolean).join("\n\n"),
       metadata: { guard: "schedule", schedule_draft: checked.draft, ask_schedule: { field: checked.missing, options }, follow_ups: [] },
     };
   };
-  const summary = (checked: Checked, lead = ""): { kind: "reply"; content: string; metadata: Record<string, unknown> } => {
+  const summary = (checked: Checked, lead = ""): Reply => {
     const pack = packs.find((p) => p.id === checked.draft.pack_id);
+    const editing = Boolean(checked.draft.session_id);
+    const body = editing
+      ? `Here's the updated session: ${describe(checked.draft, now, packs)}. Press **Save changes** to update your calendar, or tell me what else to change.`
+      : `Here's your session: ${describe(checked.draft, now, packs)}. Press **Confirm** to add it to your calendar, or tell me what to change.`;
     return {
       kind: "reply",
-      content: `${lead ? `${lead} ` : ""}Here's your session: ${describe(checked.draft, now, packs)}. Press **Confirm** to add it to your calendar, or tell me what to change.`,
+      content: [lead, body].filter(Boolean).join(" "),
       metadata: {
         guard: "schedule",
         schedule_draft: checked.draft,
@@ -514,7 +625,7 @@ export async function scheduleTurn({ db, userId, message, history, draft: previo
     };
   };
 
-  // ── Confirm pressed: save it ────────────────────────────────
+  // ── Confirm pressed: save it, or save the changes ───────────
   if (confirm) {
     const checked = validateDraft(previous, now, packs, defaults);
     if (checked.missing) return ask(checked);
@@ -524,32 +635,81 @@ export async function scheduleTurn({ db, userId, message, history, draft: previo
       return ask({ ...checked, draft: { ...checked.draft, start: null }, missing: "start", problem: "That time has already passed." });
     }
     try {
+      if (checked.draft.session_id && await updateSession(db, checked.draft.session_id, checked.draft, times.start, times.end)) {
+        return savedReply(checked.draft, checked.draft.session_id, times, `Updated. ${describe(checked.draft, now, packs)} is on your calendar now.`);
+      }
+      // New, or the saved one was deleted from the Calendar meanwhile: add it.
       const id = await createSession(db, userId, checked.draft, times.start, times.end);
-      return {
-        kind: "reply",
-        content: `Done. ${describe(checked.draft, now, packs)} is on your calendar.`,
-        metadata: {
-          guard: "schedule",
-          scheduled: {
-            id,
-            title: checked.draft.title,
-            starts_at: times.start.toISOString(),
-            ends_at: times.end.toISOString(),
-            pack_id: checked.draft.pack_id ?? null,
-          },
-          follow_ups: ["Plan another study session", "Quiz me on this topic"],
-        },
-      };
+      return savedReply(checked.draft, id, times, `Done. ${describe(checked.draft, now, packs)} is on your calendar.`);
     } catch (err) {
       console.log(JSON.stringify({ schedule_save_failed: err instanceof Error ? err.message : String(err) }));
-      return { ...summary(checked), content: "I couldn't save that session just now. Press **Confirm** to try again." };
+      return { ...summary(checked), content: "I couldn't save that session just now. Press the button to try again." };
     }
+  }
+
+  // ── Answering "Remove it from your calendar?" ───────────────
+  if (previous.pending_delete && previous.session_id) {
+    const answer = message.trim();
+    if (YES.test(answer) && !NO.test(answer)) {
+      try {
+        await deleteSession(db, previous.session_id);
+      } catch (err) {
+        console.log(JSON.stringify({ schedule_delete_failed: err instanceof Error ? err.message : String(err) }));
+        return {
+          kind: "reply",
+          content: "I couldn't remove it just now. Try again, or delete it from the Calendar.",
+          metadata: { guard: "schedule", schedule_draft: previous, ask_schedule: { field: "remove", options: ["Yes, remove it", "Keep it"] }, follow_ups: [] },
+        };
+      }
+      return {
+        kind: "reply",
+        content: `Removed **${previous.title}** from your calendar.`,
+        metadata: {
+          guard: "schedule",
+          unscheduled: { id: previous.session_id, title: previous.title },
+          follow_ups: ["Plan a study session"],
+        },
+      };
+    }
+    if (NO.test(answer)) {
+      return {
+        kind: "reply",
+        content: `Okay, **${previous.title}** stays on your calendar.`,
+        metadata: {
+          guard: "schedule",
+          schedule_draft: { ...previous, pending_delete: false },
+          follow_ups: ["Move it to another time", "Plan another study session"],
+        },
+      };
+    }
+    // Something else ("actually just move it to Friday"): read it normally.
+    previous = { ...previous, pending_delete: false };
   }
 
   // ── Anything else: read the message ─────────────────────────
   const plan = await planSession({ draft: previous, message, history, now, packs, signal });
+
+  // Another session entirely: start a fresh draft with whatever they said.
+  if (plan.new_session && saved) {
+    const fresh = validateDraft(applyPlan({}, { ...plan, clear_fields: [] }), now, packs, defaults);
+    return fresh.missing ? ask(fresh, true) : summary(fresh);
+  }
+
   if (plan.unrelated && !plan.asks_availability && !opening && !force) return { kind: "unrelated" };
+
   if (plan.cancel) {
+    if (saved) {
+      return {
+        kind: "reply",
+        content: `Remove **${previous.title}** (${dayLabel(previous.date!, now)} at ${timeLabel(previous.start!)}) from your calendar?`,
+        metadata: {
+          guard: "schedule",
+          schedule_draft: { ...previous, pending_delete: true },
+          ask_schedule: { field: "remove", options: ["Yes, remove it", "Keep it"] },
+          follow_ups: [],
+        },
+      };
+    }
     return {
       kind: "reply",
       content: "Okay, I won't plan that session. Just ask whenever you want to schedule one.",
@@ -557,21 +717,33 @@ export async function scheduleTurn({ db, userId, message, history, draft: previo
     };
   }
 
+  const before = validateDraft(previous, now, packs, defaults);
   const checked = validateDraft(applyPlan(previous, plan), now, packs, defaults);
-  const changed = JSON.stringify(checked.draft) !== JSON.stringify(validateDraft(previous, now, packs, defaults).draft);
+  const changed = JSON.stringify(checked.draft) !== JSON.stringify(before.draft) || checked.missing !== before.missing;
+
+  // Right after saving, a message that changes nothing ("thanks!") is ordinary chat.
+  if (saved && !changed && !plan.wants_change && !plan.asks_availability) return { kind: "unrelated" };
 
   if (plan.wants_change && !changed && !checked.missing) {
     return {
       kind: "reply",
-      content: "Sure. What would you like to change: the day, the time, the length, the title or the pack?",
+      content: saved
+        ? "Sure. What would you like to change: the day, the time, the type or the length? Or should I remove it?"
+        : "Sure. What would you like to change: the day, the time, the type, the length or the title?",
       metadata: {
         guard: "schedule",
         schedule_draft: checked.draft,
-        ask_schedule: { field: "change", options: ["Change the day", "Change the time", "Change the length", "Change the title"] },
+        ask_schedule: {
+          field: "change",
+          options: saved
+            ? ["Change the day", "Change the time", "Change the type", "Remove it"]
+            : ["Change the day", "Change the time", "Change the type", "Cancel it"],
+        },
         follow_ups: [],
       },
     };
   }
+
   // "Which days are free?": show their week, then carry on where they were.
   if (plan.asks_availability) {
     const week = weekOverview(await fetchPlanned(db, now, timeZone), now);
@@ -583,12 +755,19 @@ export async function scheduleTurn({ db, userId, message, history, draft: previo
         metadata: { guard: "schedule", schedule_draft: checked.draft, ask_schedule: { field: checked.missing, options }, follow_ups: [] },
       };
     }
+    if (saved && !changed) {
+      return {
+        kind: "reply",
+        content: week.text,
+        metadata: { guard: "schedule", schedule_draft: checked.draft, follow_ups: ["Move it to another time", "Plan another study session"] },
+      };
+    }
     const card = summary(checked);
     return { ...card, content: `${week.text}\n\n${card.content}` };
   }
 
   if (checked.missing) return ask(checked, opening);
-  // A typed "yes": the app saves it with the Confirm button, which knows the
+  // A typed "yes": the app saves it with the button, which knows the
   // student's time zone.
   return summary(checked, plan.confirm && !changed ? "Almost there." : "");
 }

@@ -52,7 +52,10 @@ when a first message names no subject.
 the day and the start time (and offers a matching pack), keeping the draft on
 its last reply (`metadata.schedule_draft`). It shows a summary card; Confirm in
 the app sends the instants (`schedule` in the request, worked out in the
-student's time zone) and only then is a `scheduled_sessions` row saved. The app
+student's time zone) and only then is a `scheduled_sessions` row saved. The
+student can change the day, time, type or length at any point, or cancel. The
+saved reply keeps the draft with its `session_id`, so a change of mind right
+after updates that row, and "cancel" asks before removing it. The app
 sends its wall clock as `client_now` so "tomorrow at 4" means the student's
 tomorrow. Tests: `npx --yes deno@2.5.4 test chat` (from this folder).
 

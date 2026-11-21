@@ -329,7 +329,7 @@ export async function runChat(
     if (last?.role === "buddy" && last.metadata?.quiz) {
       return { status: 400, body: { error: "That reply made a quiz, so it can't be regenerated. Ask for more questions instead." } };
     }
-    if (last?.role === "buddy" && (last.metadata?.schedule_draft || last.metadata?.scheduled)) {
+    if (last?.role === "buddy" && (last.metadata?.schedule_draft || last.metadata?.scheduled || last.metadata?.unscheduled)) {
       return { status: 400, body: { error: "That reply is part of planning a session, so it can't be regenerated. Answer it instead." } };
     }
     if (last?.role === "buddy" && before?.role === "user") {

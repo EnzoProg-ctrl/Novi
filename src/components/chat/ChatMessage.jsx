@@ -7,6 +7,8 @@ import { formatDuration, formatFullDay, formatTime, parseLocal } from '../../lib
 
 const timeOf = (date) => date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
 
+const TYPE_LABELS = { focus: 'Focus', practice: 'Practice', revision: 'Revision', break: 'Break' }
+
 /** "Tuesday, 25 November · 4:00 PM – 5:00 PM", in the student's own format. */
 function sessionWhen(start, end) {
   if (!start || !end) return ''
@@ -24,18 +26,21 @@ function SessionCard({ draft = null, saved = null, isLast, busy, onConfirm, onCh
   const title = draft?.title ?? saved.title
   const minutes = start && end ? Math.round((end - start) / 60_000) : null
   const pack = draft?.pack_title ?? null
+  const type = TYPE_LABELS[draft?.type ?? saved?.type] ?? null
+  // Changing a session that is already on the calendar.
+  const editing = Boolean(draft?.session_id)
 
   return (
     <div className={`ch-quiz ch-session${saved ? ' is-saved' : ''}`}>
       <span className="ch-quiz-icon">{saved ? <IconCheck /> : <IconCalendar />}</span>
       <span className="ch-quiz-text">
-        <span className="ch-quiz-title">{saved ? 'Added to your calendar' : title}</span>
+        <span className="ch-quiz-title">{saved ? 'On your calendar' : title}</span>
         <span className="ch-quiz-sub">{saved ? title : sessionWhen(start, end)}</span>
         {saved ? (
-          <span className="ch-quiz-sub">{sessionWhen(start, end)}</span>
+          <span className="ch-quiz-sub">{[sessionWhen(start, end), type].filter(Boolean).join(' · ')}</span>
         ) : (
           <span className="ch-quiz-sub">
-            {minutes ? formatDuration(minutes) : ''}{pack ? ` · ${pack}` : ''}
+            {[minutes ? formatDuration(minutes) : null, type, pack].filter(Boolean).join(' · ')}
           </span>
         )}
       </span>
@@ -44,7 +49,9 @@ function SessionCard({ draft = null, saved = null, isLast, busy, onConfirm, onCh
           <Link to="/calendar" className="ch-quiz-link">View in Calendar</Link>
         ) : isLast ? (
           <>
-            <button type="button" className="ch-quiz-cta" onClick={() => onConfirm(draft)} disabled={busy || !start}>Confirm</button>
+            <button type="button" className="ch-quiz-cta" onClick={() => onConfirm(draft)} disabled={busy || !start}>
+              {editing ? 'Save changes' : 'Confirm'}
+            </button>
             <button type="button" className="ch-quiz-link ch-link-btn" onClick={onChange} disabled={busy}>Change</button>
           </>
         ) : null}

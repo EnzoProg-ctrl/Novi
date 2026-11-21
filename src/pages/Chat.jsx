@@ -399,7 +399,8 @@ export function Chat() {
     if (result.conversation.studySetId) setPackId(result.conversation.studySetId)
     if (quiz?.created) setPacksKey((k) => k + 1)
     // A session planned here: Home's planned card and the reminder reload.
-    if (result.reply?.metadata?.scheduled) window.dispatchEvent(new Event('novi:schedule-changed'))
+    const meta = result.reply?.metadata
+    if (meta?.scheduled || meta?.unscheduled) window.dispatchEvent(new Event('novi:schedule-changed'))
   }
 
   /** A chat that now exists on the server becomes the one in the URL. */
@@ -684,7 +685,7 @@ export function Chat() {
     const start = parseLocal(draft.date, draft.start)
     if (!start) return
     const end = new Date(start.getTime() + draft.duration_minutes * 60_000)
-    submit('Confirm', { schedule: { action: 'confirm', starts_at: start.toISOString(), ends_at: end.toISOString() } })
+    submit(draft.session_id ? 'Save changes' : 'Confirm', { schedule: { action: 'confirm', starts_at: start.toISOString(), ends_at: end.toISOString() } })
   }
 
   // ── Tasks and navigation ──────────────────────────────────────
@@ -800,7 +801,8 @@ export function Chat() {
   const lastIndex = messages.length - 1
   const last = messages[lastIndex]
   const followUps =
-    last?.role === 'buddy' && !busy && !failure && !last.metadata.ask_quiz_count && !last.metadata.schedule_draft
+    last?.role === 'buddy' && !busy && !failure && !last.metadata.ask_quiz_count &&
+    !last.metadata.ask_schedule && !last.metadata.schedule_confirm
       ? last.metadata.follow_ups?.length ? last.metadata.follow_ups : FALLBACK_FOLLOW_UPS
       : []
 
@@ -927,7 +929,7 @@ export function Chat() {
                       <BuddyMessage
                         key={m.id}
                         message={m}
-                        canRegenerate={i === lastIndex && !m.metadata.quiz && !m.metadata.schedule_draft && !m.metadata.scheduled}
+                        canRegenerate={i === lastIndex && !m.metadata.quiz && !m.metadata.schedule_draft && !m.metadata.scheduled && !m.metadata.unscheduled}
                         isLast={i === lastIndex}
                         busy={busy}
                         onRegenerate={regenerate}
