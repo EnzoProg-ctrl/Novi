@@ -15,7 +15,7 @@
 
 import { generateJson } from "../_shared/ai/generate.ts";
 
-export type Category = "study" | "quiz" | "cheating" | "code" | "off_topic";
+export type Category = "study" | "quiz" | "schedule" | "cheating" | "code" | "off_topic";
 
 export type Verdict = {
   category: Category;
@@ -30,7 +30,7 @@ export type Verdict = {
 const GUARD_SCHEMA = {
   type: "OBJECT",
   properties: {
-    category: { type: "STRING", enum: ["study", "quiz", "cheating", "code", "off_topic"] },
+    category: { type: "STRING", enum: ["study", "quiz", "schedule", "cheating", "code", "off_topic"] },
     reason: { type: "STRING" },
     quiz_topic: { type: "STRING" },
     question_count: { type: "INTEGER" },
@@ -46,6 +46,7 @@ Classify the student's NEW message. Use the conversation for context (for exampl
 Categories:
 - "study": learning help. Explaining concepts and topics (including programming concepts in plain words), summaries, study plans, study strategies, memory techniques, exam preparation, checking or giving feedback on the student's own attempt, explaining how to solve a type of problem, motivation, greetings, questions about Novi or their study packs.
 - "quiz": the student wants practice questions or a practice quiz created for them, more or different questions added to one, or a quiz made bigger or smaller ("quiz me on X", "make 10 questions about chapter 2", "add 5 harder ones", "cut it down to 20", "I asked for 30, not 15").
+- "schedule": the student wants a study session put on their calendar: to schedule, plan, book or set one for a day or time ("schedule a study session", "plan a revision session for Friday at 4", "remind me to study biology tomorrow evening", "add a 2-hour study block on Monday"). Asking for advice on how to make a study plan, without asking to add a session, is "study".
 - "cheating": help that would be academic dishonesty. Answering questions from a test, quiz or exam they are taking now or that is graded; doing graded homework, assignments or essays for them to hand in; writing anything they will submit as their own work; getting around proctoring, plagiarism checkers or AI detectors. Asking how to solve a kind of problem in order to learn it is "study".
 - "code": asks Novi to write, complete, fix, convert or output code: programs, scripts, functions, commands, SQL, regex, spreadsheet formulas, HTML or CSS. Explaining what a programming idea means, in words, is "study".
 - "off_topic": anything not about learning or studying: entertainment, personal errands, role-play, unrelated writing, general chit-chat.
@@ -90,7 +91,7 @@ export async function classify({ message, history, packTitle, attachmentTitle = 
 
   try {
     const { data } = await generateJson<Verdict>(prompt, GUARD_SCHEMA, { outputTokens: 400, signal });
-    const valid: Category[] = ["study", "quiz", "cheating", "code", "off_topic"];
+    const valid: Category[] = ["study", "quiz", "schedule", "cheating", "code", "off_topic"];
     return valid.includes(data?.category) ? data : { category: "study", reason: "unrecognised verdict" };
   } catch (err) {
     if (signal.aborted) throw err;

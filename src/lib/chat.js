@@ -1,4 +1,5 @@
 import { SUPABASE_KEY, SUPABASE_URL, supabase } from './supabase'
+import { dateKey, timeKey } from './calendar-dates'
 
 /**
  * AI Chat data. Conversations and messages are read straight from the tables
@@ -74,7 +75,7 @@ const UNREACHABLE = 'Novi could not be reached. Check your connection and try ag
  * can keep the conversation and the student's message and offer a retry:
  * `error.conversation` and `error.userMessage` (either may be null).
  */
-export async function sendChat({ conversationId = null, message, studySetId = null, regenerate = false, materialId = null, onSaved }) {
+export async function sendChat({ conversationId = null, message, studySetId = null, regenerate = false, materialId = null, schedule = null, onSaved }) {
   let saved = null
   const fail = (text, payload = null) => {
     const failure = new Error(text)
@@ -99,6 +100,10 @@ export async function sendChat({ conversationId = null, message, studySetId = nu
         study_set_id: studySetId,
         regenerate,
         material_id: materialId,
+        // The student's wall clock, so "tomorrow at 4" means their tomorrow.
+        client_now: `${dateKey(new Date())}T${timeKey(new Date())}`,
+        // Confirm on a planned session's card: the instants to save.
+        ...(schedule ? { schedule } : {}),
         stream: true,
       }),
     })

@@ -27,6 +27,7 @@ import {
   sendChat,
   setFeedback,
 } from '../lib/chat'
+import { parseLocal } from '../lib/calendar-dates'
 import { NEW_CHAT, inflight } from '../lib/chatInflight'
 import { initialsFrom } from '../lib/initials'
 import { deleteMaterials, fileFingerprint, findDuplicateMaterial, processMaterial, uploadMaterial, validateFile } from '../lib/materials'
@@ -392,6 +393,8 @@ export function Chat() {
     const quiz = result.reply?.metadata?.quiz
     if (result.conversation.studySetId) setPackId(result.conversation.studySetId)
     if (quiz?.created) setPacksKey((k) => k + 1)
+    // A session planned here: Home's planned card and the reminder reload.
+    if (result.reply?.metadata?.scheduled) window.dispatchEvent(new Event('novi:schedule-changed'))
   }
 
   /** A chat that now exists on the server becomes the one in the URL. */
@@ -504,7 +507,8 @@ export function Chat() {
   }
 
   // ── Sending ────────────────────────────────────────────────────
-  const submit = async (text) => {
+  /** `schedule`: sent by Confirm on a planned session's card. */
+  const submit = async (text, { schedule = null } = {}) => {
     const typed = text.trim()
     const file = attachment?.status === 'ready' ? attachment : null
     const fileBusy = attachment && (attachment.status === 'uploading' || attachment.status === 'reading')
@@ -556,6 +560,7 @@ export function Chat() {
         message: typed,
         studySetId: packId,
         materialId: file?.material.id ?? null,
+        schedule,
         onSaved,
       })
       inflight.settle(entryKey(), { status: 'done', conversationId: result.conversation.id })
@@ -663,6 +668,18 @@ export function Chat() {
       patch(before)
       setNotice('Your feedback could not be saved. Try again.')
     }
+  }
+
+  /**
+   * Confirm on a planned session's card. The day and time are the student's
+   * own wall clock, so the instants are worked out here, where their time
+   * zone is known, and the server saves exactly these.
+   */
+  const confirmSession = (draft) => {
+    const start = parseLocal(draft.date, draft.start)
+    if (!start) return
+    const end = new Date(start.getTime() + draft.duration_minutes * 60_000)
+    submit('Confirm', { schedule: { action: 'confirm', starts_at: start.toISOString(), ends_at: end.toISOString() } })
   }
 
   // ── Tasks and navigation ──────────────────────────────────────
@@ -778,7 +795,7 @@ export function Chat() {
   const lastIndex = messages.length - 1
   const last = messages[lastIndex]
   const followUps =
-    last?.role === 'buddy' && !busy && !failure && !last.metadata.ask_quiz_count
+    last?.role === 'buddy' && !busy && !failure && !last.metadata.ask_quiz_count && !last.metadata.schedule_draft
       ? last.metadata.follow_ups?.length ? last.metadata.follow_ups : FALLBACK_FOLLOW_UPS
       : []
 
@@ -905,12 +922,14 @@ export function Chat() {
                       <BuddyMessage
                         key={m.id}
                         message={m}
-                        canRegenerate={i === lastIndex && !m.metadata.quiz}
+                        canRegenerate={i === lastIndex && !m.metadata.quiz && !m.metadata.schedule_draft && !m.metadata.scheduled}
                         isLast={i === lastIndex}
                         busy={busy}
                         onRegenerate={regenerate}
                         onFeedback={onFeedback}
                         onAskCount={(n, topic) => submit(`Make ${n} practice questions on ${topic}`)}
+                        onAnswer={(text) => submit(text)}
+                        onConfirmSession={confirmSession}
                         arrived={arrived?.id === m.id ? arrived.mode : null}
                       />
                     ),

@@ -47,6 +47,16 @@ Deno.serve(async (req: Request) => {
     return json({ error: "Invalid request" }, 400);
   }
   if (body.message !== undefined && typeof body.message !== "string") return json({ error: "Invalid request" }, 400);
+  if (body.client_now !== undefined && (typeof body.client_now !== "string" || body.client_now.length > 40)) {
+    return json({ error: "Invalid request" }, 400);
+  }
+  if (
+    body.schedule !== undefined &&
+    (typeof body.schedule !== "object" || body.schedule === null || body.schedule.action !== "confirm" ||
+      typeof body.schedule.starts_at !== "string" || typeof body.schedule.ends_at !== "string")
+  ) {
+    return json({ error: "Invalid request" }, 400);
+  }
 
   if (!(await takeRateLimit(user.id, LIMITS.chat))) return json({ error: TOO_MANY }, 429);
 

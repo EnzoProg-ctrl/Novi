@@ -104,6 +104,13 @@ export const IconTarget = (props) => (
   </svg>
 )
 
+export const IconCalendar = (props) => (
+  <svg {...base} {...props}>
+    <rect x="3.5" y="5" width="17" height="15" rx="2.5" />
+    <path d="M3.5 10h17M8 3v4M16 3v4" />
+  </svg>
+)
+
 export const IconBubble = (props) => (
   <svg {...base} {...props}>
     <path d="M20 14.5a2.5 2.5 0 01-2.5 2.5H9l-4 3.5V6.5A2.5 2.5 0 017.5 4h10A2.5 2.5 0 0120 6.5v8z" />

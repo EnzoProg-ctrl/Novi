@@ -1,11 +1,11 @@
 import { IconChevronRight } from '../study/PackIcons'
 import { LoadingRegion, Sk, SkText } from '../Skeleton'
-import { IconBubble, IconBulb, IconDots, IconNotes, IconQuiz, IconTarget } from './ChatIcons'
+import { IconBubble, IconBulb, IconCalendar, IconDots, IconNotes, IconQuiz, IconTarget } from './ChatIcons'
 import { ChatRowMenu } from './ChatRowMenu'
 import { whenLabel } from '../../lib/chat'
 import { RECENT_SHOWN, TASKS } from './chatPrompts'
 
-const TASK_ICONS = { explain: IconBulb, practice: IconQuiz, summarize: IconNotes, strategies: IconTarget }
+const TASK_ICONS = { explain: IconBulb, practice: IconQuiz, summarize: IconNotes, schedule: IconCalendar, strategies: IconTarget }
 
 export function WaysToHelp({ onTask }) {
   return (

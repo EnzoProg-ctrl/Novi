@@ -13,6 +13,7 @@ import { generateJson } from "../_shared/ai/generate.ts";
 import { logError } from "../_shared/security.ts";
 import { classify, DECLINE, stripCode } from "./guard.ts";
 import { makeQuiz } from "./quiz.ts";
+import { type Draft, localNowFrom, scheduleTurn } from "./schedule.ts";
 import { clarifyReply, vagueRequest } from "./vague.ts";
 
 export type ChatRequest = {
@@ -23,6 +24,10 @@ export type ChatRequest = {
   regenerate?: boolean;
   /** A file attached in the chat, already uploaded and read. */
   material_id?: string | null;
+  /** The student's wall clock, "YYYY-MM-DDTHH:MM", for planning sessions. */
+  client_now?: string;
+  /** Sent by Confirm on a planned session's summary card. */
+  schedule?: { action: "confirm"; starts_at: string; ends_at: string };
 };
 
 /** The choices offered when Novi asks how many practice questions to make. */
@@ -322,6 +327,9 @@ export async function runChat(
     if (last?.role === "buddy" && last.metadata?.quiz) {
       return { status: 400, body: { error: "That reply made a quiz, so it can't be regenerated. Ask for more questions instead." } };
     }
+    if (last?.role === "buddy" && (last.metadata?.schedule_draft || last.metadata?.scheduled)) {
+      return { status: 400, body: { error: "That reply is part of planning a session, so it can't be regenerated. Answer it instead." } };
+    }
     if (last?.role === "buddy" && before?.role === "user") {
       await db.from("chat_messages").delete().eq("id", last.id);
       question = before;
@@ -353,7 +361,7 @@ export async function runChat(
 
   // ── Earlier messages, oldest first, without the current one ──
   const { data: past } = await db.from("chat_messages")
-    .select("id, role, content").eq("conversation_id", conversationId)
+    .select("id, role, content, metadata").eq("conversation_id", conversationId)
     .order("created_at", { ascending: false }).limit(HISTORY_MESSAGES + 1);
   const history = (past ?? []).filter((m) => m.id !== question!.id).slice(0, HISTORY_MESSAGES).reverse();
 
@@ -361,7 +369,7 @@ export async function runChat(
   // study preferences (Settings -> Study Preferences).
   const [{ data: buddyRow }, { data: profile }] = await Promise.all([
     db.from("buddies").select("name, personality").eq("user_id", user.id).maybeSingle(),
-    db.from("profiles").select("chat_quiz_size, reply_length, question_types, education_level, course").eq("id", user.id).maybeSingle(),
+    db.from("profiles").select("chat_quiz_size, reply_length, question_types, education_level, course, default_session_minutes, default_break_minutes").eq("id", user.id).maybeSingle(),
   ]);
   const replyLength = (profile?.reply_length as string | undefined) ?? "balanced";
   const questionTypes = (profile?.question_types as string[] | null | undefined) ?? null;
@@ -381,6 +389,51 @@ export async function runChat(
     materialId = pack?.material_id ?? null;
   }
 
+  // ── Planning a study session (schedule.ts) ─────────────────
+  // Runs before the usual check while a session is being planned (Novi's last
+  // reply holds a draft), since answers like "tomorrow" or "4pm" mean nothing
+  // to it on their own.
+  const lastReply = history.at(-1)?.role === "buddy" ? history.at(-1) : null;
+  const pendingDraft = (lastReply?.metadata?.schedule_draft ?? null) as Draft | null;
+  const confirm = body.schedule?.action === "confirm" ? body.schedule : null;
+
+  const planSession = async (draft: Draft, opening: boolean): Promise<Result | null> => {
+    const { data: packRows } = await db.from("study_sets").select("id, title")
+      .order("created_at", { ascending: false }).limit(30);
+    let turn;
+    try {
+      turn = await scheduleTurn({
+        db,
+        userId: user.id,
+        message: question!.content,
+        history,
+        draft,
+        opening,
+        now: localNowFrom(body.client_now),
+        packs: (packRows ?? []) as { id: string; title: string }[],
+        defaults: {
+          session: (profile?.default_session_minutes as number | null | undefined) ?? 60,
+          brk: (profile?.default_break_minutes as number | null | undefined) ?? 10,
+        },
+        confirm: draft === pendingDraft ? confirm : null,
+        signal,
+      });
+    } catch (err) {
+      console.log(JSON.stringify({ schedule_failed: err instanceof Error ? err.message : String(err) }));
+      return { status: 502, body: { error: friendlyError(err, signal), conversation, user_message: userMessage } };
+    }
+    if (turn.kind === "unrelated") return null;
+    const meta = { guard: "schedule", guard_reason: "planning a session" };
+    await db.from("chat_messages").update({ metadata: meta }).eq("id", question!.id);
+    if (userMessage) userMessage = { ...userMessage, metadata: meta };
+    return await saveReply({ db, user, conversation: conversation!, conversationId, userMessage, content: turn.content, metadata: turn.metadata });
+  };
+
+  if (pendingDraft) {
+    const handled = await planSession(pendingDraft, false);
+    if (handled) return handled;
+  }
+
   // ── What is being asked ──────────────────────────────────────
   let verdict;
   try {
@@ -392,6 +445,11 @@ export async function runChat(
   const userMeta = { ...(attachment ? { attachment } : {}), guard: verdict.category, guard_reason: verdict.reason ?? null };
   await db.from("chat_messages").update({ metadata: userMeta }).eq("id", question.id);
   if (userMessage) userMessage = { ...userMessage, metadata: userMeta };
+
+  if (verdict.category === "schedule") {
+    const handled = await planSession({}, true);
+    if (handled) return handled;
+  }
 
   // ── "Summarize" / "let's discuss" with no subject ────────────
   // With no file, no chosen pack and nothing said before, there is nothing

@@ -44,8 +44,17 @@ generate -> save, moving `materials.status` through
 ## chat
 
 AI Chat. `core.ts` handles one turn; `guard.ts` checks each message first (study
-help, quiz, cheating, code, off-topic) and removes code from replies; `quiz.ts`
-saves practice questions into a pack.
+help, quiz, schedule, cheating, code, off-topic) and removes code from replies;
+`quiz.ts` saves practice questions into a pack; `vague.ts` asks what to cover
+when a first message names no subject.
+
+`schedule.ts` plans a study session over several turns: Novi asks for what,
+the day and the start time (and offers a matching pack), keeping the draft on
+its last reply (`metadata.schedule_draft`). It shows a summary card; Confirm in
+the app sends the instants (`schedule` in the request, worked out in the
+student's time zone) and only then is a `scheduled_sessions` row saved. The app
+sends its wall clock as `client_now` so "tomorrow at 4" means the student's
+tomorrow. Tests: `npx --yes deno@2.5.4 test chat` (from this folder).
 
 ## delete-account
 

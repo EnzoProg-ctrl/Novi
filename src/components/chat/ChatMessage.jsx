@@ -2,9 +2,56 @@ import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Markdown } from '../study/Markdown'
 import { MascotRig } from '../MascotRig'
-import { IconCheck, IconCopy, IconNotes, IconQuiz, IconRefresh, IconThumbDown, IconThumbUp } from './ChatIcons'
+import { IconCalendar, IconCheck, IconCopy, IconNotes, IconQuiz, IconRefresh, IconThumbDown, IconThumbUp } from './ChatIcons'
+import { formatDuration, formatFullDay, formatTime, parseLocal } from '../../lib/calendar-dates'
 
 const timeOf = (date) => date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+
+/** "Tuesday, 25 November · 4:00 PM – 5:00 PM", in the student's own format. */
+function sessionWhen(start, end) {
+  if (!start || !end) return ''
+  return `${formatFullDay(start)} · ${formatTime(start)} – ${formatTime(end)}`
+}
+
+/**
+ * A session being planned in chat, or one just added. `draft` (to confirm)
+ * holds the student's local day and time; `saved` holds the stored instants.
+ * Confirm and Change only show on Novi's latest reply.
+ */
+function SessionCard({ draft = null, saved = null, isLast, busy, onConfirm, onChange }) {
+  const start = draft ? parseLocal(draft.date, draft.start) : new Date(saved.starts_at)
+  const end = draft ? (start && new Date(start.getTime() + draft.duration_minutes * 60_000)) : new Date(saved.ends_at)
+  const title = draft?.title ?? saved.title
+  const minutes = start && end ? Math.round((end - start) / 60_000) : null
+  const pack = draft?.pack_title ?? null
+
+  return (
+    <div className={`ch-quiz ch-session${saved ? ' is-saved' : ''}`}>
+      <span className="ch-quiz-icon">{saved ? <IconCheck /> : <IconCalendar />}</span>
+      <span className="ch-quiz-text">
+        <span className="ch-quiz-title">{saved ? 'Added to your calendar' : title}</span>
+        <span className="ch-quiz-sub">{saved ? title : sessionWhen(start, end)}</span>
+        {saved ? (
+          <span className="ch-quiz-sub">{sessionWhen(start, end)}</span>
+        ) : (
+          <span className="ch-quiz-sub">
+            {minutes ? formatDuration(minutes) : ''}{pack ? ` · ${pack}` : ''}
+          </span>
+        )}
+      </span>
+      <span className="ch-quiz-actions">
+        {saved ? (
+          <Link to="/calendar" className="ch-quiz-link">View in Calendar</Link>
+        ) : isLast ? (
+          <>
+            <button type="button" className="ch-quiz-cta" onClick={() => onConfirm(draft)} disabled={busy || !start}>Confirm</button>
+            <button type="button" className="ch-quiz-link ch-link-btn" onClick={onChange} disabled={busy}>Change</button>
+          </>
+        ) : null}
+      </span>
+    </div>
+  )
+}
 
 /** Novi's profile picture, beside replies and in the chat header. */
 export function NoviAvatar({ size = 32 }) {
@@ -38,7 +85,7 @@ export function UserMessage({ message, initials }) {
  * A reply from Novi. Controls appear only where they work: copy always,
  * feedback once the reply is saved, regenerate on the latest reply only.
  */
-export function BuddyMessage({ message, canRegenerate, busy, isLast, onRegenerate, onFeedback, onAskCount, arrived = null }) {
+export function BuddyMessage({ message, canRegenerate, busy, isLast, onRegenerate, onFeedback, onAskCount, onAnswer, onConfirmSession, arrived = null }) {
   const [copied, setCopied] = useState(false)
   const timer = useRef(null)
   useEffect(() => () => clearTimeout(timer.current), [])
@@ -58,6 +105,9 @@ export function BuddyMessage({ message, canRegenerate, busy, isLast, onRegenerat
   const sources = message.metadata.used_material ? message.metadata.sources ?? [] : []
   const quiz = message.metadata.quiz ?? null
   const ask = message.metadata.ask_quiz_count ?? null
+  const askSchedule = message.metadata.ask_schedule ?? null
+  const confirmSession = message.metadata.schedule_confirm ?? null
+  const scheduled = message.metadata.scheduled ?? null
 
   return (
     // `arrived`: this reply just replaced "Novi is typing" ('morph' or 'fade').
@@ -89,7 +139,28 @@ export function BuddyMessage({ message, canRegenerate, busy, isLast, onRegenerat
               </span>
             </div>
           )}
+          {confirmSession && (
+            <SessionCard
+              draft={confirmSession}
+              isLast={isLast}
+              busy={busy}
+              onConfirm={onConfirmSession}
+              onChange={() => onAnswer('I want to change something')}
+            />
+          )}
+          {scheduled && <SessionCard saved={scheduled} isLast={isLast} busy={busy} />}
         </div>
+        {askSchedule?.options?.length > 0 && isLast && (
+          <div className="ch-ask ch-ask-wrap" role="group" aria-label="Suggested answers">
+            <span className="ch-ask-options">
+              {askSchedule.options.map((option) => (
+                <button key={option} type="button" className="ch-ask-btn" disabled={busy} onClick={() => onAnswer(option)}>
+                  {option}
+                </button>
+              ))}
+            </span>
+          </div>
+        )}
         {ask && isLast && (
           <div className="ch-ask" role="group" aria-label="How many practice questions?">
             <span className="ch-ask-label">How many practice questions?</span>

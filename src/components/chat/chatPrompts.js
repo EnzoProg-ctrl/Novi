@@ -42,6 +42,13 @@ export const TASKS = [
     hint: 'Paste your notes, or choose a study pack with the paperclip.',
   },
   {
+    id: 'schedule',
+    tone: 'blue',
+    title: 'Plan a study session',
+    description: 'Add a session to your calendar.',
+    fill: (pack) => (pack ? `Schedule a study session for "${pack.title}"` : 'Schedule a study session'),
+  },
+  {
     id: 'strategies',
     tone: 'coral',
     title: 'Give study strategies',

@@ -944,6 +944,20 @@
 .ch-ask-btn:focus-visible { outline: 2px solid var(--coral); outline-offset: 2px; }
 .ch-ask-btn:disabled { opacity: 0.5; cursor: default; }
 
+/* Answers while a study session is being planned: longer labels, so they wrap. */
+.ch-ask-wrap .ch-ask-options { flex-wrap: wrap; }
+.ch-ask-wrap .ch-ask-btn { font-weight: 620; }
+
+/* ── Study session planned in chat ───────────────────────────── */
+/* Built on the quiz card. Buttons get the link and CTA looks. */
+.ch-session .ch-quiz-cta { border: 0; font: inherit; font-size: 0.84rem; font-weight: 650; cursor: pointer; }
+.ch-session .ch-quiz-cta:disabled { opacity: 0.55; cursor: default; }
+.ch-link-btn { padding: 0; border: 0; background: none; font: inherit; font-size: 0.84rem; font-weight: 620; cursor: pointer; }
+.ch-link-btn:hover:not(:disabled) { text-decoration: underline; }
+.ch-link-btn:disabled { opacity: 0.55; cursor: default; }
+.ch-session.is-saved { border-color: color-mix(in srgb, var(--success) 30%, transparent); }
+.ch-session.is-saved .ch-quiz-icon { background: var(--success-tint); color: var(--success-ink); }
+
 /* ── Recent Chats: ⋯ menu, rename and delete ─────────────────── */
 /* The row holds the open-chat button and, beside it, the ⋯ button. They are
    siblings (a button cannot contain a button), laid over each other so the
