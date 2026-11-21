@@ -109,8 +109,13 @@ export function Chat() {
   const returnFocus = useRef(null)
 
   // Replies that arrive after the page has gone must not touch it (or navigate).
+  // Nothing is on screen any more either: if the page is mounted again (React
+  // does this once in development to check cleanups), the conversation must
+  // load afresh. Otherwise the load just cancelled here is never redone and
+  // the chat stays on its loading placeholder.
   useEffect(() => () => {
     viewToken.current += 1
+    shownId.current = null
     stopWaiting.current()
   }, [])
 
