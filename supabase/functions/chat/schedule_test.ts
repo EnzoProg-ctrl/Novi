@@ -8,6 +8,7 @@
 import { assert, assertEquals } from "jsr:@std/assert@1";
 import {
   applyPlan,
+  changeNote,
   confirmedTimes,
   type Draft,
   localNowFrom,
@@ -186,4 +187,15 @@ Deno.test("a saved session keeps its id through changes", () => {
   const moved = check(applyPlan(savedDraft, { start: "18:00" }));
   assertEquals(moved.draft.session_id, "s-1");
   assertEquals(moved.missing, null);
+});
+
+Deno.test("a change of mind is acknowledged", () => {
+  const monday = check({ title: "React framework", date: "2026-11-23" }).draft;
+  const wednesday = check(applyPlan(monday, { date: "2026-11-25" })).draft;
+  assertEquals(changeNote(monday, wednesday, now, packs), "Okay, I changed the day to **Wednesday, November 25**.");
+  const base = check(complete).draft;
+  const both = check(applyPlan(base, { start: "18:00", type: "revision" })).draft;
+  assertEquals(changeNote(base, both, now, packs), "Okay, I changed the time to **6:00 PM** and the type to **revision session**.");
+  // Filling in a detail for the first time is not a change.
+  assertEquals(changeNote(check({ title: "Biology" }).draft, check({ title: "Biology", date: "2026-11-25" }).draft, now, packs), "");
 });

@@ -327,6 +327,31 @@ export function nextQuestion(
   return { content: [lead, question].filter(Boolean).join(" "), options };
 }
 
+/**
+ * "Okay, I changed the day to Wednesday, November 25." for details the
+ * student had already set and has now changed, so a change of mind is
+ * visibly taken. Empty when nothing set before has changed.
+ */
+export function changeNote(before: Draft, after: Draft, now: LocalNow, packs: Pack[]): string {
+  const parts: string[] = [];
+  if (before.title && after.title && before.title !== after.title) parts.push(`the title to **${after.title}**`);
+  if (before.date && after.date && before.date !== after.date) parts.push(`the day to **${dayLabel(after.date, now)}**`);
+  if (before.start && after.start && before.start !== after.start) parts.push(`the time to **${timeLabel(after.start)}**`);
+  if (before.type && after.type && before.type !== after.type && !after.type_pending) {
+    parts.push(`the type to **${TYPE_LABELS[after.type]}**`);
+  }
+  if (before.duration_minutes && after.duration_minutes && before.duration_minutes !== after.duration_minutes) {
+    parts.push(`the length to **${durationLabel(after.duration_minutes)}**`);
+  }
+  if (before.pack_decided && after.pack_decided && (before.pack_id ?? null) !== (after.pack_id ?? null)) {
+    const pack = packs.find((p) => p.id === after.pack_id);
+    parts.push(pack ? `the pack to **${pack.title}**` : "it to have no pack");
+  }
+  if (!parts.length) return "";
+  const list = parts.length === 1 ? parts[0] : `${parts.slice(0, -1).join(", ")} and ${parts.at(-1)}`;
+  return `Okay, I changed ${list}.`;
+}
+
 /** One line describing a complete draft, for Novi's replies. */
 export function describe(draft: Draft, now: LocalNow, packs: Pack[]): string {
   const pack = packs.find((p) => p.id === draft.pack_id);
@@ -599,11 +624,11 @@ export async function scheduleTurn({ db, userId, message, history, draft: previo
 }): Promise<TurnResult> {
   const saved = Boolean(previous.session_id);
 
-  const ask = (checked: Checked, lead = false, prefix = ""): Reply => {
+  const ask = (checked: Checked, lead = false, note = ""): Reply => {
     const { content, options } = nextQuestion(checked, now, packs, lead);
     return {
       kind: "reply",
-      content: [prefix, content].filter(Boolean).join("\n\n"),
+      content: [note, content].filter(Boolean).join(" "),
       metadata: { guard: "schedule", schedule_draft: checked.draft, ask_schedule: { field: checked.missing, options }, follow_ups: [] },
     };
   };
@@ -720,6 +745,7 @@ export async function scheduleTurn({ db, userId, message, history, draft: previo
   const before = validateDraft(previous, now, packs, defaults);
   const checked = validateDraft(applyPlan(previous, plan), now, packs, defaults);
   const changed = JSON.stringify(checked.draft) !== JSON.stringify(before.draft) || checked.missing !== before.missing;
+  const note = changeNote(before.draft, checked.draft, now, packs);
 
   // Right after saving, a message that changes nothing ("thanks!") is ordinary chat.
   if (saved && !changed && !plan.wants_change && !plan.asks_availability) return { kind: "unrelated" };
@@ -762,12 +788,12 @@ export async function scheduleTurn({ db, userId, message, history, draft: previo
         metadata: { guard: "schedule", schedule_draft: checked.draft, follow_ups: ["Move it to another time", "Plan another study session"] },
       };
     }
-    const card = summary(checked);
+    const card = summary(checked, note);
     return { ...card, content: `${week.text}\n\n${card.content}` };
   }
 
-  if (checked.missing) return ask(checked, opening);
+  if (checked.missing) return ask(checked, opening, note);
   // A typed "yes": the app saves it with the button, which knows the
   // student's time zone.
-  return summary(checked, plan.confirm && !changed ? "Almost there." : "");
+  return summary(checked, note || (plan.confirm && !changed ? "Almost there." : ""));
 }
