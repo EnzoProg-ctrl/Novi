@@ -11,6 +11,11 @@ import {
   changeNote,
   clashWarning,
   findClashes,
+  durationLabel,
+  findStrain,
+  mondayOf,
+  sameDraft,
+  strainWarning,
   confirmedTimes,
   type Draft,
   localNowFrom,
@@ -240,4 +245,109 @@ Deno.test("keeping both lasts until the day or time changes", () => {
   assertEquals(applyPlan(kept, { title: "History notes" }).clash_ok, true);
   assertEquals(applyPlan(kept, { start: "18:00" }).clash_ok, false);
   assertEquals(applyPlan(kept, { date: "2026-11-26" }).clash_ok, false);
+});
+
+// Week of Monday 2026-11-23 to Sunday 2026-11-29.
+const day = (n: number) => `2026-11-${String(22 + n).padStart(2, "0")}`; // day(1) = Monday 23rd
+const study = (date: string, start: string, end: string, extra: Record<string, unknown> = {}) =>
+  ({ id: `${date}-${start}`, date, start, end, title: "Study", type: "focus" as const, ...extra });
+const planDraft = (date: string, start: string, minutes: number, extra: Draft = {}) =>
+  check({ title: "New", date, start, duration_minutes: minutes, type: "focus", pack_decided: true, ...extra }).draft;
+
+Deno.test("weeks run Monday to Sunday", () => {
+  assertEquals(mondayOf("2026-11-25"), "2026-11-23");
+  assertEquals(mondayOf("2026-11-29"), "2026-11-23"); // Sunday
+  assertEquals(mondayOf("2026-11-23"), "2026-11-23");
+});
+
+Deno.test("a heavy week is warned about above 25 hours, firmly above 30", () => {
+  // 24 hours planned over four days, then a one-hour session: exactly 25h, no warning.
+  const heavy = [1, 2, 3, 4].map((n) => study(day(n), "08:00", "14:00")); // 6h x 4 = 24h
+  assertEquals(findStrain(planDraft(day(5), "09:00", 60), heavy), null);
+  const over = findStrain(planDraft(day(5), "09:00", 120), heavy)!; // 26h
+  assertEquals(over.reasons, ["week"]);
+  assertEquals(over.week_minutes, 26 * 60);
+  assert(strainWarning(over, planDraft(day(5), "09:00", 120), now).includes("**26 hours** of study the week of Monday, November 23"));
+  const firm = findStrain(planDraft(day(5), "09:00", 7 * 60), heavy)!; // 31h
+  assert(strainWarning(firm, planDraft(day(5), "09:00", 7 * 60), now).includes("past what most people can keep up"));
+});
+
+Deno.test("breaks never count, finished sessions do, other weeks don't", () => {
+  const planned = [
+    study(day(1), "08:00", "20:00", { type: "break" }),
+    study(day(2), "08:00", "14:00", { completed: true }),
+    study("2026-11-30", "08:00", "20:00"), // next Monday
+  ];
+  assertEquals(findStrain(planDraft(day(3), "09:00", 120), planned), null);
+  assertEquals(findStrain(planDraft(day(3), "09:00", 120, { type: "break" }), [study(day(1), "08:00", "20:00"), study(day(2), "08:00", "20:00")]), null);
+});
+
+Deno.test("editing a session isn't counted twice", () => {
+  const planned = [study(day(1), "08:00", "14:00"), study(day(2), "08:00", "14:00"), study(day(3), "08:00", "14:00"),
+    study(day(4), "08:00", "14:00"), study(day(5), "08:00", "09:00", { id: "mine" })]; // 25h
+  assertEquals(findStrain(planDraft(day(5), "08:00", 60, { session_id: "mine" }), planned), null);
+  assertEquals(findStrain(planDraft(day(5), "10:00", 120), planned)?.reasons, ["week"]);
+});
+
+Deno.test("more than 3 hours in a row, including back-to-back sessions", () => {
+  assertEquals(findStrain(planDraft(day(1), "09:00", 181), [])?.reasons, ["stretch"]);
+  assertEquals(findStrain(planDraft(day(1), "09:00", 180), []), null);
+  // Back to back with a 2-hour session: 2h + 2h in a row.
+  const joined = findStrain(planDraft(day(1), "11:00", 120), [study(day(1), "09:00", "11:00")])!;
+  assertEquals(joined.stretch_minutes, 240);
+  assertEquals(joined.reasons, ["stretch"]);
+  // A 10-minute gap is a real break.
+  assertEquals(findStrain(planDraft(day(1), "11:10", 120), [study(day(1), "09:00", "11:00")]), null);
+  // A 9-minute gap is not.
+  assertEquals(findStrain(planDraft(day(1), "11:09", 120), [study(day(1), "09:00", "11:00")])?.reasons, ["stretch"]);
+  // A break session in between doesn't join them.
+  assertEquals(findStrain(planDraft(day(1), "11:00", 120), [study(day(1), "09:00", "11:00", { type: "break" })]), null);
+});
+
+Deno.test("a fifth study session in a day is warned about", () => {
+  const four = [study(day(1), "08:00", "09:00"), study(day(1), "10:00", "11:00"), study(day(1), "12:00", "13:00"), study(day(1), "14:00", "15:00")];
+  const fifth = findStrain(planDraft(day(1), "17:00", 60), four)!;
+  assertEquals(fifth.reasons, ["day"]);
+  assertEquals(fifth.day_count, 5);
+  assert(strainWarning(fifth, planDraft(day(1), "17:00", 60), now).includes("your **5th** study session"));
+  assertEquals(findStrain(planDraft(day(1), "17:00", 60), four.slice(0, 3)), null);
+});
+
+Deno.test("several reasons share one warning", () => {
+  const planned = [1, 2, 3, 4].map((n) => study(day(n), "08:00", "14:00"));
+  const draft = planDraft(day(5), "09:00", 4 * 60);
+  const strain = findStrain(draft, planned)!;
+  assertEquals(strain.reasons, ["week", "stretch"]);
+  const text = strainWarning(strain, draft, now);
+  assert(text.startsWith("Heads up: ") && text.endsWith("Proceed anyway, or change it?"));
+  assert(text.includes("of study the week of") && text.includes("in a row with no real break"));
+});
+
+Deno.test("proceeding anyway lasts until the plan changes", () => {
+  const ok = { ...planDraft(day(1), "09:00", 240), load_ok: true };
+  assertEquals(applyPlan(ok, { title: "Other" }).load_ok, true);
+  assertEquals(applyPlan(ok, { duration_minutes: 120 }).load_ok, false);
+  assertEquals(applyPlan(ok, { type: "practice" }).load_ok, false);
+  assertEquals(applyPlan(ok, { start: "10:00" }).load_ok, false);
+});
+
+Deno.test("the warning says 'this week' only for the current week", () => {
+  // now is Saturday 2026-11-21, so this week is Monday 16th to Sunday 22nd.
+  const heavy = [16, 17, 18, 19].map((d) => study(`2026-11-${d}`, "08:00", "14:00"));
+  const draft = planDraft("2026-11-22", "09:00", 120);
+  assert(strainWarning(findStrain(draft, heavy)!, draft, now).includes("of study this week"));
+});
+
+Deno.test("exact lengths, so a stretch just over the limit doesn't read as within it", () => {
+  assertEquals(durationLabel(181), "3 hours 1 minute");
+  assertEquals(durationLabel(1), "1 minute");
+  const strain = findStrain(planDraft(day(1), "09:00", 181), [])!;
+  assert(strainWarning(strain, planDraft(day(1), "09:00", 181), now).includes("**3 hours 1 minute** of study in a row"));
+});
+
+Deno.test("which warning was shown doesn't count as a change", () => {
+  const draft = planDraft(day(1), "09:00", 240);
+  assert(sameDraft({ ...draft, strain_shown: true }, applyPlan({ ...draft, strain_shown: true }, { wants_change: true })));
+  assert(sameDraft({ ...draft, clash_shown: true }, { ...draft, clash_shown: false }));
+  assert(!sameDraft(draft, applyPlan(draft, { start: "10:00" })));
 });

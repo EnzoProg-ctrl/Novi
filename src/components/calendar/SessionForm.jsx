@@ -9,7 +9,7 @@ import {
   sameDay,
   timeKey,
 } from '../../lib/calendar-dates'
-import { MAX_SESSION_MINUTES, findClashes } from '../../lib/schedule'
+import { MAX_SESSION_MINUTES, findClashes, findStrain } from '../../lib/schedule'
 import { IconClose } from '../app/AppIcons'
 import { SESSION_TYPES } from './sessionTypes'
 import { DatePicker } from '../DatePicker'
@@ -18,6 +18,8 @@ import { TimeSelect } from '../TimeSelect'
 import { friendlyError } from '../../lib/errors'
 
 const pad = (n) => String(n).padStart(2, '0')
+
+const ordinal = (n) => `${n}${n % 100 >= 11 && n % 100 <= 13 ? 'th' : ['th', 'st', 'nd', 'rd'][n % 10 < 4 ? n % 10 : 0]}`
 
 /** Next full hour if planning for today, otherwise late afternoon. */
 function defaultStart(date, now) {
@@ -105,6 +107,9 @@ export function SessionForm({ session, prefill, packs, sessions = [], now, savin
     ? findClashes({ id: session?.id, title: values.title, packId: values.packId || null, start, end }, sessions)
     : []
   const overlapping = clashes.some((c) => c.kind === 'overlap')
+  // A heavy week, a long stretch with no break, or a crowded day.
+  const strain = duration ? findStrain({ id: session?.id, type: values.type, start, end }, sessions) : null
+  const warned = clashes.length > 0 || Boolean(strain)
 
   async function handleSubmit(event) {
     event.preventDefault()
@@ -273,13 +278,30 @@ export function SessionForm({ session, prefill, packs, sessions = [], now, savin
         </div>
       )}
 
+      {strain && (
+        <div className="msg msg-warn cal-clash" role="status">
+          <p>
+            {[
+              strain.reasons.includes('week') &&
+                (strain.firm
+                  ? `That's ${formatDuration(strain.weekMinutes)} of study that week, past what most people can keep up.`
+                  : `That's ${formatDuration(strain.weekMinutes)} of study that week. Most people do best with 10 to 25 hours.`),
+              strain.reasons.includes('stretch') && `It makes ${formatDuration(strain.stretchMinutes)} of study in a row with no real break.`,
+              strain.reasons.includes('day') && `It would be your ${ordinal(strain.dayCount)} study session that day.`,
+            ]
+              .filter(Boolean)
+              .join(' ')}
+          </p>
+        </div>
+      )}
+
       <div className="nv-modal-actions">
         <button type="button" className="btn btn-secondary" onClick={onCancel} disabled={saving}>
           Cancel
         </button>
         <button className="btn btn-primary" disabled={saving}>
           {saving && <span className="spinner" />}
-          {saving ? 'Saving…' : clashes.length > 0 ? 'Save anyway' : 'Save Session'}
+          {saving ? 'Saving…' : warned ? 'Save anyway' : 'Save Session'}
         </button>
       </div>
     </form>

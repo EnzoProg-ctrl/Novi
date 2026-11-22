@@ -165,3 +165,61 @@ export function findClashes(candidate, sessions) {
       : sameTopic(candidate, s) ? { session: s, kind: 'same_topic' } : null))
     .filter(Boolean)
 }
+
+// ── Too much study ─────────────────────────────────────────────
+// Same limits and rules as AI Chat (findStrain in supabase/functions/chat/schedule.ts).
+const WEEK_WARN_MINUTES = 25 * 60
+const WEEK_FIRM_MINUTES = 30 * 60
+const STRETCH_MAX_MINUTES = 3 * 60
+const REST_GAP_MINUTES = 10
+const DAY_MAX_SESSIONS = 4
+
+const minutes = (a, b) => Math.round((b - a) / 60000)
+
+/** Local midnight of the Monday on or before `date`. */
+function mondayOf(date) {
+  const d = new Date(date.getFullYear(), date.getMonth(), date.getDate())
+  d.setDate(d.getDate() - ((d.getDay() + 6) % 7))
+  return d
+}
+
+/**
+ * How heavy the plan gets with `candidate` ({ id?, type, start, end }) added:
+ * the week's study (Monday to Sunday, finished or not), the stretch it joins
+ * with no real break (gaps under 10 minutes don't count), and the day's study
+ * sessions. Breaks never count, and the session being edited isn't counted
+ * twice. Returns null when nothing is over the limits.
+ */
+export function findStrain(candidate, sessions) {
+  if (!candidate.start || !candidate.end || candidate.type === 'break') return null
+  const others = sessions.filter((s) => s.type !== 'break' && s.id !== candidate.id)
+
+  const monday = mondayOf(candidate.start)
+  const nextMonday = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + 7)
+  const week = others
+    .filter((s) => s.start >= monday && s.start < nextMonday)
+    .reduce((sum, s) => sum + minutes(s.start, s.end), minutes(candidate.start, candidate.end))
+
+  const day = others.filter((s) => localDay(s.start) === localDay(candidate.start))
+  let from = candidate.start
+  let to = candidate.end
+  const gap = REST_GAP_MINUTES * 60000
+  for (let changed = true; changed;) {
+    changed = false
+    for (const s of day) {
+      if (s.start < new Date(to.getTime() + gap) && s.end > new Date(from.getTime() - gap) && (s.start < from || s.end > to)) {
+        if (s.start < from) from = s.start
+        if (s.end > to) to = s.end
+        changed = true
+      }
+    }
+  }
+  const stretch = minutes(from, to)
+  const count = day.length + 1
+
+  const reasons = []
+  if (week > WEEK_WARN_MINUTES) reasons.push('week')
+  if (stretch > STRETCH_MAX_MINUTES) reasons.push('stretch')
+  if (count > DAY_MAX_SESSIONS) reasons.push('day')
+  return reasons.length ? { weekMinutes: week, stretchMinutes: stretch, dayCount: count, firm: week > WEEK_FIRM_MINUTES, reasons } : null
+}

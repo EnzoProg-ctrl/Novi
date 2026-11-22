@@ -47,6 +47,10 @@ export type Draft = {
   clash_shown?: boolean;
   /** The student chose to keep it despite the clash (until the day or time changes). */
   clash_ok?: boolean;
+  /** Novi warned that the plan is too much and is waiting for "proceed anyway" or a change. */
+  strain_shown?: boolean;
+  /** The student chose to proceed despite a heavy plan (until the day, time, length or type changes). */
+  load_ok?: boolean;
 };
 
 export type Field = "title" | "date" | "start" | "duration" | "pack" | "type";
@@ -114,9 +118,10 @@ export function timeLabel(time: string): string {
 export function durationLabel(minutes: number): string {
   const h = Math.floor(minutes / 60);
   const m = minutes % 60;
-  if (!h) return `${m} minutes`;
+  const mins = `${m} ${m === 1 ? "minute" : "minutes"}`;
+  if (!h) return mins;
   const hours = `${h} ${h === 1 ? "hour" : "hours"}`;
-  return m ? `${hours} ${m} minutes` : hours;
+  return m ? `${hours} ${mins}` : hours;
 }
 
 /** "Today", "Tomorrow", or the weekday name for the days after (within a week). */
@@ -129,7 +134,16 @@ export function dayChip(date: string, now: LocalNow): string {
 // ── The student's week ─────────────────────────────────────────
 
 /** A planned session in the student's own wall-clock time. */
-export type Planned = { date: string; start: string; end: string; title: string; id?: string; pack_id?: string | null };
+export type Planned = {
+  date: string;
+  start: string;
+  end: string;
+  title: string;
+  id?: string;
+  pack_id?: string | null;
+  type?: SessionType;
+  completed?: boolean;
+};
 
 /** An instant as the student's local date and time ("YYYY-MM-DD", "HH:MM"). */
 export function localParts(iso: string, timeZone: string | null): LocalNow {
@@ -153,12 +167,16 @@ export async function fetchPlanned(
   timeZone: string | null,
   /** Local days to cover, inclusive. Defaults to today through the next week. */
   range: { from: string; to: string } = { from: now.date, to: addDays(now.date, 7) },
+  /** Also return sessions already marked done (for counting the week's load). */
+  includeCompleted = false,
 ): Promise<Planned[]> {
   // A generous window in UTC; each session is then placed on its local day.
   const from = new Date(`${addDays(range.from, -1)}T00:00:00Z`).toISOString();
   const to = new Date(`${addDays(range.to, 2)}T00:00:00Z`).toISOString();
-  const { data } = await db.from("scheduled_sessions").select("id, title, starts_at, ends_at, study_set_id")
-    .is("completed_at", null).gte("starts_at", from).lt("starts_at", to).order("starts_at");
+  let query = db.from("scheduled_sessions").select("id, title, starts_at, ends_at, study_set_id, session_type, completed_at")
+    .gte("starts_at", from).lt("starts_at", to).order("starts_at");
+  if (!includeCompleted) query = query.is("completed_at", null);
+  const { data } = await query;
   return (data ?? []).map((row) => {
     const start = localParts(row.starts_at as string, timeZone);
     const end = localParts(row.ends_at as string, timeZone);
@@ -169,6 +187,8 @@ export async function fetchPlanned(
       end: end.time,
       title: row.title as string,
       pack_id: (row.study_set_id as string | null) ?? null,
+      type: row.session_type as SessionType,
+      completed: Boolean(row.completed_at),
     };
   });
 }
@@ -244,6 +264,102 @@ export function weekOverview(planned: Planned[], now: LocalNow): { text: string;
     ? "Here's your next 7 days:"
     : "Your calendar is clear for the next 7 days:";
   return { text: `${intro}\n\n${lines.join("\n")}`, freeDates };
+}
+
+// ── Too much study ─────────────────────────────────────────────
+
+/** Fixed limits: a heavy week, a long stretch without rest, a crowded day. */
+export const WEEK_WARN_MINUTES = 25 * 60;
+export const WEEK_FIRM_MINUTES = 30 * 60;
+export const STRETCH_MAX_MINUTES = 3 * 60;
+/** Study sessions closer together than this count as one stretch. */
+export const REST_GAP_MINUTES = 10;
+export const DAY_MAX_SESSIONS = 4;
+
+export type Strain = {
+  week_minutes: number;
+  stretch_minutes: number;
+  day_count: number;
+  reasons: ("week" | "stretch" | "day")[];
+};
+
+/** The Monday on or before "YYYY-MM-DD". */
+export function mondayOf(date: string): string {
+  const day = dayOf(date)!.getUTCDay(); // 0 = Sunday
+  return addDays(date, -((day + 6) % 7));
+}
+
+const span = (p: { start: string; end: string }): [number, number] => {
+  const start = minutesOf(p.start) ?? 0;
+  return [start, Math.max(start, minutesOf(p.end) ?? start)];
+};
+
+/**
+ * How heavy the plan gets if this complete draft is added: the week's study
+ * (Monday to Sunday, finished or not), the longest stretch it joins with no
+ * real break, and how many study sessions that day. Breaks never count. The
+ * session being edited isn't counted twice. Pure, so it is tested.
+ */
+export function findStrain(draft: Draft, planned: Planned[]): Strain | null {
+  const start = minutesOf(draft.start);
+  if (!draft.date || start == null || !draft.duration_minutes || draft.type === "break") return null;
+  const end = start + draft.duration_minutes;
+  const others = planned.filter((p) => p.type !== "break" && !(draft.session_id && p.id === draft.session_id));
+
+  const monday = mondayOf(draft.date);
+  const sunday = addDays(monday, 6);
+  const week = others.filter((p) => p.date >= monday && p.date <= sunday)
+    .reduce((sum, p) => sum + (span(p)[1] - span(p)[0]), draft.duration_minutes);
+
+  // Merge the day's study into stretches; the new session's stretch is what matters.
+  const day = others.filter((p) => p.date === draft.date).map(span).sort((a, b) => a[0] - b[0]);
+  let stretchStart = start;
+  let stretchEnd = end;
+  for (let changed = true; changed;) {
+    changed = false;
+    for (const [s, e] of day) {
+      if (s <= stretchEnd + REST_GAP_MINUTES - 1 && e >= stretchStart - REST_GAP_MINUTES + 1 && (s < stretchStart || e > stretchEnd)) {
+        stretchStart = Math.min(stretchStart, s);
+        stretchEnd = Math.max(stretchEnd, e);
+        changed = true;
+      }
+    }
+  }
+  const stretch = stretchEnd - stretchStart;
+  const count = day.length + 1;
+
+  const reasons: Strain["reasons"] = [];
+  if (week > WEEK_WARN_MINUTES) reasons.push("week");
+  if (stretch > STRETCH_MAX_MINUTES) reasons.push("stretch");
+  if (count > DAY_MAX_SESSIONS) reasons.push("day");
+  return reasons.length ? { week_minutes: week, stretch_minutes: stretch, day_count: count, reasons } : null;
+}
+
+const ordinal = (n: number) => {
+  const tail = n % 100;
+  if (tail >= 11 && tail <= 13) return `${n}th`;
+  return `${n}${["th", "st", "nd", "rd"][n % 10 < 4 ? n % 10 : 0]}`;
+};
+
+/** Novi's warning about a heavy plan: one message for every reason that applies. */
+export function strainWarning(strain: Strain, draft: Draft, now: LocalNow): string {
+  const parts: string[] = [];
+  const week = mondayOf(draft.date!) === mondayOf(now.date) ? "this week" : `the week of ${dayLabel(mondayOf(draft.date!), now)}`;
+  if (strain.reasons.includes("week")) {
+    parts.push(
+      strain.week_minutes > WEEK_FIRM_MINUTES
+        ? `that would be **${durationLabel(strain.week_minutes)}** of study ${week}, which is past what most people can keep up. Retention drops and burnout rises`
+        : `that would be **${durationLabel(strain.week_minutes)}** of study ${week}, which is a lot. Most people do best with 10 to 25 hours`,
+    );
+  }
+  if (strain.reasons.includes("stretch")) {
+    parts.push(`that is **${durationLabel(strain.stretch_minutes)}** of study in a row with no real break`);
+  }
+  if (strain.reasons.includes("day")) {
+    parts.push(`that would be your **${ordinal(strain.day_count)}** study session ${dayLabel(draft.date!, now)}`);
+  }
+  const list = parts.length === 1 ? parts[0] : `${parts.slice(0, -1).join("; ")}; and ${parts.at(-1)}`;
+  return `Heads up: ${list}. Proceed anyway, or change it?`;
 }
 
 export type Checked = {
@@ -565,11 +681,12 @@ export function applyPlan(draft: Draft, plan: Plan): Draft {
       next.pack_decided = false;
     } else next[field] = null;
   }
-  // A new day, time or length is checked for clashes again.
-  if (next.date !== draft.date || next.start !== draft.start || next.duration_minutes !== draft.duration_minutes) {
-    next.clash_ok = false;
-  }
+  // A new day, time or length is checked for clashes again; a new type counts for load.
+  const moved = next.date !== draft.date || next.start !== draft.start || next.duration_minutes !== draft.duration_minutes;
+  if (moved) next.clash_ok = false;
+  if (moved || next.type !== draft.type) next.load_ok = false;
   next.clash_shown = false;
+  next.strain_shown = false;
   return next;
 }
 
@@ -633,6 +750,19 @@ export function localNowFrom(clientNow: unknown): LocalNow {
   return { date: iso.slice(0, 10), time: iso.slice(11, 16) };
 }
 
+/** Flags that only record which question Novi just asked, not what the session is. */
+const TRANSIENT = ["clash_shown", "strain_shown", "pending_delete"] as const;
+
+/** Whether two drafts describe the same session, ignoring which warning was last shown. */
+export function sameDraft(a: Draft, b: Draft): boolean {
+  const strip = (d: Draft) => {
+    const copy: Record<string, unknown> = { ...d };
+    for (const key of TRANSIENT) delete copy[key];
+    return JSON.stringify(Object.keys(copy).sort().map((k) => [k, copy[k]]));
+  };
+  return strip(a) === strip(b);
+}
+
 // ── One turn of the flow ───────────────────────────────────────
 
 export type TurnResult =
@@ -641,6 +771,7 @@ export type TurnResult =
 
 type Reply = { kind: "reply"; content: string; metadata: Record<string, unknown> };
 
+const PROCEED = /^(proceed( anyway)?|go ahead|keep it|do it anyway|anyway|yes|yeah|yep|sure|ok(ay)?|that'?s (fine|ok)|it'?s (fine|ok)|fine)\b/i;
 const KEEP_BOTH = /^(keep both|keep (them|it)( both)?|both|plan it anyway|anyway|that'?s (fine|ok)|it'?s (fine|ok)|fine|yes|yeah|yep|sure|ok(ay)?|go ahead)\b/i;
 const YES = /^(yes|yeah|yep|yup|sure|ok(ay)?|please do|do it|remove( it)?|delete( it)?|cancel( it)?)\b/i;
 const NO = /^(no|nope|nah|keep( it)?|don'?t|never ?mind|leave it)\b/i;
@@ -737,15 +868,34 @@ export async function scheduleTurn({ db, userId, message, history, draft: previo
       },
     };
   };
-  /** The summary card, unless the session clashes with another first. */
-  const finish = async (checked: Checked, lead = ""): Promise<Reply> => (await clashReply(checked, lead)) ?? summary(checked, lead);
+  /** A warning instead of the card when the plan is too much: a heavy week, a long stretch, a crowded day. */
+  const strainReply = async (checked: Checked, lead = ""): Promise<Reply | null> => {
+    if (checked.draft.load_ok || !checked.draft.date) return null;
+    const monday = mondayOf(checked.draft.date);
+    const planned = await fetchPlanned(db, now, timeZone, { from: monday, to: addDays(monday, 6) }, true);
+    const strain = findStrain(checked.draft, planned);
+    if (!strain) return null;
+    return {
+      kind: "reply",
+      content: [lead, strainWarning(strain, checked.draft, now)].filter(Boolean).join(" "),
+      metadata: {
+        guard: "schedule",
+        schedule_draft: { ...checked.draft, strain_shown: true },
+        ask_schedule: { field: "strain", options: ["Proceed anyway", "Change it", checked.draft.session_id ? "Remove it" : "Cancel it"] },
+        follow_ups: [],
+      },
+    };
+  };
+  /** The summary card, unless the session clashes or is too much first. */
+  const finish = async (checked: Checked, lead = ""): Promise<Reply> =>
+    (await clashReply(checked, lead)) ?? (await strainReply(checked, lead)) ?? summary(checked, lead);
 
   // ── Confirm pressed: save it, or save the changes ───────────
   if (confirm) {
     const checked = validateDraft(previous, now, packs, defaults);
     if (checked.missing) return ask(checked);
     // Something may have been added to the calendar while the card was open.
-    const clash = await clashReply(checked);
+    const clash = (await clashReply(checked)) ?? (await strainReply(checked));
     if (clash) return clash;
     const times = confirmedTimes(checked.draft, confirm.starts_at, confirm.ends_at);
     if (!times) {
@@ -806,7 +956,12 @@ export async function scheduleTurn({ db, userId, message, history, draft: previo
 
   // ── Answering a clash warning: "Keep both" ──────────────────
   if (previous.clash_shown && KEEP_BOTH.test(message.trim())) {
-    return summary(validateDraft({ ...previous, clash_shown: false, clash_ok: true }, now, packs, defaults), "Okay, keeping both.");
+    return await finish(validateDraft({ ...previous, clash_shown: false, clash_ok: true }, now, packs, defaults), "Okay, keeping both.");
+  }
+
+  // ── Answering a "that's a lot" warning: "Proceed anyway" ────
+  if (previous.strain_shown && PROCEED.test(message.trim())) {
+    return await finish(validateDraft({ ...previous, strain_shown: false, load_ok: true }, now, packs, defaults), "Okay, your call.");
   }
 
   // ── Anything else: read the message ─────────────────────────
@@ -842,7 +997,7 @@ export async function scheduleTurn({ db, userId, message, history, draft: previo
 
   const before = validateDraft(previous, now, packs, defaults);
   const checked = validateDraft(applyPlan(previous, plan), now, packs, defaults);
-  const changed = JSON.stringify(checked.draft) !== JSON.stringify(before.draft) || checked.missing !== before.missing;
+  const changed = !sameDraft(checked.draft, before.draft) || checked.missing !== before.missing;
   const note = changeNote(before.draft, checked.draft, now, packs);
 
   // Right after saving, a message that changes nothing ("thanks!") is ordinary chat.

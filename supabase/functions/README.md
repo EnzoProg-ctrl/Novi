@@ -55,7 +55,12 @@ the app sends the instants (`schedule` in the request, worked out in the
 student's time zone) and only then is a `scheduled_sessions` row saved. The
 student can change the day, time, type or length at any point, or cancel. The
 saved reply keeps the draft with its `session_id`, so a change of mind right
-after updates that row, and "cancel" asks before removing it. The app
+after updates that row, and "cancel" asks before removing it. Before the card,
+Novi warns about clashes (an overlap, or the same topic that day) and about too
+much study: over 25 hours in a Monday–Sunday week, over 3 hours in a row (gaps
+under 10 minutes don't count as rest), or more than 4 study sessions in a day.
+Breaks never count. The student can proceed anyway, change it or cancel. The
+Calendar form mirrors these rules (`src/lib/schedule.js`). The app
 sends its wall clock as `client_now` so "tomorrow at 4" means the student's
 tomorrow. Tests: `npx --yes deno@2.5.4 test chat` (from this folder).
 
