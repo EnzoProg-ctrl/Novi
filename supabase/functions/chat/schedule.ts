@@ -177,21 +177,32 @@ export async function fetchPlanned(
     .gte("starts_at", from).lt("starts_at", to).order("starts_at");
   if (!includeCompleted) query = query.is("completed_at", null);
   const { data } = await query;
-  return (data ?? []).map((row) => {
-    const start = localParts(row.starts_at as string, timeZone);
-    const end = localParts(row.ends_at as string, timeZone);
+  return ((data ?? []) as SessionRow[]).map((row) => {
+    const start = localParts(row.starts_at, timeZone);
+    const end = localParts(row.ends_at, timeZone);
     return {
-      id: row.id as string,
+      id: row.id,
       date: start.date,
       start: start.time,
       end: end.time,
-      title: row.title as string,
-      pack_id: (row.study_set_id as string | null) ?? null,
-      type: row.session_type as SessionType,
+      title: row.title,
+      pack_id: row.study_set_id ?? null,
+      type: row.session_type,
       completed: Boolean(row.completed_at),
     };
   });
 }
+
+/** The columns fetchPlanned reads from scheduled_sessions. */
+type SessionRow = {
+  id: string;
+  title: string;
+  starts_at: string;
+  ends_at: string;
+  study_set_id: string | null;
+  session_type: SessionType;
+  completed_at: string | null;
+};
 
 // ── Duplicates and overlaps ────────────────────────────────────
 
