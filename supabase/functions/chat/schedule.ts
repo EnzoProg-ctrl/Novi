@@ -492,14 +492,14 @@ export async function planSession({ draft, message, history, now, packs, signal 
     recent ? `\nRECENT CONVERSATION:\n${recent}` : "",
     "",
     "Rules:",
-    "- Fill a field only when the student said it or clearly implied it. Leave everything else out. Never guess a day or a time.",
+    "- Return EVERY field in the schema. Fill a field only when the student said it or clearly implied it; set every other field to null (false for yes/no fields, an empty list for clear_fields). Never guess a day or a time.",
     draft.session_id
       ? "- This session is ALREADY SAVED on their calendar. If they change their mind about anything (\"actually make it Friday\", \"move it to 5\", \"make it a revision session\"), return the new value: it will update the saved session."
       : "",
     "- Students often change their mind (\"actually\", \"instead\", \"make it\", \"move it\", \"not Monday\"). Return the NEW value for whatever they changed, even if it was set before.",
     "- title: a short name for what they'll study, like \"Biology: cell division\" or \"Exam revision\" (at most 60 characters). If they only name one of their packs, use that pack's title.",
     "- date: YYYY-MM-DD. Work out words like \"today\", \"tomorrow\", \"Friday\", \"next Monday\" or \"the 25th\" from today's date. A weekday name means the next one after today.",
-    "- start: HH:MM, 24-hour (\"4pm\" is 16:00, \"half past 9 in the morning\" is 09:30). \"Evening\" or \"afternoon\" alone is not a time: leave it out.",
+    "- start: HH:MM, 24-hour (\"4pm\" is 16:00, \"half past 9 in the morning\" is 09:30). \"Evening\" or \"afternoon\" alone is not a time: set start to null.",
     "- duration_minutes: only if they gave a length (\"for 2 hours\" is 120), or a start and end time.",
     "- type: \"practice\" for practice questions or quizzes, \"revision\" for reviewing or revising, \"break\" for a break, \"focus\" for focused study. Set it when they first describe the session or when they change it.",
     "- suggested_pack_id: the id of one of their packs that clearly matches the topic, if any.",
