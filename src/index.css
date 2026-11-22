@@ -297,6 +297,7 @@ a:hover { text-decoration: underline; }
 .msg-error   { background: var(--danger-tint);  color: var(--danger-ink); }
 .msg-success { background: var(--success-tint); color: var(--success-ink); }
 .msg-info    { background: var(--coral-tint);   color: var(--coral-active); }
+.msg-warn    { background: var(--warn-tint);    color: var(--warn-ink); }
 
 /* ── Bits ────────────────────────────────────────────────────── */
 .badge {

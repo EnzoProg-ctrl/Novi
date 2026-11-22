@@ -9,6 +9,8 @@ import { assert, assertEquals } from "jsr:@std/assert@1";
 import {
   applyPlan,
   changeNote,
+  clashWarning,
+  findClashes,
   confirmedTimes,
   type Draft,
   localNowFrom,
@@ -198,4 +200,44 @@ Deno.test("a change of mind is acknowledged", () => {
   assertEquals(changeNote(base, both, now, packs), "Okay, I changed the time to **6:00 PM** and the type to **revision session**.");
   // Filling in a detail for the first time is not a change.
   assertEquals(changeNote(check({ title: "Biology" }).draft, check({ title: "Biology", date: "2026-11-25" }).draft, now, packs), "");
+});
+
+const wednesday = [
+  { id: "s-bio", date: "2026-11-25", start: "16:00", end: "17:00", title: "Biology", pack_id: "p-bio" },
+  { id: "s-sql", date: "2026-11-25", start: "09:00", end: "10:00", title: "SQL practice", pack_id: null },
+];
+const draftAt = (start: string, title = "History", extra: Draft = {}) =>
+  check({ title, date: "2026-11-25", start, type: "focus", pack_decided: true, ...extra }).draft;
+
+Deno.test("an overlapping time is a clash, a free slot is not", () => {
+  assertEquals(findClashes(draftAt("16:30"), wednesday).map((c) => [c.session.id, c.kind]), [["s-bio", "overlap"]]);
+  assertEquals(findClashes(draftAt("16:00"), wednesday).length, 1); // same day and time
+  assertEquals(findClashes(draftAt("17:00"), wednesday), []); // starts as Biology ends
+  assertEquals(findClashes(draftAt("15:00", "History", { duration_minutes: 60 }), wednesday), []);
+});
+
+Deno.test("the same topic on the same day is a likely duplicate", () => {
+  assertEquals(findClashes(draftAt("19:00", "Biology revision"), wednesday).map((c) => c.kind), ["same_topic"]);
+  assertEquals(findClashes(draftAt("19:00", "Anything", { pack_id: "p-bio" }), wednesday).map((c) => c.kind), ["same_topic"]);
+  assertEquals(findClashes(draftAt("19:00", "History"), wednesday), []);
+  // Another day is fine.
+  assertEquals(findClashes({ ...draftAt("16:00", "Biology"), date: "2026-11-26" }, wednesday), []);
+});
+
+Deno.test("editing a saved session doesn't clash with itself", () => {
+  assertEquals(findClashes(draftAt("16:30", "Biology", { session_id: "s-bio" }), wednesday), []);
+});
+
+Deno.test("the warning names the sessions and offers a choice", () => {
+  const overlap = clashWarning(findClashes(draftAt("16:30"), wednesday), now);
+  assertEquals(overlap, "Heads up: that overlaps with **Biology** (4:00 PM – 5:00 PM) Wednesday, November 25. Keep both, or change the time?");
+  const dup = clashWarning(findClashes(draftAt("19:00", "Biology"), wednesday), now);
+  assert(dup.startsWith("You already have **Biology** (4:00 PM – 5:00 PM) planned"));
+});
+
+Deno.test("keeping both lasts until the day or time changes", () => {
+  const kept = { ...draftAt("16:30"), clash_ok: true };
+  assertEquals(applyPlan(kept, { title: "History notes" }).clash_ok, true);
+  assertEquals(applyPlan(kept, { start: "18:00" }).clash_ok, false);
+  assertEquals(applyPlan(kept, { date: "2026-11-26" }).clash_ok, false);
 });

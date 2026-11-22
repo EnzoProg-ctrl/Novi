@@ -43,6 +43,10 @@ export type Draft = {
   session_id?: string | null;
   /** Novi asked whether to remove the saved session. */
   pending_delete?: boolean;
+  /** Novi warned about a clash and is waiting for "keep both" or a change. */
+  clash_shown?: boolean;
+  /** The student chose to keep it despite the clash (until the day or time changes). */
+  clash_ok?: boolean;
 };
 
 export type Field = "title" | "date" | "start" | "duration" | "pack" | "type";
@@ -125,7 +129,7 @@ export function dayChip(date: string, now: LocalNow): string {
 // ── The student's week ─────────────────────────────────────────
 
 /** A planned session in the student's own wall-clock time. */
-export type Planned = { date: string; start: string; end: string; title: string };
+export type Planned = { date: string; start: string; end: string; title: string; id?: string; pack_id?: string | null };
 
 /** An instant as the student's local date and time ("YYYY-MM-DD", "HH:MM"). */
 export function localParts(iso: string, timeZone: string | null): LocalNow {
@@ -143,17 +147,77 @@ export function localParts(iso: string, timeZone: string | null): LocalNow {
 }
 
 /** The student's unfinished planned sessions from today through the next week. */
-export async function fetchPlanned(db: SupabaseClient, now: LocalNow, timeZone: string | null): Promise<Planned[]> {
+export async function fetchPlanned(
+  db: SupabaseClient,
+  now: LocalNow,
+  timeZone: string | null,
+  /** Local days to cover, inclusive. Defaults to today through the next week. */
+  range: { from: string; to: string } = { from: now.date, to: addDays(now.date, 7) },
+): Promise<Planned[]> {
   // A generous window in UTC; each session is then placed on its local day.
-  const from = new Date(`${addDays(now.date, -1)}T00:00:00Z`).toISOString();
-  const to = new Date(`${addDays(now.date, 9)}T00:00:00Z`).toISOString();
-  const { data } = await db.from("scheduled_sessions").select("title, starts_at, ends_at")
+  const from = new Date(`${addDays(range.from, -1)}T00:00:00Z`).toISOString();
+  const to = new Date(`${addDays(range.to, 2)}T00:00:00Z`).toISOString();
+  const { data } = await db.from("scheduled_sessions").select("id, title, starts_at, ends_at, study_set_id")
     .is("completed_at", null).gte("starts_at", from).lt("starts_at", to).order("starts_at");
   return (data ?? []).map((row) => {
     const start = localParts(row.starts_at as string, timeZone);
     const end = localParts(row.ends_at as string, timeZone);
-    return { date: start.date, start: start.time, end: end.time, title: row.title as string };
+    return {
+      id: row.id as string,
+      date: start.date,
+      start: start.time,
+      end: end.time,
+      title: row.title as string,
+      pack_id: (row.study_set_id as string | null) ?? null,
+    };
   });
+}
+
+// ── Duplicates and overlaps ────────────────────────────────────
+
+export type Clash = { session: Planned; kind: "overlap" | "same_topic" };
+
+const topicKey = (title: string) => title.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+
+/** Same topic: the same pack, or titles where one contains the other ("Biology" / "Biology revision"). */
+function sameTopic(draft: Draft, other: Planned): boolean {
+  if (draft.pack_id && other.pack_id && draft.pack_id === other.pack_id) return true;
+  const a = topicKey(draft.title ?? "");
+  const b = topicKey(other.title);
+  if (!a || !b) return false;
+  const [short, long] = a.length <= b.length ? [a, b] : [b, a];
+  return short === long || (short.length >= 4 && long.includes(short));
+}
+
+/**
+ * Planned sessions a complete draft would clash with: any that overlap its
+ * time, or one on the same topic on the same day (a likely duplicate). The
+ * session being edited is not compared with itself. Pure, so it is tested.
+ */
+export function findClashes(draft: Draft, planned: Planned[]): Clash[] {
+  const start = minutesOf(draft.start);
+  if (!draft.date || start == null || !draft.duration_minutes) return [];
+  const end = start + draft.duration_minutes;
+  const clashes: Clash[] = [];
+  for (const other of planned) {
+    if (other.date !== draft.date || (draft.session_id && other.id === draft.session_id)) continue;
+    const oStart = minutesOf(other.start) ?? 0;
+    const oEnd = minutesOf(other.end) ?? oStart;
+    if (start < oEnd && oStart < end) clashes.push({ session: other, kind: "overlap" });
+    else if (sameTopic(draft, other)) clashes.push({ session: other, kind: "same_topic" });
+  }
+  return clashes;
+}
+
+/** Novi's warning about clashes, naming at most two sessions. */
+export function clashWarning(clashes: Clash[], now: LocalNow): string {
+  const day = dayLabel(clashes[0].session.date, now);
+  const named = clashes.slice(0, 2).map(({ session }) => `**${session.title}** (${timeLabel(session.start)} – ${timeLabel(session.end)})`);
+  const list = named.join(" and ") + (clashes.length > 2 ? ` and ${clashes.length - 2} more` : "");
+  const overlap = clashes.some((c) => c.kind === "overlap");
+  return overlap
+    ? `Heads up: that overlaps with ${list} ${day}. Keep both, or change the time?`
+    : `You already have ${list} planned ${day}, which looks like the same topic. Keep both, or change it?`;
 }
 
 /**
@@ -501,6 +565,11 @@ export function applyPlan(draft: Draft, plan: Plan): Draft {
       next.pack_decided = false;
     } else next[field] = null;
   }
+  // A new day, time or length is checked for clashes again.
+  if (next.date !== draft.date || next.start !== draft.start || next.duration_minutes !== draft.duration_minutes) {
+    next.clash_ok = false;
+  }
+  next.clash_shown = false;
   return next;
 }
 
@@ -572,6 +641,7 @@ export type TurnResult =
 
 type Reply = { kind: "reply"; content: string; metadata: Record<string, unknown> };
 
+const KEEP_BOTH = /^(keep both|keep (them|it)( both)?|both|plan it anyway|anyway|that'?s (fine|ok)|it'?s (fine|ok)|fine|yes|yeah|yep|sure|ok(ay)?|go ahead)\b/i;
 const YES = /^(yes|yeah|yep|yup|sure|ok(ay)?|please do|do it|remove( it)?|delete( it)?|cancel( it)?)\b/i;
 const NO = /^(no|nope|nah|keep( it)?|don'?t|never ?mind|leave it)\b/i;
 
@@ -650,10 +720,33 @@ export async function scheduleTurn({ db, userId, message, history, draft: previo
     };
   };
 
+  /** A warning instead of the card when the session clashes with one already planned. */
+  const clashReply = async (checked: Checked, lead = ""): Promise<Reply | null> => {
+    if (checked.draft.clash_ok || !checked.draft.date) return null;
+    const planned = await fetchPlanned(db, now, timeZone, { from: checked.draft.date, to: checked.draft.date });
+    const clashes = findClashes(checked.draft, planned);
+    if (!clashes.length) return null;
+    return {
+      kind: "reply",
+      content: [lead, clashWarning(clashes, now)].filter(Boolean).join(" "),
+      metadata: {
+        guard: "schedule",
+        schedule_draft: { ...checked.draft, clash_shown: true },
+        ask_schedule: { field: "clash", options: ["Keep both", "Change the time", checked.draft.session_id ? "Remove it" : "Cancel it"] },
+        follow_ups: [],
+      },
+    };
+  };
+  /** The summary card, unless the session clashes with another first. */
+  const finish = async (checked: Checked, lead = ""): Promise<Reply> => (await clashReply(checked, lead)) ?? summary(checked, lead);
+
   // ── Confirm pressed: save it, or save the changes ───────────
   if (confirm) {
     const checked = validateDraft(previous, now, packs, defaults);
     if (checked.missing) return ask(checked);
+    // Something may have been added to the calendar while the card was open.
+    const clash = await clashReply(checked);
+    if (clash) return clash;
     const times = confirmedTimes(checked.draft, confirm.starts_at, confirm.ends_at);
     if (!times) {
       // Most likely the start time passed while the card was open.
@@ -711,13 +804,18 @@ export async function scheduleTurn({ db, userId, message, history, draft: previo
     previous = { ...previous, pending_delete: false };
   }
 
+  // ── Answering a clash warning: "Keep both" ──────────────────
+  if (previous.clash_shown && KEEP_BOTH.test(message.trim())) {
+    return summary(validateDraft({ ...previous, clash_shown: false, clash_ok: true }, now, packs, defaults), "Okay, keeping both.");
+  }
+
   // ── Anything else: read the message ─────────────────────────
   const plan = await planSession({ draft: previous, message, history, now, packs, signal });
 
   // Another session entirely: start a fresh draft with whatever they said.
   if (plan.new_session && saved) {
     const fresh = validateDraft(applyPlan({}, { ...plan, clear_fields: [] }), now, packs, defaults);
-    return fresh.missing ? ask(fresh, true) : summary(fresh);
+    return fresh.missing ? ask(fresh, true) : await finish(fresh);
   }
 
   if (plan.unrelated && !plan.asks_availability && !opening && !force) return { kind: "unrelated" };
@@ -788,12 +886,12 @@ export async function scheduleTurn({ db, userId, message, history, draft: previo
         metadata: { guard: "schedule", schedule_draft: checked.draft, follow_ups: ["Move it to another time", "Plan another study session"] },
       };
     }
-    const card = summary(checked, note);
+    const card = await finish(checked, note);
     return { ...card, content: `${week.text}\n\n${card.content}` };
   }
 
   if (checked.missing) return ask(checked, opening, note);
   // A typed "yes": the app saves it with the button, which knows the
   // student's time zone.
-  return summary(checked, note || (plan.confirm && !changed ? "Almost there." : ""));
+  return await finish(checked, note || (plan.confirm && !changed ? "Almost there." : ""));
 }

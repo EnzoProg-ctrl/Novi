@@ -288,6 +288,7 @@ export function Calendar() {
             session={current}
             prefill={modal.prefill}
             packs={packs}
+            sessions={sessions}
             now={now}
             saving={saving}
             onCancel={() =>

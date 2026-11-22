@@ -3,12 +3,13 @@ import { usePreferences } from '../../context/preferences-context'
 import {
   dateKey,
   formatDuration,
+  formatTime,
   minutesBetween,
   parseLocal,
   sameDay,
   timeKey,
 } from '../../lib/calendar-dates'
-import { MAX_SESSION_MINUTES } from '../../lib/schedule'
+import { MAX_SESSION_MINUTES, findClashes } from '../../lib/schedule'
 import { IconClose } from '../app/AppIcons'
 import { SESSION_TYPES } from './sessionTypes'
 import { DatePicker } from '../DatePicker'
@@ -73,7 +74,7 @@ function validate(values) {
   return { errors, start, end }
 }
 
-export function SessionForm({ session, prefill, packs, now, saving, onCancel, onSave }) {
+export function SessionForm({ session, prefill, packs, sessions = [], now, saving, onCancel, onSave }) {
   const { prefs } = usePreferences()
   const lengthFor = (type) => (type === 'break' ? prefs.defaultBreakMinutes : prefs.defaultSessionMinutes)
   const [values, setValues] = useState(() => initialValues(session, prefill, now, lengthFor('focus')))
@@ -98,6 +99,12 @@ export function SessionForm({ session, prefill, packs, now, saving, onCancel, on
   const start = parseLocal(values.date, values.start)
   const end = parseLocal(values.date, values.end)
   const duration = start && end && end > start ? minutesBetween(start, end) : null
+  // Overlaps and same-topic sessions that day: shown as a warning, and Save
+  // becomes "Save anyway" so a duplicate is never added by accident.
+  const clashes = duration
+    ? findClashes({ id: session?.id, title: values.title, packId: values.packId || null, start, end }, sessions)
+    : []
+  const overlapping = clashes.some((c) => c.kind === 'overlap')
 
   async function handleSubmit(event) {
     event.preventDefault()
@@ -250,13 +257,29 @@ export function SessionForm({ session, prefill, packs, now, saving, onCancel, on
         />
       </div>
 
+      {clashes.length > 0 && (
+        <div className="msg msg-warn cal-clash" role="status">
+          <p>
+            {overlapping ? 'This overlaps with ' : 'You already have '}
+            {clashes.slice(0, 2).map(({ session: s }, i) => (
+              <span key={s.id}>
+                {i > 0 && ' and '}
+                <strong>{s.title}</strong> ({formatTime(s.start)} – {formatTime(s.end)})
+              </span>
+            ))}
+            {clashes.length > 2 && ` and ${clashes.length - 2} more`}
+            {overlapping ? ' that day.' : ' planned that day, which looks like the same topic.'}
+          </p>
+        </div>
+      )}
+
       <div className="nv-modal-actions">
         <button type="button" className="btn btn-secondary" onClick={onCancel} disabled={saving}>
           Cancel
         </button>
         <button className="btn btn-primary" disabled={saving}>
           {saving && <span className="spinner" />}
-          {saving ? 'Saving…' : 'Save Session'}
+          {saving ? 'Saving…' : clashes.length > 0 ? 'Save anyway' : 'Save Session'}
         </button>
       </div>
     </form>

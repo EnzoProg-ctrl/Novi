@@ -135,3 +135,33 @@ export async function saveWeeklyGoal(userId, goal) {
   if (error) throw error
   return data.weekly_session_goal
 }
+
+const topicKey = (title) => (title ?? '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()
+
+/** Same pack, or titles where one contains the other ("Biology" / "Biology revision"). */
+function sameTopic(a, b) {
+  if (a.packId && b.packId && a.packId === b.packId) return true
+  const x = topicKey(a.title)
+  const y = topicKey(b.title)
+  if (!x || !y) return false
+  const [short, long] = x.length <= y.length ? [x, y] : [y, x]
+  return short === long || (short.length >= 4 && long.includes(short))
+}
+
+const localDay = (d) => `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`
+
+/**
+ * Unfinished sessions that `candidate` ({ id?, title, packId, start, end })
+ * would clash with: any overlapping its time, or one on the same topic the
+ * same day (a likely duplicate). The session being edited is skipped. Same
+ * rules as AI Chat (supabase/functions/chat/schedule.ts).
+ */
+export function findClashes(candidate, sessions) {
+  if (!candidate.start || !candidate.end) return []
+  return sessions
+    .filter((s) => !s.completedAt && s.id !== candidate.id && localDay(s.start) === localDay(candidate.start))
+    .map((s) => (candidate.start < s.end && s.start < candidate.end
+      ? { session: s, kind: 'overlap' }
+      : sameTopic(candidate, s) ? { session: s, kind: 'same_topic' } : null))
+    .filter(Boolean)
+}
