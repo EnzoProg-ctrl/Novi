@@ -126,7 +126,7 @@
   cursor: pointer;
   transition: border-color 0.15s ease, background-color 0.15s ease, scale 0.16s var(--ease-press), translate 0.2s var(--ease-press);
 }
-.personality-option:hover { border-color: var(--faint); background: var(--bg-soft); }
+.personality-option:hover { border-color: var(--line-hover); background: var(--bg-soft); }
 .personality-option.is-selected {
   border-color: var(--coral);
   background: var(--coral-tint);
@@ -247,7 +247,7 @@
   cursor: pointer;
   transition: border-color 0.15s ease, background-color 0.15s ease, scale 0.16s var(--ease-press), translate 0.2s var(--ease-press);
 }
-.count-option:hover { border-color: var(--faint); background: var(--bg-soft); }
+.count-option:hover { border-color: var(--line-hover); background: var(--bg-soft); }
 .count-option.is-selected {
   border-color: var(--coral);
   background: var(--coral-tint);

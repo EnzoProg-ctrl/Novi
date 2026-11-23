@@ -143,6 +143,10 @@
 .pr-verdict.is-wrong .pr-verdict-line { color: var(--danger-ink); }
 
 .pr-next { align-self: flex-start; }
+/* An answer that didn't save: the message and a retry, on the question itself. */
+.pr-save-error { align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px 14px; }
+.pr-save-error > p { flex: 1 1 220px; }
+.pr-retry { flex: none; min-height: 44px; }
 .pr-tally { text-align: center; }
 
 /* ── Summary ─────────────────────────────────────────────────── */

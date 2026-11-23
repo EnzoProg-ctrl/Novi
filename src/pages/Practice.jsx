@@ -67,6 +67,9 @@ export function Practice() {
   const [saving, setSaving] = useState(false)
   const [finished, setFinished] = useState(false)
   const [error, setError] = useState(null)
+  // An answer that couldn't be saved: { answer, correct, message }.
+  const [saveFailed, setSaveFailed] = useState(null)
+  const nextRef = useRef(null)
 
   const askedAt = useRef(Date.now())
   // Counts only this visit. A resumed session already carries earlier answers,
@@ -198,6 +201,13 @@ export function Practice() {
     load()
   }, [load])
 
+  // Answering disables the choices, which drops keyboard focus: move it to
+  // "Next question" once the answer is checked and saved.
+  const answeredNow = verdict === true || verdict === false
+  useEffect(() => {
+    if (answeredNow && !saving) nextRef.current?.focus()
+  }, [answeredNow, saving])
+
   const question = queue[index] ?? null
   const total = startAnswered + queue.length
   const doneCount = startAnswered + index
@@ -211,8 +221,17 @@ export function Practice() {
     const correct = selfGraded ?? gradeAnswer(question, answer)
     setGiven(answer)
     setVerdict(correct)
-    setSaving(true)
+    await saveAnswer(answer, correct)
+  }
 
+  /**
+   * Records an answer. A failed save stays on this question with a retry,
+   * instead of ending the session: the answer is still on screen and the
+   * student can try again or move on.
+   */
+  async function saveAnswer(answer, correct) {
+    setSaving(true)
+    setSaveFailed(null)
     try {
       const next = await recordAttempt({
         userId: user.id,
@@ -227,13 +246,14 @@ export function Practice() {
       setSession((s) => ({ ...s, ...next }))
       setTally({ answered: next.questions_answered, correct: next.questions_correct })
     } catch (err) {
-      setError(friendlyError(err, 'Could not save that answer.'))
+      setSaveFailed({ answer, correct, message: friendlyError(err, 'Could not save that answer.') })
     } finally {
       setSaving(false)
     }
   }
 
   async function next() {
+    setSaveFailed(null)
     setGiven(null)
     setVerdict(null)
     askedAt.current = Date.now()
@@ -417,8 +437,22 @@ export function Practice() {
           personality={buddy?.personality}
         />
 
+        {saveFailed && (
+          <div className="msg msg-error pr-save-error" role="alert">
+            <p>{saveFailed.message} It won&apos;t count toward your progress unless it&apos;s saved.</p>
+            <button
+              type="button"
+              className="btn btn-secondary pr-retry"
+              onClick={() => saveAnswer(saveFailed.answer, saveFailed.correct)}
+              disabled={saving}
+            >
+              {saving ? 'Saving…' : 'Try again'}
+            </button>
+          </div>
+        )}
+
         {verdict === true || verdict === false ? (
-          <button type="button" className="hm-buddy-cta pr-next" onClick={next} disabled={saving}>
+          <button ref={nextRef} type="button" className="hm-buddy-cta pr-next" onClick={next} disabled={saving}>
             {index + 1 < queue.length ? 'Next question' : 'Finish session'}
           </button>
         ) : null}

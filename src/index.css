@@ -20,9 +20,11 @@
   /* Neutrals */
   --ink: #1c2024;
   --ink-soft: #454c54;
-  --muted: #6f7782;
-  --faint: #9aa1ab;
+  /* Text greys pass 4.5:1 on cards and the page (small text included). */
+  --muted: #636b76;
+  --faint: #6b737e;
   --line: #e9eaee;
+  --line-hover: #b8bec7;    /* borders on hover, lighter than any text */
   --line-strong: #d8dbe1;
   --bg: #ffffff;
   --bg-soft: #fafafb;
@@ -83,8 +85,9 @@
   --ink: #e9ecf0;
   --ink-soft: #c3c9d1;
   --muted: #9aa3ae;
-  --faint: #6f7884;
+  --faint: #8a93a0;
   --line: #2a3039;
+  --line-hover: #4a525e;
   --line-strong: #3a414c;
   --bg: #181c22;
   --bg-soft: #1e232a;
@@ -163,7 +166,8 @@ h2 { font-size: 1.35rem; }
 h3 { font-size: 1.05rem; }
 p  { margin: 0; }
 
-a { color: var(--coral); text-decoration: none; }
+/* The darker accent shade: plain coral is too light for text (2.8:1). */
+a { color: var(--coral-active); text-decoration: none; }
 a:hover { text-decoration: underline; }
 
 :focus-visible {
@@ -196,7 +200,7 @@ a:hover { text-decoration: underline; }
 .btn-primary:active:not(:disabled) { background: var(--coral-active); }
 
 .btn-secondary { background: var(--bg); color: var(--ink); border-color: var(--line-strong); }
-.btn-secondary:hover:not(:disabled) { background: var(--bg-soft); border-color: var(--faint); }
+.btn-secondary:hover:not(:disabled) { background: var(--bg-soft); border-color: var(--line-hover); }
 
 .btn-ghost { background: transparent; color: var(--ink-soft); }
 .btn-ghost:hover:not(:disabled) { background: var(--bg-sunken); color: var(--ink); }
@@ -223,7 +227,7 @@ a:hover { text-decoration: underline; }
   transition: border-color var(--dur-hover) ease-out, box-shadow var(--dur-hover) ease-out;
 }
 .input::placeholder { color: var(--faint); }
-.input:hover:not(:disabled) { border-color: var(--faint); }
+.input:hover:not(:disabled) { border-color: var(--line-hover); }
 .input:focus {
   outline: none;
   border-color: var(--coral);
@@ -312,8 +316,8 @@ a:hover { text-decoration: underline; }
   color: var(--ink-soft);
 }
 .badge-coral { background: var(--coral-tint); color: var(--coral-active); }
-.badge-ok    { background: var(--success-tint); color: var(--success); }
-.badge-warn  { background: var(--warn-tint); color: var(--warn); }
+.badge-ok    { background: var(--success-tint); color: var(--success-ink); }
+.badge-warn  { background: var(--warn-tint); color: var(--warn-ink); }
 
 .spinner {
   width: 16px;

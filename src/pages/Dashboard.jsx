@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { IconMoon, IconSun } from '../components/app/AppIcons'
 import { BuddyCard } from '../components/home/BuddyCard'
+import { FirstStep } from '../components/home/FirstStep'
 import { NextUp } from '../components/home/NextUp'
 import { Recommendations } from '../components/home/Recommendations'
 import { StudyPacks } from '../components/home/StudyPacks'
@@ -188,9 +189,13 @@ export function Dashboard() {
 
       {error && <div className="msg msg-error">{error}</div>}
 
-      <NextUp focus={visibleFocus} session={focusSession} loading={loading} />
+      {/* Nothing uploaded yet: the first step goes at the top. */}
+      {!loading && !error && materials.length === 0 && packs.length === 0
+        ? <FirstStep />
+        : <NextUp focus={visibleFocus} session={focusSession} loading={loading} />}
 
       <Recommendations
+        hasPacks={loading || packs.length > 0}
         items={visibleRecs}
         loading={recs.loading}
         error={recs.error}

@@ -30,7 +30,7 @@ export function StudyPacks({ packs = [], loading }) {
     <section className="hm-section" aria-label="Recent study packs">
       <header className="hm-card-head">
         <h2 className="hm-section-title">Recent Study Packs</h2>
-        {packs.length > 0 && <span className="hm-muted-link">See All</span>}
+        {packs.length > 0 && <Link to="/packs" className="hm-muted-link">See All</Link>}
       </header>
 
       {loading ? (

@@ -31,7 +31,7 @@ function SessionCard({ draft = null, saved = null, isLast, busy, onConfirm, onCh
   const editing = Boolean(draft?.session_id)
 
   return (
-    <div className={`ch-quiz ch-session${saved ? ' is-saved' : ''}`}>
+    <div className={`ch-quiz ch-session${saved ? ' is-saved' : ''}${!saved && !isLast ? ' is-old' : ''}`}>
       <span className="ch-quiz-icon">{saved ? <IconCheck /> : <IconCalendar />}</span>
       <span className="ch-quiz-text">
         <span className="ch-quiz-title">{saved ? 'On your calendar' : title}</span>
@@ -54,7 +54,10 @@ function SessionCard({ draft = null, saved = null, isLast, busy, onConfirm, onCh
             </button>
             <button type="button" className="ch-quiz-link ch-link-btn" onClick={onChange} disabled={busy}>Change</button>
           </>
-        ) : null}
+        ) : (
+          // A summary from earlier in the chat: no longer the one to confirm.
+          <span className="ch-session-old">Earlier draft</span>
+        )}
       </span>
     </div>
   )

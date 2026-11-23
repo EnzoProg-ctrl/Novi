@@ -245,7 +245,7 @@
   cursor: pointer;
   transition: border-color 0.15s ease, background-color 0.15s ease, scale 0.16s var(--ease-press), translate 0.2s var(--ease-press);
 }
-.st-tile:hover { border-color: var(--faint); }
+.st-tile:hover { border-color: var(--line-hover); }
 .st-tile.is-selected { border-color: var(--coral); background: var(--coral-tint); box-shadow: 0 0 0 3px var(--coral-ring); }
 .st-tile:has(:focus-visible) { outline: 2px solid var(--coral); outline-offset: 2px; }
 .st-tile-label { display: inline-flex; align-items: center; gap: 4px; font-size: 0.86rem; font-weight: 640; color: var(--ink); }

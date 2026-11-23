@@ -42,7 +42,7 @@
 .hm-muted-link {
   font-size: 0.82rem;
   font-weight: 600;
-  color: var(--coral);
+  color: var(--coral-active);
   text-decoration: none;
   white-space: nowrap;
 }
@@ -327,7 +327,7 @@
   border-style: dashed;
   border-color: color-mix(in srgb, var(--coral) 40%, transparent);
   background: color-mix(in srgb, var(--coral) 4%, var(--bg));
-  color: var(--coral);
+  color: var(--coral-active);
   box-shadow: none;
   transition: background-color 0.15s ease, border-color 0.15s ease, scale 0.16s var(--ease-press), translate 0.2s var(--ease-press);
 }
@@ -489,3 +489,32 @@ a.hm-pack:focus-visible { outline: 2px solid var(--coral); outline-offset: 2px; 
 
 /* The time-of-day icon after the Home greeting. */
 .hm-greet-icon { margin-left: 8px; color: var(--coral); vertical-align: -0.12em; }
+
+/* ── First step (nothing uploaded yet) ──────────────────────── */
+.hm-first {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 22px 24px;
+  border: 1px solid color-mix(in srgb, var(--coral) 22%, transparent);
+  background: color-mix(in srgb, var(--coral) 5%, var(--bg));
+}
+.hm-first-icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: var(--coral-tint);
+  color: var(--coral-active);
+}
+.hm-first-text { flex: 1; min-width: 0; }
+.hm-first-title { margin: 0 0 4px; font-size: 1.1rem; font-weight: 720; color: var(--ink); }
+.hm-first-cta { flex: none; min-height: 44px; }
+
+@media (max-width: 620px) {
+  .hm-first { flex-wrap: wrap; padding: 18px; }
+  .hm-first-text { flex-basis: calc(100% - 70px); }
+  .hm-first-cta { width: 100%; }
+}

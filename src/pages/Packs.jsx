@@ -91,6 +91,19 @@ export function Packs() {
       return next
     }, { replace: true })
   }
+  /**
+   * Choosing a card. On narrower screens the details sit below the whole
+   * list, so a tap would only highlight the card and seem to do nothing:
+   * bring the details into view as well.
+   */
+  const openDetails = (id) => {
+    select(id)
+    if (!window.matchMedia('(max-width: 1080px)').matches) return
+    const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    requestAnimationFrame(() =>
+      document.querySelector('.pk .pd')?.scrollIntoView({ block: 'start', behavior: still ? 'auto' : 'smooth' }),
+    )
+  }
   // Which collection, also in the link (/packs?tab=shared) so a share link can land on it.
   const activeTab = params.get('tab') === 'shared' ? 'shared' : 'mine'
   const setTab = (id) => {
@@ -500,7 +513,7 @@ export function Packs() {
                   aria-label={selecting ? `${isPicked ? 'Unselect' : 'Select'} ${name}` : undefined}
                   disabled={selecting && !canPick}
                   data-pack-id={pack.id}
-                  onClick={() => (selecting ? togglePick(pack.id) : select(pack.id))}
+                  onClick={() => (selecting ? togglePick(pack.id) : openDetails(pack.id))}
                 >
                   {selecting && (
                     <span className={`pk-card-check${isPicked ? ' is-on' : ''}`} aria-hidden="true">

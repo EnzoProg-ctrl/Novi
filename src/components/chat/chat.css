@@ -956,6 +956,20 @@
 .ch-link-btn:hover:not(:disabled) { text-decoration: underline; }
 .ch-link-btn:disabled { opacity: 0.55; cursor: default; }
 .ch-session.is-saved { border-color: color-mix(in srgb, var(--success) 30%, transparent); }
+/* The day and time wrap rather than cut off, so the end time is always seen. */
+.ch-session .ch-quiz-sub { white-space: normal; overflow: visible; text-overflow: clip; }
+/* An earlier summary in the chat: clearly not the live one. */
+.ch-session.is-old { border-style: dashed; border-color: var(--line-strong); }
+.ch-session.is-old .ch-quiz-icon { background: var(--bg-sunken); color: var(--muted); }
+.ch-session-old { font-size: 0.78rem; font-weight: 600; color: var(--muted); }
+
+/* Phones: controls under a reply big enough to tap (44px). */
+@media (max-width: 620px) {
+  .ch-icon-btn { width: 44px; height: 44px; }
+  .ch-ask-btn { min-height: 44px; }
+  .ch-session .ch-quiz-cta { min-height: 44px; padding-inline: 18px; }
+  .ch-link-btn { min-height: 44px; padding: 0 8px; }
+}
 .ch-session.is-saved .ch-quiz-icon { background: var(--success-tint); color: var(--success-ink); }
 
 /* ── Recent Chats: ⋯ menu, rename and delete ─────────────────── */

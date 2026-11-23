@@ -23,7 +23,7 @@ const FIRST = 2
  * do it. Shown, opened and dismissed are recorded once each, to learn what
  * actually helps.
  */
-export function Recommendations({ items = [], loading, error, onRetry, onDismiss }) {
+export function Recommendations({ items = [], loading, error, onRetry, onDismiss, hasPacks = true }) {
   const { openUpload } = useUpload()
   const [expanded, setExpanded] = useState(false)
   const visible = expanded ? items : items.slice(0, FIRST)
@@ -74,8 +74,9 @@ export function Recommendations({ items = [], loading, error, onRetry, onDismiss
       ) : items.length === 0 ? (
         <div className="hm-card hm-rec-empty">
           <p className="hm-empty-line">
-            Nothing to suggest right now. Answer some practice questions and Novi will point out
-            what to work on next.
+            {hasPacks
+              ? 'Nothing to suggest right now. Answer some practice questions and Novi will point out what to work on next.'
+              : 'Suggestions show up here once you have a study pack and have answered a few of its practice questions.'}
           </p>
         </div>
       ) : (
