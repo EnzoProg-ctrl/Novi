@@ -4,6 +4,8 @@ import { IconArrowRight, IconBrain, IconCards, IconClock, IconPackBook, IconPenc
 import { LoadingRegion, Sk, SkText } from '../Skeleton'
 import { useUpload } from '../../context/upload-context'
 import { recommendationHref, recordRecommendationEvent } from '../../lib/recommendations'
+import { PHONE_QUERY, useMediaQuery } from '../../lib/useMediaQuery'
+import { IconChevronRight } from '../app/AppIcons'
 
 /** How each kind presents itself. Every kind leads somewhere that exists. */
 const KINDS = {
@@ -15,7 +17,9 @@ const KINDS = {
   new_material: { Icon: IconUpload, tone: 'blue', action: 'Add material' },
 }
 const FALLBACK = { Icon: IconCards, tone: 'violet', action: 'Open' }
+/** How many show before "See All": two side by side, or three stacked on phones. */
 const FIRST = 2
+const FIRST_PHONE = 3
 
 /**
  * "Recommended for You": what to study next, from the recommend function.
@@ -26,7 +30,8 @@ const FIRST = 2
 export function Recommendations({ items = [], loading, error, onRetry, onDismiss, hasPacks = true }) {
   const { openUpload } = useUpload()
   const [expanded, setExpanded] = useState(false)
-  const visible = expanded ? items : items.slice(0, FIRST)
+  const first = useMediaQuery(PHONE_QUERY) ? FIRST_PHONE : FIRST
+  const visible = expanded ? items : items.slice(0, first)
 
   // "Shown" once per recommendation actually on screen.
   const shown = useRef(new Set())
@@ -48,7 +53,7 @@ export function Recommendations({ items = [], loading, error, onRetry, onDismiss
             <p className="hm-sub">Based on your answers, packs and plans.</p>
           </div>
         </div>
-        {items.length > FIRST && (
+        {items.length > first && (
           <button type="button" className="hm-muted-link hm-rec-more" onClick={() => setExpanded((v) => !v)} aria-expanded={expanded}>
             {expanded ? 'Show less' : 'See All'}
             {!expanded && <IconArrowRight width={16} height={16} />}
@@ -88,10 +93,12 @@ export function Recommendations({ items = [], loading, error, onRetry, onDismiss
             const opened = () => recordRecommendationEvent(item.id, 'opened')
             // "Start a pack" reads best as just the pack's name; the button says Start.
             const title = item.kind === 'start_pack' && item.pack?.title ? item.pack.title : item.title
+            // Phones show the card as a row with a chevron; the label stays for screen readers.
             const cta = (
               <>
-                {kind.action}
-                <IconArrowRight width={15} height={15} />
+                <span className="hm-rec-cta-text">{kind.action}</span>
+                <IconArrowRight className="hm-rec-cta-arrow" width={15} height={15} />
+                <IconChevronRight className="hm-rec-chev" width={20} height={20} />
               </>
             )
             return (
@@ -105,6 +112,7 @@ export function Recommendations({ items = [], loading, error, onRetry, onDismiss
                   <button
                     type="button"
                     className="hm-rec-cta"
+                    aria-label={`${kind.action}: ${title}`}
                     onClick={() => {
                       opened()
                       openUpload()

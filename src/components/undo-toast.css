@@ -77,3 +77,8 @@
   .nv-undo { animation: none; }
   .nv-undo-bar { animation-duration: 5000ms !important; }
 }
+
+/* Phones: above the bottom tab bar (app-shell.css). */
+@media (max-width: 767px) {
+  .nv-undo { bottom: calc(16px + var(--nv-tab-space, 0px)); }
+}

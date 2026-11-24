@@ -42,3 +42,8 @@
 @media (max-width: 620px) {
   .nv-reminder { right: 16px; bottom: 16px; }
 }
+
+/* Phones: above the bottom tab bar (app-shell.css). */
+@media (max-width: 767px) {
+  .nv-reminder { bottom: calc(16px + var(--nv-tab-space, 0px)); }
+}

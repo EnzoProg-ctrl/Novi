@@ -539,6 +539,11 @@ a:hover > .logo .mascot { animation: nv-wiggle 0.6s ease-in-out; }
   .sk-landing-nav .sk-row:last-child .sk:first-child { display: none; }
 }
 
+/* Phones: toasts sit above the bottom tab bar (app-shell.css). */
+@media (max-width: 767px) {
+  .nv-app .nv-toast { bottom: calc(16px + var(--nv-tab-space, 0px)); }
+}
+
 /* ── Toast (confirmation messages) ─────────────────────────────────────────────────────── */
 .nv-toast {
   position: fixed;

@@ -1073,3 +1073,14 @@
 }
 .ch-file-anyway:hover { text-decoration: underline; }
 .ch-file-anyway:focus-visible { outline: 2px solid var(--coral); outline-offset: 2px; border-radius: 4px; }
+
+/* Phones: the tab bar (app-shell.css) takes the bottom of the screen, so the
+   chat ends above it. --nv-tab-space drops to 0 while typing. */
+@media (max-width: 767px) {
+  .ch-page { height: calc(100dvh - var(--nv-top-h) - 28px - 12px - var(--nv-tab-space, 0px)); min-height: 0; }
+  .nv-app-content:has(> .ch-page) { padding-bottom: calc(12px + var(--nv-tab-space, 0px)); }
+  .ch-bottom { padding-bottom: 8px; }
+}
+@media (max-width: 620px) {
+  .ch-page { height: calc(100dvh - var(--nv-top-h) - 20px - 12px - var(--nv-tab-space, 0px)); }
+}

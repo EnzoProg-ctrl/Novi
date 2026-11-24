@@ -337,6 +337,138 @@
   .nv-user-btn svg { display: none; }
 }
 
+/* Phone-only pieces: hidden everywhere until the phone layout below. */
+.nv-top-brand,
+.nv-search-toggle,
+.nv-search-close,
+.nv-tabbar { display: none; }
+
+/* ── Phones (below 768): bottom tab bar instead of the sidebar ── */
+@media (max-width: 767px) {
+  .nv-app {
+    /* Room the fixed tab bar takes: 64px plus the home-indicator area.
+       Pages and toasts use it so nothing hides behind the bar. */
+    --nv-tab-space: calc(64px + env(safe-area-inset-bottom));
+    --nv-top-h: 64px;
+  }
+  /* While typing, the phone keyboard pushes the bottom of the page up: hide
+     the bar so it doesn't ride on top of the keyboard, and give its space
+     back (AI Chat's composer then sits right above the keyboard). */
+  .nv-app:has(:is(input:not([type="checkbox"], [type="radio"], [type="range"], [type="button"], [type="submit"], [type="file"]), textarea):focus) {
+    --nv-tab-space: 0px;
+  }
+  .nv-app:has(:is(input:not([type="checkbox"], [type="radio"], [type="range"], [type="button"], [type="submit"], [type="file"]), textarea):focus) .nv-tabbar {
+    display: none;
+  }
+
+  /* No sidebar, drawer or menu button: the tab bar and profile menu cover them. */
+  .nv-side, .nv-backdrop, .nv-top-menu { display: none; }
+  .nv-app-content { padding-bottom: calc(24px + var(--nv-tab-space)); }
+
+  /* Compact header: brand left, search and profile right. */
+  .nv-top { gap: 10px; }
+  .nv-top-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-right: auto;
+    font-size: 1.3rem;
+    font-weight: 760;
+    letter-spacing: -0.035em;
+    color: var(--ink);
+    text-decoration: none;
+  }
+  .nv-top-brand:hover { text-decoration: none; }
+  .nv-top-brand:focus-visible { outline: 2px solid var(--coral); outline-offset: 3px; border-radius: var(--r-sm); }
+
+  .nv-search-wrap { width: auto; flex: none; margin-left: 0; }
+  .nv-search-toggle {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: var(--bg);
+    color: var(--ink);
+    cursor: pointer;
+    transition: background-color var(--dur-hover, 180ms) ease;
+  }
+  .nv-search-toggle[hidden] { display: none; }
+  .nv-search-toggle:hover { background: var(--bg-sunken); }
+  .nv-search-toggle:focus-visible { outline: 2px solid var(--coral); outline-offset: 2px; }
+  /* Closed: just the button. Open: the box covers the whole header row. */
+  .nv-search-wrap:not(.is-expanded) .nv-search { display: none; }
+  .nv-search-wrap.is-expanded {
+    position: absolute;
+    inset: 0 16px;
+    z-index: 25;
+    display: flex;
+    align-items: center;
+    background: var(--page);
+  }
+  .nv-search-wrap.is-expanded .nv-search { flex: 1; height: 46px; padding-right: 6px; }
+  .nv-search-wrap.is-expanded .nv-search-input { font-size: 16px; } /* iOS won't zoom in */
+  .nv-search-close {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    flex: none;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+  }
+  .nv-search-close:hover { background: var(--bg-sunken); color: var(--ink); }
+  .nv-search-wrap.is-expanded .nv-search-pop { top: calc(100% - 2px); }
+  .nv-user-btn svg { display: block; }
+  .nv-user-btn { padding: 3px 8px 3px 3px; }
+
+  /* The bar itself. */
+  .nv-tabbar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 30;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 4px;
+    padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--line);
+    background: color-mix(in srgb, var(--bg) 94%, transparent);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+  .nv-tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    min-width: 0;
+    min-height: 52px;
+    border-radius: 14px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--ink-soft);
+    text-decoration: none;
+    transition: background-color 170ms ease, color 170ms ease;
+  }
+  .nv-tab span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .nv-tab:hover { color: var(--ink); text-decoration: none; }
+  .nv-tab.is-active { background: var(--coral-tint); color: var(--coral-active); }
+  .nv-tab:focus-visible { outline: 2px solid var(--coral); outline-offset: -2px; }
+}
+
+@media (max-width: 360px) {
+  .nv-tabbar { padding-inline: 4px; gap: 2px; }
+  .nv-tab { font-size: 0.68rem; }
+  .nv-top-brand span { display: none; }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .nv-side, .nv-backdrop { transition: none; }
+  .nv-side, .nv-backdrop, .nv-tab, .nv-search-toggle { transition: none; }
 }

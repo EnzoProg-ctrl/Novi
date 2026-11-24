@@ -518,3 +518,193 @@ a.hm-pack:focus-visible { outline: 2px solid var(--coral); outline-offset: 2px; 
   .hm-first-text { flex-basis: calc(100% - 70px); }
   .hm-first-cta { width: 100%; }
 }
+
+/* ── Phone Home (below 768) ─────────────────────────────────────
+   Greeting with the waving buddy, Continue Studying as the main card,
+   then recommendations as a stacked list. Ask and the packs list are in
+   the bottom tab bar (app-shell.css) on phones. Wider screens are as above:
+   the phone-only pieces are hidden there. */
+.hm-greet-art,
+.hm-greet-break,
+.hm-next-tile,
+.hm-next-open,
+.hm-next-label,
+.hm-next-pct,
+.hm-next-word,
+.hm-next-cta-play,
+.hm-rec-chev { display: none; }
+
+@media (max-width: 767px) {
+  .hm { gap: 18px; }
+  .hm-wide-only { display: none; }
+
+  /* Greeting: text left, the buddy right, standing on the card below. */
+  .hm-greeting {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    gap: 8px;
+    margin-bottom: -26px;
+  }
+  .hm-greet-text { padding-bottom: 34px; }
+  .hm-greeting h1 { font-size: clamp(1.65rem, 7.4vw, 2.1rem); line-height: 1.12; }
+  .hm-greet-break { display: inline; }
+  .hm-greet-name { color: var(--coral-active); }
+  .hm-greet-icon { display: none; }
+  .hm-greeting .hm-sub { margin-top: 8px; font-size: 1rem; line-height: 1.4; }
+  .hm-greet-art {
+    position: relative;
+    display: block;
+    width: clamp(112px, 36vw, 168px);
+  }
+  /* A soft coral shape behind the buddy. */
+  .hm-greet-art::before {
+    content: '';
+    position: absolute;
+    inset: 22% 0 2% 4%;
+    border-radius: 48% 52% 44% 56% / 58% 46% 54% 42%;
+    background: color-mix(in srgb, var(--coral) 22%, transparent);
+    filter: blur(2px);
+  }
+  .hm-greet-art img {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: auto;
+    filter: drop-shadow(0 10px 16px rgba(0, 0, 0, 0.18));
+  }
+
+  /* Continue Studying: pack tile, label, title, progress, then the button. */
+  .hm-next {
+    display: block;
+    min-height: 0;
+    padding: 18px;
+    border-radius: 22px;
+  }
+  .hm-next-art { display: none; }
+  .hm-next-body {
+    display: grid;
+    grid-template-columns: 56px minmax(0, 1fr) 44px;
+    column-gap: 14px;
+    row-gap: 4px;
+    align-items: start;
+  }
+  .hm-next-tile {
+    grid-column: 1;
+    grid-row: 1 / span 3;
+    display: grid;
+    place-items: center;
+    width: 56px;
+    height: 56px;
+    margin: 0;
+    border-radius: 16px;
+  }
+  .hm-next-tile svg { width: 26px; height: 26px; }
+  .hm-next-head { grid-column: 2; grid-row: 1; gap: 0; }
+  .hm-next-icon,
+  .hm-next-badge,
+  .hm-next-heading { display: none; }
+  .hm-next-label {
+    display: inline;
+    font-size: 0.74rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--coral-active);
+  }
+  .hm-next-open {
+    grid-column: 3;
+    grid-row: 1 / span 2;
+    justify-self: end;
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--coral) 14%, var(--bg));
+    color: var(--ink);
+    transition: background-color 160ms ease;
+  }
+  .hm-next-open:hover { background: color-mix(in srgb, var(--coral) 22%, var(--bg)); }
+  .hm-next-open:focus-visible { outline: 2px solid var(--coral); outline-offset: 2px; }
+  .hm-next-pack {
+    grid-column: 2;
+    grid-row: 2;
+    font-size: 1.2rem;
+    line-height: 1.25;
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+  }
+  .hm-next-meta { grid-column: 2; grid-row: 3; margin: 0; font-size: 0.88rem; color: var(--muted); }
+  /* Progress: the count under the title, then the bar with its percentage. */
+  .hm-next-progress { display: contents; }
+  .hm-next-count { grid-column: 2; grid-row: 3; font-size: 0.88rem; font-weight: 500; color: var(--muted); white-space: normal; }
+  .hm-next-word { display: inline; }
+  .hm-next-track { grid-column: 1 / 3; grid-row: 4; align-self: center; margin-top: 16px; height: 10px; }
+  .hm-next-pct {
+    display: block;
+    grid-column: 3;
+    grid-row: 4;
+    align-self: center;
+    margin-top: 16px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    text-align: right;
+    color: var(--coral-active);
+    font-variant-numeric: tabular-nums;
+  }
+  .hm-next-cta {
+    grid-column: 1 / -1;
+    grid-row: 5;
+    width: 100%;
+    min-height: 52px;
+    margin-top: 16px;
+    border-radius: 16px;
+    font-size: 1.02rem;
+  }
+  .hm-next-cta-play { display: block; }
+  .hm-next-cta-arrow { display: none; }
+
+  /* Recommended for You: a stacked list of rows, each opening on tap. */
+  .hm-rec-spark,
+  .hm-rec-heading .hm-sub { display: none; }
+  .hm-rec-heading .hm-section-title { font-size: 1.25rem; }
+  .hm-recs { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .hm-rec {
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 14px;
+    min-height: 76px;
+    padding: 14px 12px 14px 14px;
+  }
+  .hm-rec-icon { width: 48px; height: 48px; border-radius: 14px; }
+  .hm-rec-text { flex-basis: auto; padding-right: 0; }
+  .hm-rec-body { -webkit-line-clamp: 2; line-clamp: 2; }
+  .hm-rec-cta,
+  .hm-rec:hover .hm-rec-cta {
+    margin-left: 0;
+    padding: 0;
+    background: none;
+    color: var(--muted);
+  }
+  .hm-rec-cta-text {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .hm-rec-cta-arrow { display: none; }
+  .hm-rec-chev { display: block; }
+  .hm-rec:hover .hm-rec-chev { color: var(--ink); }
+  /* "Not now" stays on wider screens; on a phone the row is one tap target. */
+  .hm-rec-dismiss { display: none; }
+  .hm-rec:has(.hm-rec-cta:focus-visible) { outline: 2px solid var(--coral); outline-offset: 2px; }
+  .hm-rec-cta:focus-visible { outline: none; }
+}

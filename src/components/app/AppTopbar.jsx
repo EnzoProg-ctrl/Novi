@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/auth-context'
 import { initialsFrom } from '../../lib/initials'
-import { IconChevronDown, IconMenu } from './AppIcons'
+import { IconChevronDown, IconMenu, NoviMark } from './AppIcons'
 import { TopbarSearch } from './TopbarSearch'
 
 export function AppTopbar({ onMenuClick }) {
@@ -66,6 +66,12 @@ export function AppTopbar({ onMenuClick }) {
         <IconMenu />
       </button>
 
+      {/* Phones only: the bottom bar replaces the sidebar, so the brand sits here. */}
+      <Link to="/dashboard" className="nv-top-brand" aria-label="Novi home">
+        <NoviMark size={24} />
+        <span>Novi</span>
+      </Link>
+
       <TopbarSearch />
 
       <div className="nv-top-end">
@@ -96,6 +102,18 @@ export function AppTopbar({ onMenuClick }) {
               }}
             >
               Edit your buddy
+            </button>
+            {/* Phones have no sidebar, so Settings is reached from here. */}
+            <button
+              type="button"
+              className="nv-user-action"
+              role="menuitem"
+              onClick={() => {
+                setMenuOpen(false)
+                navigate('/settings')
+              }}
+            >
+              Settings
             </button>
             <button type="button" className="nv-user-action" role="menuitem" onClick={handleSignOut}>
               Sign out

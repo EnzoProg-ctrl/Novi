@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from '
 import { IconMoon, IconSun } from '../components/app/AppIcons'
 import { BuddyCard } from '../components/home/BuddyCard'
 import { FirstStep } from '../components/home/FirstStep'
+import greetingMascot from '../assets/capybara_landingpage.webp'
 import { NextUp } from '../components/home/NextUp'
 import { Recommendations } from '../components/home/Recommendations'
 import { StudyPacks } from '../components/home/StudyPacks'
@@ -177,14 +178,22 @@ export function Dashboard() {
   return (
     <div className="hm">
       <header className="hm-greeting">
-        <h1>
-          {greetingFor()}{firstName ? `, ${firstName}` : ''}!
-          {/* Sun by day, moon from 6pm, matching the greeting. */}
-          {new Date().getHours() < 18
-            ? <IconSun className="hm-greet-icon" width={26} height={26} />
-            : <IconMoon className="hm-greet-icon" width={24} height={24} />}
-        </h1>
-        <p className="hm-sub">Ready to make progress today?</p>
+        <div className="hm-greet-text">
+          <h1>
+            {greetingFor()}
+            {/* Phones put the name on its own line, in coral; wider screens keep one line. */}
+            {firstName ? <>,<br className="hm-greet-break" /> <span className="hm-greet-name">{firstName}!</span></> : '!'}
+            {/* Sun by day, moon from 6pm, matching the greeting. */}
+            {new Date().getHours() < 18
+              ? <IconSun className="hm-greet-icon" width={26} height={26} />
+              : <IconMoon className="hm-greet-icon" width={24} height={24} />}
+          </h1>
+          <p className="hm-sub">Ready to make progress today?</p>
+        </div>
+        {/* Phones only: the buddy waving beside the greeting (a still image, no animation). */}
+        <span className="hm-greet-art" aria-hidden="true">
+          <img src={greetingMascot} width={1278} height={1230} alt="" draggable="false" />
+        </span>
       </header>
 
       {error && <div className="msg msg-error">{error}</div>}
@@ -203,11 +212,17 @@ export function Dashboard() {
         onDismiss={dismissRec}
       />
 
-      <BuddyCard buddyName={buddy?.name} hasMaterial={materials.length > 0} loading={loading} />
+      {/* Phones show Continue Studying and recommendations only; Ask and the
+          packs list are a tap away in the bottom bar (AI Chat, Packs). */}
+      <div className="hm-wide-only">
+        <BuddyCard buddyName={buddy?.name} hasMaterial={materials.length > 0} loading={loading} />
+      </div>
 
       <UploadStatus materials={materials} retryingId={retryingId} onRetry={retry} onRemove={remove} />
 
-      <StudyPacks packs={packs} loading={loading} />
+      <div className="hm-wide-only">
+        <StudyPacks packs={packs} loading={loading} />
+      </div>
     </div>
   )
 }

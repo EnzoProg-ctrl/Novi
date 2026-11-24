@@ -1,7 +1,8 @@
 import { useEffect, useId, useRef, useState } from 'react'
+import { flushSync } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { searchEverything } from '../../lib/search'
-import { IconSearch } from './AppIcons'
+import { IconClose, IconSearch } from './AppIcons'
 
 const DEBOUNCE_MS = 200
 
@@ -56,6 +57,18 @@ export function TopbarSearch() {
   const [state, setState] = useState('idle')
   const [options, setOptions] = useState([])
   const [active, setActive] = useState(-1)
+  // Phones: the box is hidden behind a search button until it's opened.
+  const [expanded, setExpanded] = useState(false)
+
+  /** Phones: show the box and focus it in the same tap, so the keyboard opens. */
+  function expand() {
+    flushSync(() => setExpanded(true))
+    inputRef.current?.focus()
+  }
+  function collapse() {
+    setExpanded(false)
+    setOpen(false)
+  }
 
   const text = query.trim()
 
@@ -95,6 +108,7 @@ export function TopbarSearch() {
       const typing = el && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName))
       if (typing || document.querySelector('dialog[open]')) return
       event.preventDefault()
+      flushSync(() => setExpanded(true))
       inputRef.current?.focus()
     }
     window.addEventListener('keydown', onKey)
@@ -104,6 +118,7 @@ export function TopbarSearch() {
   function choose(option) {
     if (!option) return
     setOpen(false)
+    setExpanded(false)
     setQuery('')
     inputRef.current?.blur()
     navigate(option.to)
@@ -116,6 +131,8 @@ export function TopbarSearch() {
         setOpen(false)
       } else if (query) {
         setQuery('')
+      } else {
+        collapse()
       }
       return
     }
@@ -134,12 +151,26 @@ export function TopbarSearch() {
   return (
     <div
       ref={wrapRef}
-      className="nv-search-wrap"
+      className={`nv-search-wrap${expanded ? ' is-expanded' : ''}`}
       onBlur={(event) => {
         // Closes unless focus moved to something inside the search.
-        if (!wrapRef.current?.contains(event.relatedTarget)) setOpen(false)
+        if (wrapRef.current?.contains(event.relatedTarget)) return
+        setOpen(false)
+        // Phones: an empty box folds back into the button.
+        if (!query.trim()) setExpanded(false)
       }}
     >
+      <button
+        type="button"
+        className="nv-search-toggle"
+        onClick={expand}
+        aria-label="Search packs, topics and chats"
+        aria-expanded={expanded}
+        hidden={expanded}
+      >
+        <IconSearch width={20} height={20} />
+      </button>
+
       <form
         className="nv-search"
         role="search"
@@ -169,6 +200,17 @@ export function TopbarSearch() {
           onFocus={() => setOpen(true)}
           onKeyDown={onKeyDown}
         />
+        <button
+          type="button"
+          className="nv-search-close"
+          onClick={() => {
+            setQuery('')
+            collapse()
+          }}
+          aria-label="Close search"
+        >
+          <IconClose width={18} height={18} />
+        </button>
       </form>
 
       {showList && (

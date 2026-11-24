@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom'
 import { useAuth } from '../context/auth-context'
 import { AppSidebar } from './app/AppSidebar'
 import { AppTopbar } from './app/AppTopbar'
+import { MobileTabBar } from './app/MobileTabBar'
 import { PageBodySkeleton } from './RouteSkeletons'
 import { UploadProvider } from './upload/UploadProvider'
 import { SessionReminder } from './SessionReminder'
@@ -39,6 +40,8 @@ export function AppLayout() {
           </Suspense>
         </main>
       </div>
+      {/* Phones: the five main places at the bottom, in place of the sidebar. */}
+      <MobileTabBar />
       <SessionReminder />
       <UndoToast />
     </div>
