@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { PASSWORD_MIN } from '../../lib/account'
+import { PASSWORD_HINT, passwordProblem } from '../../lib/account'
 import { IconClose } from '../app/AppIcons'
 import { PasswordField } from '../PasswordField'
 import { friendlyError } from '../../lib/errors'
@@ -106,7 +106,8 @@ export function PasswordForm({ onCancel, onSubmit }) {
     if (busy) return
     const found = {}
     if (!values.current) found.current = 'Enter your current password.'
-    if (values.next.length < PASSWORD_MIN) found.next = `Use at least ${PASSWORD_MIN} characters.`
+    const weak = passwordProblem(values.next)
+    if (weak) found.next = weak
     else if (values.next === values.current) found.next = 'Choose a password different from your current one.'
     if (values.confirm !== values.next) found.confirm = 'The passwords do not match.'
     setErrors(found)
@@ -131,7 +132,7 @@ export function PasswordForm({ onCancel, onSubmit }) {
         {err('current')}
       </div>
       <div>
-        <PasswordField id="st-pw-new" label="New password" value={values.next} onChange={set('next')} autoComplete="new-password" hint={`At least ${PASSWORD_MIN} characters.`} />
+        <PasswordField id="st-pw-new" label="New password" value={values.next} onChange={set('next')} autoComplete="new-password" hint={PASSWORD_HINT} />
         {err('next')}
       </div>
       <div>

@@ -28,7 +28,28 @@ export const educationLabel = (value) => EDUCATION_LEVELS.find((l) => l.value ==
 
 /** Trims and collapses spaces; empty becomes null so "not set" is stored as null. */
 export const tidyText = (text) => (text ?? '').trim().replace(/\s+/g, ' ') || null
-export const PASSWORD_MIN = 8 // the same rule sign-up enforces
+/**
+ * Password rules, matching Supabase Auth (Authentication -> Email): at least
+ * 10 characters, with a lowercase letter, an uppercase letter and a digit.
+ * Checked here first so the forms can say what's missing; Supabase enforces
+ * the same rules on the server.
+ */
+export const PASSWORD_MIN = 10
+export const PASSWORD_HINT = `At least ${PASSWORD_MIN} characters, with an uppercase letter, a lowercase letter and a number.`
+
+/** What a new password is missing, in one sentence, or null if it meets the rules. */
+export function passwordProblem(password) {
+  const missing = []
+  if (!/[a-z]/.test(password)) missing.push('a lowercase letter')
+  if (!/[A-Z]/.test(password)) missing.push('an uppercase letter')
+  if (!/[0-9]/.test(password)) missing.push('a number')
+  const short = password.length < PASSWORD_MIN
+  if (!short && !missing.length) return null
+  const list = missing.length > 1 ? `${missing.slice(0, -1).join(', ')} and ${missing.at(-1)}` : missing[0]
+  if (short && list) return `Use at least ${PASSWORD_MIN} characters, including ${list}.`
+  if (short) return `Use at least ${PASSWORD_MIN} characters.`
+  return `Add ${list}.`
+}
 
 /**
  * The name lives in two places: the auth user's metadata (read by the top bar

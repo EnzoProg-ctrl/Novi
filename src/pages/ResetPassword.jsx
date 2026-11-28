@@ -5,7 +5,7 @@ import { MfaChallenge } from '../components/MfaChallenge'
 import { PasswordField } from '../components/PasswordField'
 import { AuthCardSkeleton } from '../components/RouteSkeletons'
 import { useAuth } from '../context/auth-context'
-import { authErrorMessage, PASSWORD_MIN, setNewPassword } from '../lib/account'
+import { authErrorMessage, PASSWORD_HINT, passwordProblem, setNewPassword } from '../lib/account'
 import { clearRecoveryPending, peekAuthRedirectNotice, takeAuthRedirectNotice } from '../lib/auth-redirect'
 import { supabase } from '../lib/supabase'
 // Shared card style (hm-card) lives with Home; pages load on their own now.
@@ -53,8 +53,9 @@ export function ResetPassword() {
   async function submit(event) {
     event.preventDefault()
     if (busy) return
-    if (form.password.length < PASSWORD_MIN) {
-      setError(`Use at least ${PASSWORD_MIN} characters.`)
+    const weak = passwordProblem(form.password)
+    if (weak) {
+      setError(weak)
       return
     }
     if (form.password !== form.confirm) {
@@ -119,7 +120,7 @@ export function ResetPassword() {
         <Logo />
         <h2 className="auth-title">Choose a new password</h2>
         <p className="hint">
-          For {user.email}. Use at least {PASSWORD_MIN} characters. You&rsquo;ll sign in with it next.
+          For {user.email}. {PASSWORD_HINT} You&rsquo;ll sign in with it next.
         </p>
 
         {error && <div className="msg msg-error auth-gap" role="alert">{error}</div>}

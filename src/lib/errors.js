@@ -38,7 +38,7 @@ function knownAuthMessage(err) {
   if (code === 'over_request_rate_limit') return 'Too many attempts. Wait a few minutes, then try again.'
   if (code === 'email_exists') return 'That email already belongs to another Novi account.'
   if (code === 'same_password') return 'Choose a password different from your old one.'
-  if (code === 'weak_password') return 'Choose a stronger password: longer, and not a common one.'
+  if (code === 'weak_password') return 'Choose a stronger password: at least 10 characters, with an uppercase letter, a lowercase letter and a number.'
   if (code === 'insufficient_aal') return 'Enter your two-step verification code first.'
   if (code === 'reauthentication_needed') return 'For security, sign in again before making this change.'
   if (code === 'email_address_invalid' || /invalid.*email/i.test(message)) return 'Enter a valid email address.'

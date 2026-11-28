@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Logo } from '../components/Mascot'
 import { PasswordField } from '../components/PasswordField'
 import { useAuth } from '../context/auth-context'
+import { PASSWORD_HINT, passwordProblem } from '../lib/account'
 import { friendlyError } from '../lib/errors'
 
 /** Supabase's error for an email that already has an account (when it reports one at all). */
@@ -30,8 +31,9 @@ export function SignUp() {
     setError(null)
     setEmailTaken(false)
 
-    if (form.password.length < 8) {
-      setError('Use at least 8 characters for your password.')
+    const weak = passwordProblem(form.password)
+    if (weak) {
+      setError(weak)
       return
     }
 
@@ -125,8 +127,8 @@ export function SignUp() {
             label="Password"
             value={form.password}
             onChange={update('password')}
-            placeholder="At least 8 characters"
             autoComplete="new-password"
+            hint={PASSWORD_HINT}
             required
           />
         </div>
