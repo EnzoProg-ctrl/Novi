@@ -12,7 +12,7 @@
       "headers": [
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https://lvrfxsgabzjjrzdjhzdr.supabase.co; connect-src 'self' https://lvrfxsgabzjjrzdjhzdr.supabase.co wss://lvrfxsgabzjjrzdjhzdr.supabase.co; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests"
+          "value": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https://lvrfxsgabzjjrzdjhzdr.supabase.co; connect-src 'self' https://lvrfxsgabzjjrzdjhzdr.supabase.co wss://lvrfxsgabzjjrzdjhzdr.supabase.co https://cloudflare-dns.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests"
         },
         {
           "key": "Strict-Transport-Security",

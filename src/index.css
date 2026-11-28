@@ -303,6 +303,16 @@ a:hover { text-decoration: underline; }
 .msg-info    { background: var(--coral-tint);   color: var(--coral-active); }
 .msg-warn    { background: var(--warn-tint);    color: var(--warn-ink); }
 
+/* An error under a single form field. */
+.field-error { display: block; margin-top: 6px; font-size: 0.82rem; font-weight: 560; color: var(--danger-ink); }
+
+/* "Did you mean name@gmail.com?" under an email field (components/EmailSuggestion.jsx). */
+.email-suggest { margin-top: 8px; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 12px; }
+.email-suggest > p { flex: 1 1 180px; overflow-wrap: anywhere; }
+.email-suggest-actions { display: flex; align-items: center; gap: 12px; }
+.email-suggest-btn { padding: 7px 14px; font-size: 0.85rem; min-height: 36px; }
+.email-suggest-keep { padding: 6px 2px; border: 0; background: none; font: inherit; font-size: 0.85rem; font-weight: 600; color: inherit; text-decoration: underline; cursor: pointer; }
+
 /* ── Bits ────────────────────────────────────────────────────── */
 .badge {
   display: inline-flex;

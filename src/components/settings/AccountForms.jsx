@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { PASSWORD_HINT, passwordProblem } from '../../lib/account'
 import { IconClose } from '../app/AppIcons'
+import { EmailSuggestion } from '../EmailSuggestion'
 import { PasswordField } from '../PasswordField'
+import { domainProblem, emailProblem, emailSuggestion } from '../../lib/emailCheck'
 import { friendlyError } from '../../lib/errors'
-
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 function Head({ title, hint, onClose, busy }) {
   return (
@@ -26,15 +26,26 @@ export function EmailForm({ currentEmail, onCancel, onSubmit }) {
   const [error, setError] = useState(null)
   const [busy, setBusy] = useState(false)
   const [sentTo, setSentTo] = useState(null)
+  const [suggestion, setSuggestion] = useState(null)
+  const [kept, setKept] = useState(null)
 
   async function submit(event) {
     event.preventDefault()
     if (busy) return
     const clean = email.trim()
-    if (!EMAIL_RE.test(clean)) return setError('Enter a valid email address.')
+    const typo = clean === kept ? null : emailSuggestion(clean)
+    if (typo) return setSuggestion(typo)
+    const shape = emailProblem(clean)
+    if (shape) return setError(shape)
     if (clean.toLowerCase() === currentEmail?.toLowerCase()) return setError('That is already your email.')
     setError(null)
     setBusy(true)
+    const noMail = await domainProblem(clean)
+    if (noMail) {
+      setError(noMail)
+      setBusy(false)
+      return
+    }
     try {
       await onSubmit(clean)
       setSentTo(clean)
@@ -72,7 +83,12 @@ export function EmailForm({ currentEmail, onCancel, onSubmit }) {
           type="email"
           className="input"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={(e) => {
+            setEmail(e.target.value)
+            setSuggestion(null)
+            setError(null)
+          }}
+          onBlur={() => email.trim() && email.trim() !== kept && setSuggestion(emailSuggestion(email.trim()))}
           autoComplete="email"
           aria-invalid={error ? true : undefined}
           aria-describedby={error ? 'st-new-email-error' : 'st-new-email-help'}
@@ -83,6 +99,17 @@ export function EmailForm({ currentEmail, onCancel, onSubmit }) {
         ) : (
           <span id="st-new-email-help" className="hint">Your email changes only after you confirm the link we send.</span>
         )}
+        <EmailSuggestion
+          suggestion={suggestion}
+          onUse={(fixed) => {
+            setEmail(fixed)
+            setSuggestion(null)
+          }}
+          onKeep={() => {
+            setKept(email.trim())
+            setSuggestion(null)
+          }}
+        />
       </div>
       <div className="nv-modal-actions">
         <button type="button" className="btn btn-secondary" onClick={onCancel} disabled={busy}>Cancel</button>
