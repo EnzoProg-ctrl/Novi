@@ -103,9 +103,11 @@ export function DataPrivacyCard({ onDownload }) {
           <li>Your account email and name, and the preferences on this page.</li>
           <li>The files you upload, their extracted text, and the study packs made from them.</li>
           <li>Your practice answers, planned sessions and progress.</li>
+          <li>Your AI Chat conversations, including any study sessions you plan there.</li>
           <li>
-            To build a study pack, the text of your material is sent to the AI services Novi uses
-            (Groq and Google Gemini).
+            Novi uses two AI services, Groq and Google Gemini. To build a study pack, the text of your
+            material is sent to them. In AI Chat, your messages, recent conversation and matching
+            excerpts from your notes are sent to them to write each reply.
           </li>
         </ul>
         <p className="st-row-help">Only you can see your data. Deleting your account removes all of it.</p>

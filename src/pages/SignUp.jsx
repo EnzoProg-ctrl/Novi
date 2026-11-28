@@ -100,7 +100,7 @@ export function SignUp() {
               className="input"
               value={form.displayName}
               onChange={update('displayName')}
-              placeholder="Enzo"
+              placeholder="Alex"
               autoComplete="given-name"
               required
             />

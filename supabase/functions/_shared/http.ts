@@ -2,9 +2,14 @@
  * Request basics shared by every Edge Function: which sites may call them
  * (CORS plus an Origin check), JSON responses, and input checks.
  *
- * Allowed sites: the local dev servers, plus whatever is listed in the
- * ALLOWED_ORIGINS secret (comma-separated, e.g. "https://novi.vercel.app").
- * Set that secret before deploying the app, or the live site will be refused.
+ * Allowed sites: whatever is listed in the ALLOWED_ORIGINS secret
+ * (comma-separated, e.g. "https://novi.vercel.app"). Set that secret before
+ * deploying the app, or the live site will be refused.
+ *
+ * The local dev servers (localhost) are allowed only while the
+ * ALLOW_DEV_ORIGINS secret is "true": turn it on to develop locally against
+ * these functions, and off for a release, so production answers only the
+ * real site.
  *
  * Requests with no Origin header (curl, server-to-server) are not browsers, so
  * CORS does not apply; they still need a valid signed-in user's token.
@@ -24,7 +29,8 @@ function allowedOrigins(): Set<string> {
     .split(",")
     .map((o) => o.trim().replace(/\/+$/, ""))
     .filter(Boolean);
-  return new Set([...DEV_ORIGINS, ...extra]);
+  const dev = Deno.env.get("ALLOW_DEV_ORIGINS") === "true" ? DEV_ORIGINS : [];
+  return new Set([...dev, ...extra]);
 }
 
 export type Http = {

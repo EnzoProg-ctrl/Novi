@@ -15,11 +15,15 @@ rate limits), and in `delete-account`.
 
 ## Security
 
-- **Allowed sites (CORS).** Only the local dev servers and the sites listed in
-  the `ALLOWED_ORIGINS` secret may call these functions from a browser; any other
-  site gets a 403. **Set this secret before deploying the app**, for example
+- **Allowed sites (CORS).** Only the sites listed in the `ALLOWED_ORIGINS`
+  secret may call these functions from a browser; any other site gets a 403.
+  **Set this secret before deploying the app**, for example
   `ALLOWED_ORIGINS=https://novi.vercel.app,https://www.yourdomain.com`
   (Supabase dashboard -> Edge Functions -> Secrets). See `_shared/http.ts`.
+- **Local development.** The localhost dev servers are allowed only while the
+  `ALLOW_DEV_ORIGINS` secret is `true` (`npx supabase secrets set ALLOW_DEV_ORIGINS=true`).
+  Unset it for a release (`npx supabase secrets unset ALLOW_DEV_ORIGINS`), so
+  production only answers the real site.
 - **Rate limits per student** (`_shared/security.ts`, `LIMITS`): chat 8/min and
   150/day; building a pack 5 per 10 min and 30/day; account deletion attempts
   5 per 15 min. Counted in `security_events` by the `take_rate_limit` function.

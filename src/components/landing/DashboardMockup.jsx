@@ -63,11 +63,11 @@ export function DashboardMockup() {
               Search…
             </span>
             <span className="nv-mock-icon"><IconBell width="1.1em" height="1.1em" /></span>
-            <span className="nv-mock-avatar">EN</span>
+            <span className="nv-mock-avatar">MA</span>
           </div>
 
           <p className="nv-mock-h">Home</p>
-          <p className="nv-mock-sub">Welcome back, Enzo! Ready to study?</p>
+          <p className="nv-mock-sub">Welcome back, Maya! Ready to study?</p>
 
           <div className="nv-mock-row">
             <div className="nv-mock-card nv-mock-next">
