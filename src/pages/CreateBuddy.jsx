@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { Logo } from '../components/Mascot'
 import { MascotRig } from '../components/MascotRig'
 import { useAuth } from '../context/auth-context'
@@ -18,6 +18,16 @@ const PERSONALITIES = [
 export function CreateBuddy() {
   const { buddy, createBuddy } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
+
+  /**
+   * Editing only: leave without saving, back to where they came from (the
+   * profile menu or Settings), or Home if this page was opened directly.
+   */
+  function cancel() {
+    if (location.key !== 'default') navigate(-1)
+    else navigate('/dashboard', { replace: true })
+  }
 
   const [name, setName] = useState(buddy?.name ?? '')
   const [personality, setPersonality] = useState(buddy?.personality ?? 'supportive')
@@ -134,10 +144,24 @@ export function CreateBuddy() {
           {moreOutfits && <span className="hint">More outfits coming soon.</span>}
         </fieldset>
 
-        <button className="btn btn-primary btn-block auth-gap" disabled={busy}>
-          {busy && <span className="spinner" />}
-          {busy ? 'Saving...' : buddy ? 'Save changes' : 'Create my buddy'}
-        </button>
+        {buddy ? (
+          // Editing an existing buddy: changes can be dropped. A new student
+          // has to create one first, so they only get the create button.
+          <div className="buddy-actions auth-gap">
+            <button type="button" className="btn btn-secondary" onClick={cancel} disabled={busy}>
+              Cancel
+            </button>
+            <button className="btn btn-primary" disabled={busy}>
+              {busy && <span className="spinner" />}
+              {busy ? 'Saving...' : 'Save changes'}
+            </button>
+          </div>
+        ) : (
+          <button className="btn btn-primary btn-block auth-gap" disabled={busy}>
+            {busy && <span className="spinner" />}
+            {busy ? 'Saving...' : 'Create my buddy'}
+          </button>
+        )}
       </form>
     </div>
   )
