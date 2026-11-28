@@ -9,12 +9,13 @@
  */
 
 const VOICES = {
+  // Like a friend texting: casual, Gen Z, still clear about right and wrong.
   supportive: {
-    home: [["You've got this!", 'Stuck on something? Ask me.'], ['Every bit of practice counts.', "Ask me if anything's unclear."]],
-    start: ['Add something to study', "and we'll begin together."],
-    right: ['Correct, nice work!', 'Correct, well done!', "Correct, you're getting it!"],
-    wrong: ['Not quite, but good try', 'Not quite, keep going', 'Not quite, you’re learning'],
-    done: ['Session complete', 'Nice effort today. Every session moves you forward.'],
+    home: [['you got this fr', 'stuck on something? just ask me'], ['every bit of practice counts tbh', 'lmk if anything’s confusing']],
+    start: ['Add something to study', 'and we’ll figure it out together'],
+    right: ['Correct, let’s gooo', 'Correct, you ate that', 'Correct, you’re so locked in'],
+    wrong: ['Not quite, but you’re so close', 'Not quite, no worries tho', 'Not quite, happens to the best of us'],
+    done: ['Session complete', 'W session fr. You showed up and that’s what counts.'],
   },
   cheerful: {
     home: [['Ready to learn something new today?', 'Ask me anything!'], ["Let's make today a good one!", "I'm here if you need me."]],

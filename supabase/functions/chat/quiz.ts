@@ -90,7 +90,7 @@ const promptKey = (prompt: string) => prompt.toLowerCase().replace(/[^\p{L}\p{N}
  * the counts and pack names after it are the same for everyone.
  */
 const OPENERS: Record<string, string> = {
-  supportive: "Done, nice!",
+  supportive: "Done, let's get it!",
   cheerful: "All set, have fun!",
   calm: "Your questions are ready.",
   witty: "Fresh questions, hot off the press!",
